@@ -1,0 +1,14 @@
+<package>
+  <description brief="A Lua client library for ROS">
+    This package is a Lua client library for ROS. It allows connecting to a
+    rosmaster instance and to develop ROS packages in Lua.
+  </description>
+  <author>Tim Niemueller</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/roslua</url>
+  <depend package="roslang"/>
+  <depend package="roscpp"/>
+  <depend package="roslib"/>
+
+</package>
