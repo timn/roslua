@@ -9,50 +9,16 @@
 
 -- Licensed under BSD license
 
-module("roslua", package.seeall)
+module(..., package.seeall)
 
-require("xmlrpc.http")
+local master_proxy = require("roslua.master_proxy")
+local param_proxy  = require("roslua.param_proxy")
 
+-- just to describe variables we provide
 master = nil
-
-MasterProxy = { ros_master_uri = nil, node_name = nil }
-
-function MasterProxy:new(ros_master_uri, node_name)
-   local o = {}
-   setmetatable(o, self)
-   self.__index = self
-
-   o.ros_master_uri = ros_master_uri
-   o.node_name      = node_name
-
-   return o
-end
-
-function MasterProxy:getSystemState()
-   local ok, res = xmlrpc.http.call(self.ros_master_uri, "getSystemState", self.node_name)
-   assert(ok, "XML-RPC call getSystemState failed on client: " .. tostring(res))
-   assert(res[1] == 1, "XML-RPC call getSystemState failed on server: " .. tostring(res[2]))
-
-   local publishers  = {}
-   local subscribers = {}
-   local services    = {}
-
-   for i, v in ipairs(res[3][1]) do
-      publishers[v[1]] = v[2]
-   end
-
-   for i, v in ipairs(res[3][2]) do
-      subscribers[v[1]] = v[2]
-   end
-
-   for i, v in ipairs(res[3][3]) do
-      services[v[1]] = v[2]
-   end
-
-   return publishers, subscribers, services
-end
-
+parameter_server = nil
 
 function init_node(ros_master_uri, node_name)
-   master = MasterProxy:new(ros_master_uri, node_name)
+   master = master_proxy.MasterProxy:new(ros_master_uri, node_name)
+   parameter_server = param_proxy.ParamProxy:new(ros_master_uri, node_name)
 end
