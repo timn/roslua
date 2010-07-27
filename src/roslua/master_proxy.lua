@@ -11,6 +11,7 @@
 
 module(..., package.seeall)
 
+require("roslua")
 require("xmlrpc.http")
 
 __DEBUG = true
@@ -91,8 +92,8 @@ function MasterProxy:lookupService(service)
 end
 
 
-function MasterProxy:registerService(service, service_api, caller_api)
-   self:do_call("registerService", service, service_api, caller_api)
+function MasterProxy:registerService(service, service_api)
+   self:do_call("registerService", service, service_api, roslua.slave_uri)
 end
 
 function MasterProxy:unregisterService(service, service_api)
@@ -100,8 +101,8 @@ function MasterProxy:unregisterService(service, service_api)
 end
 
 
-function MasterProxy:registerSubscriber(topic, topic_type, caller_api)
-   local res = self:do_call("registerSubscriber", topic, topic_type, caller_api)
+function MasterProxy:registerSubscriber(topic, topic_type)
+   local res = self:do_call("registerSubscriber", topic, topic_type, roslua.slave_uri)
 
    return res[3]
 end
@@ -111,12 +112,12 @@ function MasterProxy:unregisterSubscriber(topic, caller_api)
 end
 
 
-function MasterProxy:registerPublisher(topic, topic_type, caller_api)
-   local res = self:do_call("registerPublisher", topic, topic_type, caller_api)
+function MasterProxy:registerPublisher(topic, topic_type)
+   local res = self:do_call("registerPublisher", topic, topic_type, roslua.slave_uri)
 
    return res[3]
 end
 
-function MasterProxy:unregisterPublisher(topic, caller_api)
-   self:do_call("unregisterPublisher", service, service_api)
+function MasterProxy:unregisterPublisher(topic)
+   self:do_call("unregisterPublisher", topic, roslua.slave_uri)
 end
