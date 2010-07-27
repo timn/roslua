@@ -11,11 +11,9 @@
 
 module(..., package.seeall)
 
--- hack for now
-package.cpath = ";;/homes/timn/ros/local/roslua/src/roslua/?.so"
-
 require("socket")
 require("struct")
+require("roslua.msg_spec")
 
 TcpRosConnection = { payload = nil, received = false }
 
@@ -41,25 +39,25 @@ function TcpRosConnection:send_header(fields)
 
    for k,v in pairs(fields) do
       local f  = k .. "=" .. v
-      local fp = struct.pack("<!4i4", #f) .. f
+      local fp = struct.pack("<!1i4", #f) .. f
       s = s .. fp
    end
 
-   self.socket:send(struct.pack("<!4i4", #s) .. s)
+   self.socket:send(struct.pack("<!1i4", #s) .. s)
 end
 
 function TcpRosConnection:receive_header()
    self.header = {}
 
    local rd = self.socket:receive(4)
-   local packet_size = struct.unpack("<!4i4", rd)
+   local packet_size = struct.unpack("<!1i4", rd)
 
    local packet = self.socket:receive(packet_size)
    local i = 1
 
    while i <= packet_size do
       local field_size
-      field_size, i = struct.unpack("<!4i4", packet, i)
+      field_size, i = struct.unpack("<!1i4", packet, i)
 
       local sub = string.sub(packet, i, i+field_size)
       local eqpos = string.find(sub, "=")
@@ -71,7 +69,9 @@ function TcpRosConnection:receive_header()
       i = i + field_size
    end
 
-   --assert(self.header.type, "Opposite site did not set type")
+   assert(self.header.type, "Opposite site did not set type")
+
+   self.msgspec = roslua.msg_spec.get_msgspec(self.header.type)
 
    return self.header
 end
@@ -90,16 +90,13 @@ end
 
 function TcpRosConnection:receive()
    local packet_size_d = self.socket:receive(4)
-   local packet_size = struct.unpack("<!4i4", packet_size_d)
+   local packet_size = struct.unpack("<!1i4", packet_size_d)
 
-   print("Packet size", packet_size)
+   local error
+   self.payload= assert(self.socket:receive(packet_size))
 
-   self.payload = self.socket:receive(packet_size)
-
-   local string_size, next_i = struct.unpack("<!4i4", self.payload)
-   print("string size", string_size)
-   self.payload = string.sub(self.payload, next_i)
-
+   self.message = self.msgspec:instantiate()
+   self.message:deserialize(self.payload)
 
    self.received = true
 end
