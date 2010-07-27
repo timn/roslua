@@ -31,7 +31,7 @@ end
 
 
 function is_array_type(type)
-   return type:find("%[")
+   return type:find("%[") ~= nil
 end
 
 function is_builtin_type(type)
