@@ -28,13 +28,22 @@ function RosMessage:new(spec)
    return o
 end
 
+-- simple read function
+local function srf(format)
+   return function (buffer, i)
+	     local s, v
+	     v, i = struct.unpack(format, buffer, i)
+	     return v, i
+	  end
+end
+
 RosMessage.read_methods = {
-   int8     = "<!1i1",   uint8   = "<!1I1",
-   int16    = "<!1i2",   uint16  = "<!1I2",
-   int32    = "<!1i4",   uint32  = "<!1I4",
-   int64    = "<!1i8",   uint64  = "<!1I8",
-   float32  = "<!1f",    float64 = "<!1d",
-   char     = "<!1i1",   byte    = "<!1I1",
+   int8     = srf("<!1i1"),   uint8   = srf("<!1I1"),
+   int16    = srf("<!1i2"),   uint16  = srf("<!1I2"),
+   int32    = srf("<!1i4"),   uint32  = srf("<!1I4"),
+   int64    = srf("<!1i8"),   uint64  = srf("<!1I8"),
+   float32  = srf("<!1f"),    float64 = srf("<!1d"),
+   char     = srf("<!1i1"),   byte    = srf("<!1I1"),
    duration = function (buffer, i)
 		 local s, u
 		 s, u, i = struct.unpack("<!1i4i4", buffer, i)
@@ -65,12 +74,53 @@ RosMessage.read_methods = {
 	      end
 }
 
-function RosMessage.simple_read(buffer, i, format)
-   local s, v
-   v, i = struct.unpack(format, buffer, i)
-   return v, i
+RosMessage.default_values = {
+   int8     = 0,       uint8   = 0,
+   int16    = 0,       uint16  = 0,
+   int32    = 0,       uint32  = 0,
+   int64    = 0,       uint64  = 0,
+   float32  = 0,       float64 = 0,
+   char     = 0,       byte    = 0,
+   duration = {0, 0},  time    = {0, 0},
+   string   = "",      array   = {}
+}
+
+RosMessage.builtin_formats = {
+   int8     = "i1",    uint8   = "I1",
+   int16    = "i2",    uint16  = "I2",
+   int32    = "i4",    uint32  = "I4",
+   int64    = "i8",    uint64  = "I8",
+   float32  = "f",     float64 = "d",
+   char     = "i1",    byte    = "I1",
+   duration = "i4i4",  time    = "I4I4",
+   string   = "i4c0",  array   = "I4"
+}
+
+local function saf(typeformat)
+   return function(format, array, value)
+	     table.insert(array, value)
+	     return format .. typeformat, array
+	  end
 end
-   
+
+local function tsaf(typeformat)
+   return function (format, array, value)
+	     table.insert(array, value[1])
+	     table.insert(array, value[2])
+	     return format .. typeformat, array
+	  end
+end	     
+
+RosMessage.append_functions = {
+   int8     = "i1",    uint8   = "I1",
+   int16    = "i2",    uint16  = "I2",
+   int32    = "i4",    uint32  = "I4",
+   int64    = "i8",    uint64  = "I8",
+   float32  = "f",     float64 = "d",
+   char     = "i1",    byte    = "I1",
+   duration = "i4i4",  time    = "I4I4",
+   string   = "I4c0"
+}
 
 
 function RosMessage:deserialize(buffer, i)
@@ -87,7 +137,7 @@ function RosMessage:deserialize(buffer, i)
 
       if is_array then
 	 ftype = roslua.msg_spec.base_type(ftype)
-	 num_values, i = self.simple_read(buffer, i, self.read_methods["uint32"])
+	 num_values, i = self.read_methods["uint32"](buffer, i)
       end
 
       local rm = self.read_methods[ftype]
@@ -96,11 +146,7 @@ function RosMessage:deserialize(buffer, i)
 	 assert(i <= #buffer, self.spec.type .. ": buffer too short for message type (" ..
 		i .. " <= " .. #buffer .. ")")
 	 if rm then -- standard type
-	    if type(rm) == "function" then
-	       self.values[fname], i = rm(buffer, i)
-	    else
-	       self.values[fname], i = self.simple_read(buffer, i, rm)
-	    end
+	    self.values[fname], i = rm(buffer, i)
 	 else -- must be complex type, try to instantiate and deserialize
 	    if not self.values[fname] then
 	       local msgspec = roslua.msg_spec.get_msgspec(ftype)
@@ -136,8 +182,126 @@ function RosMessage:print(indent)
    end
 end
 
+
+function RosMessage:generate_value_array()
+   local rv = {}
+   local format = ""
+
+   for _, f in ipairs(self.spec.fields) do
+
+      local fname = f.name
+      local ftype = f.type
+      local is_builtin_type = roslua.msg_spec.is_builtin_type(ftype)
+      local is_array = roslua.msg_spec.is_array_type(ftype)
+
+      if is_array then
+	 ftype = roslua.msg_spec.base_type(ftype)
+      end
+
+      print(ftype, fname, "is builtin: " .. tostring(is_builtin_type), "is_array: " .. tostring(is_array))
+
+      -- if no value has been set, set default value
+      if not self.values[fname] then
+	 if is_array then -- just assume empty array
+	    self.values[fname] = {}
+	 elseif is_builtin_type then -- set default builtin value from table
+	    self.values[fname] = self.default_values[ftype]
+	 else -- generate new complex message with no values set to trigger defaults
+	    self.values[fname] =roslua.get_msgspec(ftype):instantiate()
+	 end
+      end
+
+
+      local v, j
+      if is_builtin_type and is_array then
+	 format = format .. "I4" .. string.rep(self.builtin_formats[ftype], #self.values[fname])
+	 table.insert(rv, #self.values[fname])
+	 for _,v in ipairs(self.values[fname]) do
+	    if ftype == "duration" or ftype == "time" then
+	       table.insert(rv, v[1])
+	       table.insert(rv, v[2])
+	    elseif ftype == "string" then
+	       table.insert(rv, #v)
+	       table.insert(rv, v)
+	    else
+	       table.insert(rv, v)
+	    end
+	 end
+	    
+      elseif is_builtin_type then
+	 format = format .. self.builtin_formats[ftype]
+	 if ftype == "duration" or ftype == "time" then
+	    table.insert(rv, self.values[fname][1])
+	    table.insert(rv, self.values[fname][2])
+	 elseif ftype == "string" then
+	    table.insert(rv, #self.values[fname])
+	    table.insert(rv, self.values[fname])
+	 else
+	    table.insert(rv, self.values[fname])
+	 end
+
+      elseif is_array then -- it is a complex type and an array
+	 for _,v in ipairs(self.values[fname]) do
+	    local f, va = v:generate_value_array()
+	    format = format .. f
+	    for _, j in ipairs(va) do
+	       table.insert(rv, j)
+	    end
+	 end
+
+      else -- complex type, but *not* an array
+	 local f, va = self.values[fname]:generate_value_array()
+	 format = format .. f
+	 for _, j in ipairs(va) do
+	    table.insert(rv, j)
+	 end
+      end
+   end
+
+   return format, rv
+end
+
 function RosMessage:serialize()
    local rv = ""
 
-   return rv
+   -- pack values into array in proper order
+   for _, f in ipairs(self.spec.fields) do
+
+      local fname = f.name
+      local ftype = f.type
+      local is_array = roslua.msg_spec.is_array_type(ftype)
+      local num_values = 1
+
+      if is_array then
+	 ftype = roslua.msg_spec.base_type(ftype)
+      end
+
+      -- generate format string
+      local format, arr = self:generate_value_array()
+
+      format = "<!1" .. format
+
+      local function print_table_rec(t, indent)
+	 local indent = indent or ""
+	 for k,v in pairs(t) do
+	    if type(v) == "table" then
+	       print(indent .. "Recursing into table " .. k)
+	       print_table_rec(v, indent .. "   ")
+	    else
+	       print(indent .. k .. "=" .. tostring(v) .. " (" .. type(v) .. ")")
+	    end
+	 end
+      end
+      print("Format", format)
+      print_table_rec(arr)
+   
+
+
+      -- pack it!
+      local tmp = struct.pack(format, unpack(arr))
+      rv = struct.pack("<!1I4c0", #tmp, tmp)
+
+      return rv
+   end
 end
+
