@@ -1,6 +1,6 @@
 
 ----------------------------------------------------------------------------
---  slave_ypi.lua - Slave XML-RPC API
+--  slave_api.lua - Slave XML-RPC API
 --
 --  Created: Thu Jul 22 19:06:06 2010 (at Intel Research, Pittsburgh)
 --  Copyright  2010  Tim Niemueller [www.niemueller.de]
@@ -9,7 +9,7 @@
 
 -- Licensed under BSD license
 
---module(..., package.seeall)
+module(..., package.seeall)
 
 require("xavante")
 require("xavante.httpd")
@@ -199,8 +199,12 @@ xavante.HTTP(config)
 local ports = xavante.httpd.get_ports()
 --print(string.format("Xavante started on port(s) %s", table.concat(ports, ", ")))
 
-local quit = false
-while not quit do
-   local ok, res = pcall(copas.step, 0.1)
-   quit = not ok
+function spin()
+   copas.step(0.1)
 end
+
+--local quit = false
+--while not quit do
+--   local ok, res = pcall(copas.step, 0.1)
+--   quit = not ok
+--end
