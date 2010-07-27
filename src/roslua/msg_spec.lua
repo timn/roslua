@@ -12,6 +12,7 @@
 module(..., package.seeall)
 
 require("md5")
+require("roslua.message")
 
 BUILTIN_TYPES = { "int8","uint8","int16","uint16","int32","uint32",
 		  "int64","uint64","float32","float64","string","bool",
@@ -28,13 +29,18 @@ function base_type(type)
    return type:match("^([^%[]+)") or type
 end
 
-function is_builtin(type)
+
+function is_array_type(type)
+   return type:find("%[")
+end
+
+function is_builtin_type(type)
    local t = base_type(type)
    return BUILTIN_TYPES[t] ~= nil or  EXTENDED_TYPES[t] ~= nil
 end
 
 function resolve_type(type, package)
-   if is_builtin(type) or type:find("/") then
+   if is_builtin_type(type) or type:find("/") then
       return type
    else
       return string.format("%s/%s", package, type)
@@ -80,15 +86,15 @@ function MsgSpec:new(msgtype, file)
    setmetatable(o, self)
    self.__index = self
 
-   o.msgtype = msgtype
-   assert(o.msgtype, "Message type is missing")
+   o.type = msgtype
+   assert(o.type, "Message type is missing")
 
-   local slashpos = o.msgtype:find("/")
+   local slashpos = o.type:find("/")
    o.package    = "roslib"
-   o.short_type = o.msgtype
+   o.short_type = o.type
    if slashpos then
-      o.package    = o.msgtype:sub(1, slashpos - 1)
-      o.short_type = o.msgtype:sub(slashpos + 1)
+      o.package    = o.type:sub(1, slashpos - 1)
+      o.short_type = o.type:sub(slashpos + 1)
    end
 
    o:load()
@@ -150,7 +156,7 @@ function MsgSpec:calc_md5()
    end
 
    for _, spec in ipairs(self.fields) do
-      if is_builtin(spec[1]) then
+      if is_builtin_type(spec[1]) then
 	 s = s .. string.format("%s %s\n", spec[1], spec[2])
       else
 	 local msgspec = get_msgspec(base_type(resolve_type(spec[1], self.package)))
@@ -171,7 +177,7 @@ end
 
 function MsgSpec:print(indent)
    local indent = indent or ""
-   print(indent .. self.msgtype)
+   print(indent .. self.type)
    print(indent .. "Fields:")
    for _,s in ipairs(self.fields) do
       print(indent .. "  " .. s[1] .. " " .. s[2])
@@ -182,5 +188,5 @@ end
 
 
 function MsgSpec:instantiate()
-
+   return roslua.message.RosMessage:new(self)
 end
