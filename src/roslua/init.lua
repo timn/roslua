@@ -19,6 +19,9 @@ master = nil
 parameter_server = nil
 
 function init_node(ros_master_uri, node_name)
+   assert(ros_master_uri, "ROS Master URI not set")
+   assert(node_name, "Node name not set")
+
    master = master_proxy.MasterProxy:new(ros_master_uri, node_name)
    parameter_server = param_proxy.ParamProxy:new(ros_master_uri, node_name)
 end
