@@ -12,12 +12,8 @@
 package.path  = ";;/homes/timn/ros/local/roslua/src/?/init.lua;/homes/timn/ros/local/roslua/src/?.lua;/usr/share/lua/5.1/?/init.lua;/usr/share/lua/5.1/?.lua"
 package.cpath = ";;/homes/timn/ros/local/roslua/src/roslua/?.so;/usr/lib/lua/5.1/?.so"
 
-require("struct")
-
 require("roslua")
-require("roslua.msg_spec")
 
-roslua.msg_spec.init()
 print("std_msgs path: ", roslua.msg_spec.find_rospack("std_msgs"))
 
 print()

@@ -10,23 +10,23 @@
 -- Licensed under BSD license
 
 package.path  = ";;/homes/timn/ros/local/roslua/src/?/init.lua;/homes/timn/ros/local/roslua/src/?.lua;/usr/share/lua/5.1/?/init.lua;/usr/share/lua/5.1/?.lua"
-package.cpath = ";;/homes/timn/ros/local/roslua/src/roslua/?.so;/usr/lib/lua/5.1/?.so"
+package.cpath = package.cpath .. ";/homes/timn/ros/local/roslua/src/roslua/?.so;something?;/usr/lib/lua/5.1/?.so"
 
 require("struct")
 
 require("roslua")
 require("roslua.slave_proxy")
 require("roslua.tcpros")
+require("roslua.msg_spec")
 
-StringMessage = { md5sum = "992ce8a1687cec8c8bd883ec73ca41d1" }
+--StringMessage = { md5sum = "992ce8a1687cec8c8bd883ec73ca41d1" }
 
-function StringMessage:new()
-   local o = {}
-   setmetatable(o, self)
-   self.__index = self
-
-   return o
-end
+--function StringMessage:new()
+--   local o = {}
+--   setmetatable(o, self)
+--   self.__index = self
+--   return o
+--end
 
 
 --[[
@@ -48,7 +48,17 @@ end
 --]]
 
 roslua.init_node("http://irpwkst00-l:13476/", "/talkertest")
-local uri = roslua.master:lookupNode("/talker")
+
+--[[
+local remote_node = "/talker"
+local topic = "/chatter"
+local msgtype = "std_msgs/String"
+--]]
+local remote_node = "/talker"
+local topic = "/rosout"
+local msgtype = "roslib/Log"
+
+local uri = roslua.master:lookupNode(remote_node)
 print("Slave URI", uri)
 local slave = roslua.slave_proxy.SlaveProxy:new(uri, "/talkertest")
 
@@ -56,7 +66,7 @@ local pid = slave:getPid()
 print("PID", pid)
 
 print("Requesting topic")
-local proto = slave:requestTopic("/chatter")
+local proto = slave:requestTopic(topic)
 local function print_table_rec(t, indent)
    local indent = indent or ""
    for k,v in pairs(t) do
@@ -74,22 +84,25 @@ function sleep(n)
   os.execute("sleep " .. tonumber(n))
 end
 
-print("Sleeping, fire up your wireshark")
+--print("Sleeping, fire up your wireshark")
 --sleep(15)
 
 local tcpconn = roslua.tcpros.TcpRosConnection:new()
 tcpconn:connect(proto[2], proto[3])
 
+local msgspec = roslua.msg_spec.get_msgspec(msgtype)
+
 tcpconn:send_header{callerid="/talkertest",
-		    topic="/chatter",
-		    type="std_msgs/String",
-		    md5sum="992ce8a1687cec8c8bd883ec73ca41d1"}
+		    topic=topic,
+		    type=msgspec.type,
+		    md5sum=msgspec:md5()}
 local header = tcpconn:receive_header()
 print_table_rec(header, "HEADER ")
 
 while true do
    tcpconn:spin()
    if tcpconn:data_received() then
-      print("Received:", tcpconn.payload)
+      --print("Received:", tcpconn.payload)
+      tcpconn.message:print()
    end
 end
