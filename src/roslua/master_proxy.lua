@@ -14,7 +14,7 @@ module(..., package.seeall)
 require("roslua")
 require("xmlrpc.http")
 
-__DEBUG = true
+__DEBUG = false
 
 MasterProxy = { ros_master_uri = nil, node_name = nil }
 
@@ -107,8 +107,8 @@ function MasterProxy:registerSubscriber(topic, topic_type)
    return res[3]
 end
 
-function MasterProxy:unregisterSubscriber(topic, caller_api)
-   self:do_call("unregisterSubscriber", service, service_api)
+function MasterProxy:unregisterSubscriber(topic)
+   self:do_call("unregisterSubscriber", topic, roslua.slave_uri)
 end
 
 

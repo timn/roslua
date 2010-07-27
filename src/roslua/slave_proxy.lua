@@ -13,7 +13,7 @@ module(..., package.seeall)
 
 require("xmlrpc.http")
 
-__DEBUG = true
+__DEBUG = false
 
 SlaveProxy = { slave_uri = nil, node_name = nil }
 
