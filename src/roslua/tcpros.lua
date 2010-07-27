@@ -30,7 +30,11 @@ function TcpRosConnection:connect(host, port)
    self.socket = socket.tcp()
    self.socket:connect(host, port)
 
-   local ip, port = self.socket:getsockname()
+   --local ip, port = self.socket:getsockname()
+end
+
+function TcpRosConnection:disconnect()
+   self.socket:close()
 end
 
 

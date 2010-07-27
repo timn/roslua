@@ -42,6 +42,14 @@ function Subscriber:new(topic, type)
    return o
 end
 
+function Subscriber:finalize()
+   local c
+   for n, c in pairs(self.connections) do
+      c:disconnect()
+      roslua.master:unregisterSubscriber(self.topic)
+   end
+end
+
 function Subscriber:add_listener(listener)
    assert(listener.handle_message, "Handler does not have a handle message method")
    assert(type(handler.handle_message) == "function", "Handle message method is not a function")

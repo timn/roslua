@@ -20,6 +20,8 @@ require("roslua.msg_spec")
 require("roslua.message")
 require("roslua.subscriber")
 
+require("signal")
+
 -- Imports from other libs to have a unified entry point
 MsgSpec = roslua.msg_spec.MsgSpec
 Message = roslua.message.RosMessage
@@ -56,10 +58,16 @@ function init_node(args)
    roslua.publishers    = {}
    roslua.slave_proxies = {}
 
+   signal.signal(signal.SIGINT, roslua.exit)
 end
 
 function finalize()
    -- shutdown all connections
+   for _,subs in pairs(subscribers) do
+      for _,s in ipairs(subs) do
+	 s:finalize()
+      end
+   end
 end
 
 
@@ -71,6 +79,7 @@ function spin()
    roslua.slave_api.spin()
 
    -- spin subscribers for receiving
+   local subs, s
    for _,subs in pairs(roslua.subscribers) do
       for _,s in ipairs(subs) do
 	 s:spin()

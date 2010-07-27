@@ -25,3 +25,4 @@ local s = roslua.Subscriber:new(topic, msgtype)
 while not roslua.quit do
    roslua.spin()
 end
+roslua.finalize()
