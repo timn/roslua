@@ -11,12 +11,14 @@
 
 module(..., package.seeall)
 
+require("roslua")
 require("xavante")
 require("xavante.httpd")
 require("wsapi.xavante")
 require("wsapi.request")
 require("xmlrpc")
 require("posix")
+require("socket")
 
 
 -- XML-RPC WSAPI handler
@@ -163,6 +165,13 @@ function xmlrpc_exports.publisherUpdate(caller_id, topic, publishers)
    assert(topic, "Topic name is missing")
    assert(publishers, "Publishers are missing")
 
+   print("Publisher Update")
+   --if roslua.subscribers[topic] then
+   --   for _,s in ipairs(roslua.subscribers[topic]) do
+   --	 s:update_publishers(publishers)
+   --    end
+   --end
+
    return rosreply_encaps(ROS_CODE_SUCCESS, "", 0)   
 end
 
@@ -185,26 +194,21 @@ function xmlrpc_exports.requestTopic(caller_id, topic, protocols)
 end
 
 
--- XML-RPC setup
-xmlrpc.srvMethods(xmlrpc_exports)
-
-
 -- Webserver Setup
 local rules = {{ match = ".", with = wsapi.xavante.makeHandler(wsapi_handler) }}
-local config = { server = {host = "*", port = 34448}, defaultHost = { rules = rules} }
+local config = { server = {host = "*", port = 0}, defaultHost = { rules = rules} }
 
-xavante.HTTP(config)
 
--- Just for debugging purposes
-local ports = xavante.httpd.get_ports()
---print(string.format("Xavante started on port(s) %s", table.concat(ports, ", ")))
+function init()
+   xmlrpc.srvMethods(xmlrpc_exports)
+   xavante.HTTP(config)
+end
+
+function slave_uri()
+   local port = xavante.httpd.get_ports()[1]
+   return "http://" .. socket.dns.gethostname() .. ":" .. port
+end
 
 function spin()
    copas.step(0.1)
 end
-
---local quit = false
---while not quit do
---   local ok, res = pcall(copas.step, 0.1)
---   quit = not ok
---end
