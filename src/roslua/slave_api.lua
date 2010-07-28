@@ -108,6 +108,35 @@ function xmlrpc_exports.getBusStats(caller_id)
 end
 
 
+function xmlrpc_exports.getBusInfo(caller_id)
+   assert(caller_id, "Caller ID argument is missing")
+
+   local connid = 1
+   local businfo = {}
+   local topic, p, s
+
+   for topic, s in pairs(roslua.subscribers) do
+      for uri, p in pairs(s.subscriber.publishers) do
+	 local conn = {connid, uri, "o", "TCPROS", topic, (p.connection ~= nil)}
+	 local xconn = xmlrpc.newTypedValue(conn, xmlrpc.newArray())
+	 table.insert(businfo, xconn)
+	 connid = connid + 1
+      end
+   end
+
+   for topic, p in pairs(roslua.publishers) do
+      for _, s in pairs(p.publisher.subscribers) do
+	 local conn = {connid, "", "i", "TCPROS", topic, (s.connection ~= nil)}
+	 local xconn = xmlrpc.newTypedValue(conn, xmlrpc.newArray())
+	 table.insert(businfo, xconn)
+	 connid = connid + 1
+      end
+   end
+
+   local xrv = xmlrpc.newTypedValue(businfo, xmlrpc.newArray("array"))
+   return rosreply_encaps(ROS_CODE_SUCCESS, "", xrv)
+end
+
 function xmlrpc_exports.getMasterUri(caller_id)
    assert(caller_id, "Caller ID argument is missing")
 
@@ -165,12 +194,9 @@ function xmlrpc_exports.publisherUpdate(caller_id, topic, publishers)
    assert(topic, "Topic name is missing")
    assert(publishers, "Publishers are missing")
 
-   print("Publisher Update")
-   --if roslua.subscribers[topic] then
-   --   for _,s in ipairs(roslua.subscribers[topic]) do
-   --	 s:update_publishers(publishers)
-   --    end
-   --end
+   if roslua.subscribers[topic] then
+      roslua.subscribers[topic].subscriber:update_publishers(publishers)
+   end
 
    return rosreply_encaps(ROS_CODE_SUCCESS, "", 0)   
 end
@@ -181,12 +207,22 @@ function xmlrpc_exports.requestTopic(caller_id, topic, protocols)
    assert(topic, "Topic name is missing")
    assert(protocols, "Protocols are missing")
 
-   
+   if not roslua.publishers[topic] then
+      return rosreply_encaps(ROS_CODE_ERROR, "Topic us not published on this node", 0)
+   end
+
+   --for _, p in ipairs(roslua.publishers[topic]) do
+   --   local protodef = {"TCPROS", 1234}
+   --   local rp = xmlrpc.newTypedValue(protodef, xmlrpc.newArray())
+   --end
+
    for _,p in ipairs(protocols) do
       if p[1] == "TCPROS" then
-	 local protodef = {"TCPROS", 1234}
-	 local rp = xmlrpc.newTypedValue(protodef, xmlrpc.newArray())
-	 return rosreply_encaps(ROS_CODE_SUCCESS, "", rp)   
+	 -- ok, that we can handle
+	 local protodef = {"TCPROS", socket.dns.gethostname(),
+			   roslua.publishers[topic].publisher.port}
+	 local xprotodef = xmlrpc.newTypedValue(protodef, xmlrpc.newArray())
+	 return rosreply_encaps(ROS_CODE_SUCCESS, "", xprotodef)
       end
    end
 

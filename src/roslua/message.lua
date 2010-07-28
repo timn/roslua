@@ -96,21 +96,6 @@ RosMessage.builtin_formats = {
    string   = "i4c0",  array   = "I4"
 }
 
-local function saf(typeformat)
-   return function(format, array, value)
-	     table.insert(array, value)
-	     return format .. typeformat, array
-	  end
-end
-
-local function tsaf(typeformat)
-   return function (format, array, value)
-	     table.insert(array, value[1])
-	     table.insert(array, value[2])
-	     return format .. typeformat, array
-	  end
-end	     
-
 RosMessage.append_functions = {
    int8     = "i1",    uint8   = "I1",
    int16    = "i2",    uint16  = "I2",
@@ -198,7 +183,7 @@ function RosMessage:generate_value_array()
 	 ftype = roslua.msg_spec.base_type(ftype)
       end
 
-      print(ftype, fname, "is builtin: " .. tostring(is_builtin_type), "is_array: " .. tostring(is_array))
+      --print(ftype, fname, "is builtin: " .. tostring(is_builtin_type), "is_array: " .. tostring(is_array))
 
       -- if no value has been set, set default value
       if not self.values[fname] then
@@ -281,27 +266,11 @@ function RosMessage:serialize()
 
       format = "<!1" .. format
 
-      local function print_table_rec(t, indent)
-	 local indent = indent or ""
-	 for k,v in pairs(t) do
-	    if type(v) == "table" then
-	       print(indent .. "Recursing into table " .. k)
-	       print_table_rec(v, indent .. "   ")
-	    else
-	       print(indent .. k .. "=" .. tostring(v) .. " (" .. type(v) .. ")")
-	    end
-	 end
-      end
-      print("Format", format)
-      print_table_rec(arr)
-   
-
-
       -- pack it!
       local tmp = struct.pack(format, unpack(arr))
       rv = struct.pack("<!1I4c0", #tmp, tmp)
 
-      return rv
+      return rv, format, arr
    end
 end
 

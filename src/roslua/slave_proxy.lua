@@ -36,7 +36,8 @@ function SlaveProxy:do_call(method_name, ...)
 				     method_name, tostring(res[2])))
 
    if __DEBUG then
-      print(string.format("Ok: %s  Code: %d  Error: %s", tostring(ok), res[1], res[2]))
+      print(string.format("Ok: %s  Code: %d  Error: %s  arrlen: %i", tostring(ok), tostring(res[1]),
+			  tostring(res[2]), #res))
    end
 
    return res
@@ -61,7 +62,7 @@ end
 function SlaveProxy:getPid()
    local res = self:do_call("getPid")
 
-   return res[2]
+   return res[3]
 end
 
 function SlaveProxy:getSubscriptions()

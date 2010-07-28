@@ -15,28 +15,51 @@ require("socket")
 require("struct")
 require("roslua.msg_spec")
 
-TcpRosConnection = { payload = nil, received = false }
+TcpRosConnection = { payload = nil, received = false, max_receives_per_spin = 10 }
 
-function TcpRosConnection:new()
+function TcpRosConnection:new(socket)
    local o = {}
    setmetatable(o, self)
    self.__index = self
+
+   o.socket = socket
 
    return o
 end
 
 
 function TcpRosConnection:connect(host, port)
-   self.socket = socket.tcp()
-   self.socket:connect(host, port)
-
-   --local ip, port = self.socket:getsockname()
+   assert(not self.socket, "Socket has already been created")
+   self.socket = assert(socket.connect(host, port))
 end
 
-function TcpRosConnection:disconnect()
+function TcpRosConnection:close()
    self.socket:close()
+   self.socket = nil
 end
 
+function TcpRosConnection:bind()
+   assert(not self.socket, "Socket has already been created")
+   self.socket = assert(socket.bind("*", 0))
+   self.socket:settimeout(0)
+end
+
+function TcpRosConnection:accept()
+   local conns = {}
+   while true do
+      local c = self.socket:accept()
+      if not c then
+	 break
+      else
+	 table.insert(conns, TcpRosConnection:new(c))
+      end
+   end
+   return conns
+end
+
+function TcpRosConnection:get_ip_port()
+   return self.socket:getsockname()
+end
 
 function TcpRosConnection:send_header(fields)
    local s = ""
@@ -93,11 +116,13 @@ function TcpRosConnection:data_received()
 end
 
 function TcpRosConnection:receive()
-   local packet_size_d = self.socket:receive(4)
+   local ok, packet_size_d, err = pcall(self.socket.receive, self.socket, 4)
+   if not ok or packet_size_d == nil then
+      error(err, (err == "closed") and 0)
+   end
    local packet_size = struct.unpack("<!1i4", packet_size_d)
 
-   local error
-   self.payload= assert(self.socket:receive(packet_size))
+   self.payload = assert(self.socket:receive(packet_size))
 
    self.message = self.msgspec:instantiate()
    self.message:deserialize(self.payload)
@@ -105,8 +130,13 @@ function TcpRosConnection:receive()
    self.received = true
 end
 
+function TcpRosConnection:send(serialized_message)
+   assert(self.socket:send(serialized_message))
+end
+
 function TcpRosConnection:spin()
-   if self:data_available() then
+   local i = 1
+   while self:data_available() and i <= self.max_receives_per_spin do
       self:receive()
    end
 end

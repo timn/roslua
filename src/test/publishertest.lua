@@ -1,8 +1,8 @@
 
 ----------------------------------------------------------------------------
---  subscriber.lua - subscriber implementation test
+--  publisher.lua - publisher implementation test
 --
---  Created: Mon Jul 27 15:37:01 2010 (at Intel Research, Pittsburgh)
+--  Created: Tue Jul 28 10:40:33 2010 (at Intel Research, Pittsburgh)
 --  Copyright  2010  Tim Niemueller [www.niemueller.de]
 --
 ----------------------------------------------------------------------------
@@ -15,19 +15,19 @@ package.cpath = package.cpath .. ";/homes/timn/ros/local/roslua/src/roslua/?.lua
 require("roslua")
 
 roslua.init_node{master_uri=os.getenv("ROS_MASTER_URI"),
-		 node_name="/talkersub"}
+		 node_name="/talkerpub"}
 
---local topic = "/rosout"
---local msgtype = "roslib/Log"
 local topic = "/chatter"
 local msgtype = "std_msgs/String"
+local msgspec = roslua.get_msgspec(msgtype)
 
-local s = roslua.subscriber(topic, msgtype)
-s:add_listener(function (message)
-		  message:print()
-	       end)
+local p = roslua.publisher(topic, msgtype)
 
 while not roslua.quit do
    roslua.spin()
+
+   local m = msgspec:instantiate()
+   m.values.data = "hello world " .. os.date()
+   p:publish(m)
 end
 roslua.finalize()

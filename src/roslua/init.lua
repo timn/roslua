@@ -19,6 +19,7 @@ require("roslua.slave_proxy")
 require("roslua.msg_spec")
 require("roslua.message")
 require("roslua.subscriber")
+require("roslua.publisher")
 
 require("signal")
 
@@ -26,6 +27,7 @@ require("signal")
 MsgSpec = roslua.msg_spec.MsgSpec
 Message = roslua.message.RosMessage
 Subscriber = roslua.subscriber.Subscriber
+Publisher  = roslua.publisher.Publisher
 
 get_msgspec = roslua.msg_spec.get_msgspec
 
@@ -63,10 +65,13 @@ end
 
 function finalize()
    -- shutdown all connections
-   for _,subs in pairs(subscribers) do
-      for _,s in ipairs(subs) do
-	 s:finalize()
-      end
+   for topic,s in pairs(roslua.subscribers) do
+      s.subscriber:finalize()
+      roslua.unregister_subscriber(topic, s.type, s.subscriber)
+   end
+   for topic,p in pairs(roslua.publishers) do
+      p.publisher:finalize()
+      roslua.unregister_publisher(topic, p.type, p.publisher)
    end
 end
 
@@ -79,17 +84,15 @@ function spin()
    roslua.slave_api.spin()
 
    -- spin subscribers for receiving
-   local subs, s
-   for _,subs in pairs(roslua.subscribers) do
-      for _,s in ipairs(subs) do
-	 s:spin()
-      end
+   local s
+   for _,s in pairs(roslua.subscribers) do
+      s.subscriber:spin()
    end
-end
-
-function get_node_slave_proxy(node_name)
-   local uri = roslua.master:lookupNode(remote_node)
-   return get_slave_proxy(uri)
+   -- spin publishers for accepting
+   local p
+   for _,p in pairs(roslua.publishers) do
+      p.publisher:spin()
+   end
 end
 
 function get_slave_proxy(uri)
@@ -101,13 +104,60 @@ function get_slave_proxy(uri)
    return roslua.slave_proxies[uri]
 end
 
-function register_subscriber(topic, type, subscriber)
-   if roslua.subscribers[topic] then
-      assert(roslua.subscribers[topic].type == type,
-	     "Topic has already been registered with conflicting type " ..
-		"(" .. roslua.subscribers[topic].type .. " vs. " .. type .. ")")
-      table.insert(roslua.subscribers[topic], subscriber)
-   else
-      roslua.subscribers[topic] = { type=type, subscriber }
+function subscriber(topic, type)
+   if not roslua.subscribers[topic] then
+      local s = Subscriber:new(topic, type)
+      roslua.register_subscriber(topic, type, s) -- this sets the subscribers table entry
    end
+   return roslua.subscribers[topic].subscriber
+end
+
+function publisher(topic, type)
+   if not roslua.publishers[topic] then
+      local s = Publisher:new(topic, type)
+      roslua.register_publisher(topic, type, s) -- this sets the publishers table entry
+   end
+   return roslua.publishers[topic].publisher
+end
+
+function register_subscriber(topic, type, subscriber)
+   assert(not roslua.subscribers[topic], "Subscriber has already been registerd for "
+	  .. topic .. " (" .. type .. ")")
+
+   roslua.subscribers[topic] = { type=type, subscriber=subscriber }
+
+   local pubs  = roslua.master:registerSubscriber(topic, type)
+   subscriber:update_publishers(pubs)
+end
+
+function register_publisher(topic, type, publisher)
+   assert(not roslua.publishers[topic], "Publisher has already been registerd for "
+	  .. topic .. " (" .. type .. ")")
+
+   local subs  = roslua.master:registerPublisher(topic, type)
+   roslua.publishers[topic] = { type=type, publisher=publisher }
+end
+
+function unregister_subscriber(topic, type, subscriber)
+   assert(roslua.subscribers[topic], "Topic " .. topic .. " has not been subscribed")
+   assert(roslua.subscribers[topic].type == type, "Conflicting type for topic " .. topic
+	  .. " while unregistering subscriber (" .. roslua.subscribers[topic].type
+	  .. " vs. " .. type .. ")")
+   assert(roslua.subscribers[topic].subscriber == subscriber,
+	  "Different subscribers for topic " .. topic .. " on unregistering subscriber")
+
+   roslua.master:unregisterSubscriber(topic)
+   roslua.subscribers[topic] = nil
+end
+
+function unregister_publisher(topic, type, publisher)
+   assert(roslua.publishers[topic], "Topic " .. topic .. " is not published")
+   assert(roslua.publishers[topic].type == type, "Conflicting type for topic " .. topic
+	  .. " while unregistering publisher (" .. roslua.publishers[topic].type
+	  .. " vs. " .. type .. ")")
+   assert(roslua.publishers[topic].publisher == publisher,
+	  "Different publishers for topic " .. topic .. " on unregistering publisher")
+
+   roslua.master:unregisterPublisher(topic)
+   roslua.publishers[topic] = nil
 end

@@ -81,8 +81,7 @@ end
 function MasterProxy:getUri()
    local res = self:do_call("getUri")
 
-   -- That should be index 3, but master sends buggy response
-   return res[2]
+   return res[3]
 end
 
 function MasterProxy:lookupService(service)

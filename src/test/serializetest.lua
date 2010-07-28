@@ -32,8 +32,23 @@ m.values.header = hm
 m.values.level  = 2
 m.values.topics = {"/topic1", "/topic2", "/topic3"}
 
-local s = m:serialize()
+local s, format, arr = m:serialize()
 
+local function print_table_rec(t, indent)
+   local indent = indent or ""
+   for k,v in pairs(t) do
+      if type(v) == "table" then
+	 print(indent .. "Recursing into table " .. k)
+	 print_table_rec(v, indent .. "   ")
+      else
+	 print(indent .. k .. "=" .. tostring(v) .. " (" .. type(v) .. ")")
+      end
+   end
+end
+print("Format", format)
+print_table_rec(arr)
+
+print("Writing serialized string to serializetest.dat")
 local f = io.open("serializetest.dat", "w")
 f:write(s)
 f:close()

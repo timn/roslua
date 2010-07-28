@@ -14,7 +14,7 @@ module(..., package.seeall)
 require("roslua")
 require("roslua.tcpros")
 
-Subscriber = { }
+Subscriber = {}
 
 function Subscriber:new(topic, type)
    local o = {}
@@ -29,66 +29,113 @@ function Subscriber:new(topic, type)
 
    -- get message specification
    o.msgspec = roslua.get_msgspec(type)
-
-   -- register as subscriber, this will give us a list of existing publishers
-   -- and will get us notified if a publishers comes or goes
-   roslua.register_subscriber(topic, type, o)
-   o.publishers  = roslua.master:registerSubscriber(topic, type)
-   o.connections = {}
-
-   -- connect to all publishers
-   o:connect()
+   o.publishers = {}
 
    return o
 end
 
 function Subscriber:finalize()
-   local c
-   for n, c in pairs(self.connections) do
-      c:disconnect()
-      roslua.master:unregisterSubscriber(self.topic)
+   for uri, p in pairs(self.publishers) do
+      if p.connection then
+	 p.connection:close()
+	 p.connection = nil
+      end
    end
 end
 
 function Subscriber:add_listener(listener)
-   assert(listener.handle_message, "Handler does not have a handle message method")
-   assert(type(handler.handle_message) == "function", "Handle message method is not a function")
-   assert(not self.handlers[handler], "Handler already registered")
+   assert(type(listener) == "function" or
+         (type(listener) == "table" and listener.message_received),
+    "Handle message method is neither function nor class")
+   assert(not self.listeners[listener], "Handler already registered")
 
-   self.handlers[handler] = handler
+   self.listeners[listener] = listener
 end
 
-function Subscriber:remove_handler(handler)
-   self.handlers[handler] = nil
+function Subscriber:remove_listener(listener)
+   self.listeners[listeners] = nil
+end
+
+function Subscriber:dispatch(message)
+   for listener, _ in pairs(self.listeners) do
+      local t = type(listener)
+      if t == "table" then
+	 listener:message_received(message)
+      elseif t == "function" then
+	 listener(message)
+      end
+   end
+end
+
+function Subscriber:update_publishers(publishers)
+   self.connect_on_spin = false
+   local pub_rev = {}
+   for _, uri in ipairs(publishers) do
+      pub_rev[uri] = true
+      if not self.publishers[uri] then
+	 self.publishers[uri] = { uri = uri }
+	 self.connect_on_spin = true
+      end
+   end
+   local remove_pubs = {}
+   for uri, p in pairs(self.publishers) do
+      if not pub_rev[uri] then
+	 -- publisher dead, remove
+	 table.insert(remove_pubs, uri)
+      end
+   end
+   for _, uri in ipairs(remove_pubs) do
+      self.publishers[uri] = nil
+   end
 end
 
 function Subscriber:connect()
-   for _,p in ipairs(self.publishers) do
-      local slave = roslua.get_slave_proxy(p)
+   for uri, p in pairs(self.publishers) do
+      local slave = roslua.get_slave_proxy(uri)
 
-      if not self.connections[p] then
+      if not p.connection then
 	 local proto = slave:requestTopic(self.topic)
-	 assert(proto[1] == "TCPROS", "TCPROS not supported by remote")
+	 if proto then
+	    assert(proto[1] == "TCPROS", "TCPROS not supported by remote")
 
-	 local c = roslua.tcpros.TcpRosConnection:new()
-	 c:connect(proto[2], proto[3])
+	    local c = roslua.tcpros.TcpRosConnection:new()
+	    local ok, err = pcall(c.connect, c, proto[2], proto[3])
+	    if ok then
+	       c:send_header{callerid=roslua.node_name,
+			     topic=self.topic,
+			     type=self.type,
+			     md5sum=self.msgspec:md5()}
+	       c:receive_header()
 
-	 c:send_header{callerid=roslua.node_name,
-		       topic=self.topic,
-		       type=self.type,
-		       md5sum=self.msgspec:md5()}
-	 c:receive_header()
-
-	 self.connections[p] = c
+	       p.connection = c
+	    end
+	 end
       end
    end
 end
 
 function Subscriber:spin()
-   for _,c in pairs(self.connections) do
-      c:spin()
-      if c:data_received() then
-	 c.message:print()
+   if self.connect_on_spin then
+      self:connect()
+      self.connect_on_spin = false
+   end
+
+   for uri, p in pairs(self.publishers) do
+      if p.connection then
+	 local ok, err = pcall(p.connection.spin, p.connection)
+	 if not ok then
+	    if err == "closed" then
+	       -- remote closed the connection, we remove this publisher connection
+	       p.connection:close()
+	       p.connection = nil
+	       -- we do not try to reconnect, we rely on proper publisher updates
+	    else
+	       error(err)
+	    end
+	 elseif p.connection:data_received() then
+	    --p.connection.message:print()
+	    self:dispatch(p.connection.message)
+	 end
       end
    end
 end
