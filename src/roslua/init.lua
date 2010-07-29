@@ -126,15 +126,21 @@ function register_subscriber(topic, type, subscriber)
 
    roslua.subscribers[topic] = { type=type, subscriber=subscriber }
 
-   local pubs  = roslua.master:registerSubscriber(topic, type)
-   subscriber:update_publishers(pubs)
+   local ok, pubs_err = pcall(roslua.master.registerSubscriber, roslua.master, topic, type)
+   if not ok then
+      error("Cannot connect to ROS master: " .. pubs_err)
+   end
+   subscriber:update_publishers(pubs_err)
 end
 
 function register_publisher(topic, type, publisher)
    assert(not roslua.publishers[topic], "Publisher has already been registerd for "
 	  .. topic .. " (" .. type .. ")")
 
-   local subs  = roslua.master:registerPublisher(topic, type)
+   local ok, subs_err  = pcall(roslua.master.registerPublisher, roslua.master, topic, type)
+   if not ok then
+      error("Cannot connect to ROS master: " .. subs_err)
+   end
    roslua.publishers[topic] = { type=type, publisher=publisher }
 end
 
