@@ -13,6 +13,7 @@ module(..., package.seeall)
 
 require("md5")
 require("roslua.message")
+require("roslua.utils")
 
 BUILTIN_TYPES = { "int8","uint8","int16","uint16","int32","uint32",
 		  "int64","uint64","float32","float64","string","bool",
@@ -22,13 +23,11 @@ for _,v in ipairs(BUILTIN_TYPES) do
 end
 EXTENDED_TYPES = { time={"uint32", "uint32"}, duration={"int32", "int32"} }
 
-local rospack_path_cache = {}
-local msgdef_cache = {}
+local msgspec_cache = {}
 
 function base_type(type)
    return type:match("^([^%[]+)") or type
 end
-
 
 function is_array_type(type)
    return type:find("%[") ~= nil
@@ -47,46 +46,23 @@ function resolve_type(type, package)
    end
 end
 
-function init()
-   local rv = os.execute("rospack 2>/dev/null")
-   assert(rv == 0, "Cannot find rospack command, must be in PATH")
+function get_msgspec(msg_type)
+   roslua.utils.assert_rospack()
 
-   -- so common that we resolve it right away
-   get_msgspec("roslib/Header")
-end
-
-
-function find_rospack(package)
-   if not rospack_path_cache[package] then
-      local p = io.popen("rospack find " .. package)
-      local path = p:read("*a")
-      -- strip trailing newline
-      rospack_path_cache[package] = string.gsub(path, "^(.+)\n$", "%1")
-      p:close()
+   if not msgspec_cache[msg_type] then
+      msgspec_cache[msg_type] = MsgSpec:new{type=msg_type}
    end
 
-   assert(rospack_path_cache[package], "Package path could not be found")
-   return rospack_path_cache[package]
-end
-
-
-function get_msgspec(msg_type)
-
-   local spec = MsgSpec:new(msg_type)
-
-   msgdef_cache[msg_type] = spec
-   return spec
+   return msgspec_cache[msg_type]
 end
 
 
 MsgSpec = { md5sum = nil }
 
-function MsgSpec:new(msgtype, file)
-   local o = {}
+function MsgSpec:new(o)
    setmetatable(o, self)
    self.__index = self
 
-   o.type = msgtype
    assert(o.type, "Message type is missing")
 
    local slashpos = o.type:find("/")
@@ -97,22 +73,22 @@ function MsgSpec:new(msgtype, file)
       o.short_type = o.type:sub(slashpos + 1)
    end
 
-   o:load()
+   if o.specstr then
+      o:load_from_string(o.specstr)
+   else
+      o:load()
+   end
 
    return o
 end
 
 
-function MsgSpec:load()
-   local package_path = find_rospack(self.package)
-   self.file = package_path .. "/msg/" .. self.short_type .. ".msg"
-
-   local line
+function MsgSpec:load_from_iterator(iterator)
    self.fields = {}
    self.constants = {}
 
-   for line in io.lines(self.file) do
-      line = line:match("^([^#]*)") or "" -- strip comment
+   for line in iterator do
+      line = line:match("^([^#]*)") or ""   -- strip comment
       line = line:match("(.-)%s+$") or line -- strip trailing whitespace
 
       if line ~= "" then -- else comment or empty
@@ -136,20 +112,17 @@ function MsgSpec:load()
 end
 
 function MsgSpec:load_from_string(s)
-   local line
-   self.fields = {}
-
-   for line in string.gmatch("^(.+)\n") do
-      if not string.match(line, "^#.*$") then -- else comment
-	 local ftype, fname = string.match(line, "^(%w+) (%w+)$")
-	 self.fields[fname] = ftype
-	 table.insert(self.fields, {ftype, fname})
-      end
-   end
+   return self:load_from_iterator(s:gmatch("(.-)\n"))
 end
 
+function MsgSpec:load()
+   local package_path = roslua.utils.find_rospack(self.package)
+   self.file = package_path .. "/msg/" .. self.short_type .. ".msg"
 
-function MsgSpec:calc_md5()
+   return self:load_from_iterator(io.lines(self.file))
+end
+
+function MsgSpec:generate_hashtext()
    local s = ""
    for _, spec in ipairs(self.constants) do
       s = s .. string.format("%s %s=%s\n", spec[1], spec[2], spec[3])
@@ -165,7 +138,11 @@ function MsgSpec:calc_md5()
    end
    s = string.gsub(s, "^(.+)\n$", "%1") -- strip trailing newline
 
-   self.md5sum = md5.sumhexa(s)
+   return s
+end
+
+function MsgSpec:calc_md5()
+   self.md5sum = md5.sumhexa(self:generate_hashtext())
    return self.md5sum
 end
 
@@ -177,10 +154,14 @@ end
 
 function MsgSpec:print(indent)
    local indent = indent or ""
-   print(indent .. self.type)
+   print(indent .. "Message " .. self.type)
    print(indent .. "Fields:")
    for _,s in ipairs(self.fields) do
       print(indent .. "  " .. s[1] .. " " .. s[2])
+      if not is_builtin_type(s[1]) then
+	 local msgspec = get_msgspec(base_type(resolve_type(s[1], self.package)))
+	 msgspec:print(indent .. "    ")
+      end
    end
 
    print(indent .. "MD5: " .. self:md5())

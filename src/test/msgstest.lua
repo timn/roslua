@@ -1,6 +1,6 @@
 
 ----------------------------------------------------------------------------
---  talkertest.lua - Initial test of opening a connection
+--  msgstest.lua - Message specification parser test
 --
 --  Created: Mon Jul 26 15:48:49 2010 (at Intel Research, Pittsburgh)
 --  Copyright  2010  Tim Niemueller [www.niemueller.de]
@@ -13,8 +13,9 @@ package.path  = ";;/homes/timn/ros/local/roslua/src/?/init.lua;/homes/timn/ros/l
 package.cpath = ";;/homes/timn/ros/local/roslua/src/roslua/?.so;/usr/lib/lua/5.1/?.so"
 
 require("roslua")
+require("roslua.utils")
 
-print("std_msgs path: ", roslua.msg_spec.find_rospack("std_msgs"))
+print("std_msgs path: ", roslua.utils.find_rospack("std_msgs"))
 
 print()
 print("Message spec tests")

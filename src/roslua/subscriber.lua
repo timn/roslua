@@ -56,13 +56,15 @@ function Subscriber:remove_listener(listener)
    self.listeners[listeners] = nil
 end
 
-function Subscriber:dispatch(message)
-   for listener, _ in pairs(self.listeners) do
-      local t = type(listener)
-      if t == "table" then
-	 listener:message_received(message)
-      elseif t == "function" then
-	 listener(message)
+function Subscriber:dispatch(messages)
+   for _, m in ipairs(messages) do
+      for listener, _ in pairs(self.listeners) do
+	 local t = type(listener)
+	 if t == "table" then
+	    listener:message_received(m)
+	 elseif t == "function" then
+	    listener(m)
+	 end
       end
    end
 end
@@ -98,7 +100,7 @@ function Subscriber:connect()
 	 if proto then
 	    assert(proto[1] == "TCPROS", "TCPROS not supported by remote")
 
-	    local c = roslua.tcpros.TcpRosConnection:new()
+	    local c = roslua.tcpros.TcpRosPubSubConnection:new()
 	    local ok, err = pcall(c.connect, c, proto[2], proto[3])
 	    if ok then
 	       c:send_header{callerid=roslua.node_name,
@@ -133,8 +135,7 @@ function Subscriber:spin()
 	       error(err)
 	    end
 	 elseif p.connection:data_received() then
-	    --p.connection.message:print()
-	    self:dispatch(p.connection.message)
+	    self:dispatch(p.connection.messages)
 	 end
       end
    end

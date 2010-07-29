@@ -23,6 +23,7 @@ function RosMessage:new(spec)
 
    o.spec   = spec
    o.values = {}
+   o.value_array = {}
    assert(o.spec, "Message specification instance missing")
 
    return o
@@ -111,6 +112,8 @@ RosMessage.append_functions = {
 function RosMessage:deserialize(buffer, i)
    local i = i or 1
 
+   self.values = {}
+
    for _, f in ipairs(self.spec.fields) do
       assert(i <= #buffer, self.spec.type .. ": buffer too short for message type (" ..
 	     i .. " <= " .. #buffer .. ")")
@@ -168,9 +171,11 @@ function RosMessage:print(indent)
 end
 
 
-function RosMessage:generate_value_array()
+function RosMessage:generate_value_array(flat_array)
    local rv = {}
    local format = ""
+
+   if flat_array == nil then flat_array = true end
 
    for _, f in ipairs(self.spec.fields) do
 
@@ -192,7 +197,7 @@ function RosMessage:generate_value_array()
 	 elseif is_builtin_type then -- set default builtin value from table
 	    self.values[fname] = self.default_values[ftype]
 	 else -- generate new complex message with no values set to trigger defaults
-	    self.values[fname] =roslua.get_msgspec(ftype):instantiate()
+	    self.values[fname] = roslua.get_msgspec(ftype):instantiate()
 	 end
       end
 
@@ -229,16 +234,24 @@ function RosMessage:generate_value_array()
 	 for _,v in ipairs(self.values[fname]) do
 	    local f, va = v:generate_value_array()
 	    format = format .. f
-	    for _, j in ipairs(va) do
-	       table.insert(rv, j)
+	    if flat_array then
+	       for _, j in ipairs(va) do
+		  table.insert(rv, j)
+	       end
+	    else
+	       table.insert(rv, va)
 	    end
 	 end
 
       else -- complex type, but *not* an array
 	 local f, va = self.values[fname]:generate_value_array()
 	 format = format .. f
-	 for _, j in ipairs(va) do
-	    table.insert(rv, j)
+	 if flat_array then
+	    for _, j in ipairs(va) do
+	       table.insert(rv, j)
+	    end
+	 else
+	    table.insert(rv, va)
 	 end
       end
    end
@@ -262,7 +275,7 @@ function RosMessage:serialize()
       end
 
       -- generate format string
-      local format, arr = self:generate_value_array()
+      local format, arr = self:generate_value_array(true)
 
       format = "<!1" .. format
 
@@ -274,3 +287,19 @@ function RosMessage:serialize()
    end
 end
 
+
+function RosMessage:set_from_array(arr)
+   local i = 1
+   for _, f in ipairs(self.spec.fields) do
+      local ftype, fname = f.type, f.name
+      if roslua.msg_spec.is_builtin_type(ftype) then
+	 self.values[fname] = arr[i]
+      else
+	 local ms = roslua.get_msgspec(ftype)
+	 local m = ms:instantiate()
+	 m:set_from_array(arr[i])
+	 self.values[fname] = m
+      end
+      i = i + 1
+   end
+end

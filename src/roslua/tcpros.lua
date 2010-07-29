@@ -51,7 +51,7 @@ function TcpRosConnection:accept()
       if not c then
 	 break
       else
-	 table.insert(conns, TcpRosConnection:new(c))
+	 table.insert(conns, getmetatable(self):new(c))
       end
    end
    return conns
@@ -96,10 +96,6 @@ function TcpRosConnection:receive_header()
       i = i + field_size
    end
 
-   assert(self.header.type, "Opposite site did not set type")
-
-   self.msgspec = roslua.msg_spec.get_msgspec(self.header.type)
-
    return self.header
 end
 
@@ -107,12 +103,6 @@ function TcpRosConnection:data_available()
    local selres = socket.select({self.socket}, {}, 0)
 
    return selres[self.socket] ~= nil
-end
-
-function TcpRosConnection:data_received()
-   local rv = self.received
-   self.received = false
-   return rv
 end
 
 function TcpRosConnection:receive()
@@ -123,11 +113,13 @@ function TcpRosConnection:receive()
    local packet_size = struct.unpack("<!1i4", packet_size_d)
 
    self.payload = assert(self.socket:receive(packet_size))
-
-   self.message = self.msgspec:instantiate()
-   self.message:deserialize(self.payload)
-
    self.received = true
+end
+
+function TcpRosConnection:data_received()
+   local rv = self.received
+   self.received = false
+   return rv
 end
 
 function TcpRosConnection:send(serialized_message)
@@ -135,8 +127,66 @@ function TcpRosConnection:send(serialized_message)
 end
 
 function TcpRosConnection:spin()
+   self.messages = {}
    local i = 1
    while self:data_available() and i <= self.max_receives_per_spin do
       self:receive()
    end
+end
+
+
+--- @class TcpRosPubSubConnection
+-- Connection implementation for publishers and subscribers.
+TcpRosPubSubConnection = {}
+
+function TcpRosPubSubConnection:new(socket)
+   local o = TcpRosConnection:new(socket)
+
+   setmetatable(o, self)
+   setmetatable(self, TcpRosConnection)
+   self.__index = self
+
+   print("Pubsub ctor", tostring(o.receive))
+
+   return o
+end
+
+function TcpRosPubSubConnection:receive()
+   TcpRosConnection.receive(self)
+
+   local message = self.msgspec:instantiate()
+   message:deserialize(self.payload)
+   table.insert(self.messages, message)
+end
+
+function TcpRosPubSubConnection:receive_header()
+   TcpRosConnection.receive_header(self)
+
+   assert(self.header.type, "Opposite site did not set type")
+   self.msgspec = roslua.msg_spec.get_msgspec(self.header.type)
+
+   return self.header
+end
+
+
+--- @class TcpRosServiceProviderConnection
+-- Connection implementation for service providers
+TcpRosServiceProviderConnection = {}
+
+function TcpRosServiceProviderConnection:new(socket)
+   local o = TcpRosConnection:new(socket)
+
+   setmetatable(o, self)
+   setmetatable(self, TcpRosConnection)
+   self.__index = self
+
+   return o
+end
+
+function TcpRosServiceProviderConnection:receive()
+   TcpRosConnection.receive(self)
+
+   local message = self.srvspec.reqspec:instantiate()
+   message:deserialize(self.payload)
+   table.insert(self.messages, message)
 end

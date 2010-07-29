@@ -44,7 +44,7 @@ function Publisher:finalize()
 end
 
 function Publisher:start_server()
-   self.server = roslua.tcpros.TcpRosConnection:new()
+   self.server = roslua.tcpros.TcpRosPubSubConnection:new()
    self.server:bind()
    self.address, self.port = self.server:get_ip_port()
 end

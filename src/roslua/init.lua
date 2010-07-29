@@ -17,9 +17,11 @@ require("roslua.slave_api")
 require("roslua.slave_proxy")
 
 require("roslua.msg_spec")
+require("roslua.srv_spec")
 require("roslua.message")
 require("roslua.subscriber")
 require("roslua.publisher")
+require("roslua.service")
 
 require("signal")
 
@@ -28,8 +30,10 @@ MsgSpec = roslua.msg_spec.MsgSpec
 Message = roslua.message.RosMessage
 Subscriber = roslua.subscriber.Subscriber
 Publisher  = roslua.publisher.Publisher
+Service = roslua.service.Service
 
 get_msgspec = roslua.msg_spec.get_msgspec
+get_srvspec = roslua.srv_spec.get_srvspec
 
 quit = false
 
@@ -53,12 +57,10 @@ function init_node(args)
    roslua.slave_api.init()
    roslua.slave_uri = roslua.slave_api.slave_uri()
 
-   roslua.msg_spec.init()
-
-
    roslua.subscribers   = {}
    roslua.publishers    = {}
    roslua.slave_proxies = {}
+   roslua.services      = {}
 
    signal.signal(signal.SIGINT, roslua.exit)
 end
@@ -84,14 +86,16 @@ function spin()
    roslua.slave_api.spin()
 
    -- spin subscribers for receiving
-   local s
    for _,s in pairs(roslua.subscribers) do
       s.subscriber:spin()
    end
    -- spin publishers for accepting
-   local p
    for _,p in pairs(roslua.publishers) do
       p.publisher:spin()
+   end
+   -- spin service providers for accepting and processing
+   for _,s in pairs(roslua.services) do
+      s.provider:spin()
    end
 end
 
@@ -120,6 +124,15 @@ function publisher(topic, type)
    return roslua.publishers[topic].publisher
 end
 
+
+function service(service, type, handler)
+   assert(not roslua.services[service], "Service already provided")
+   local s = Service:new(service, type, handler)
+   roslua.register_service(service, type, s)
+
+   return roslua.services[service].provider
+end
+
 function register_subscriber(topic, type, subscriber)
    assert(not roslua.subscribers[topic], "Subscriber has already been registerd for "
 	  .. topic .. " (" .. type .. ")")
@@ -142,6 +155,16 @@ function register_publisher(topic, type, publisher)
       error("Cannot connect to ROS master: " .. subs_err)
    end
    roslua.publishers[topic] = { type=type, publisher=publisher }
+end
+
+function register_service(service, type, provider)
+   assert(not roslua.services[service], "Service already provided")
+
+   local ok = pcall(roslua.master.registerService, roslua.master, service, provider:uri())
+   if not ok then
+      error("Cannot connect to ROS master: " .. subs_err)
+   end
+   roslua.services[service] = { type=type, provider=provider }
 end
 
 function unregister_subscriber(topic, type, subscriber)
