@@ -23,6 +23,7 @@ function TcpRosConnection:new(socket)
    self.__index = self
 
    o.socket = socket
+   o.msg_stats = {total = 0, received = 0, sent = 0}
 
    return o
 end
@@ -121,12 +122,20 @@ function TcpRosConnection:receive()
 
    self.payload = assert(self.socket:receive(packet_size))
    self.received = true
+   self.msg_stats.received = self.msg_stats.received + 1
+   self.msg_stats.total    = self.msg_stats.total    + 1
 end
 
 function TcpRosConnection:data_received()
    local rv = self.received
    self.received = false
    return rv
+end
+
+function TcpRosConnection:get_stats()
+   local bytes_recv, bytes_sent, age = self.socket:getstats()
+   return bytes_recv, bytes_sent, age,
+          self.msg_stats.received, self.msg_stats.sent, self.msg_stats.total
 end
 
 function TcpRosConnection:send(message)
@@ -136,6 +145,8 @@ function TcpRosConnection:send(message)
       local s = message:serialize()
       assert(self.socket:send(s))
    end
+   self.msg_stats.sent  = self.msg_stats.sent  + 1
+   self.msg_stats.total = self.msg_stats.total + 1
 end
 
 function TcpRosConnection:spin()

@@ -90,46 +90,59 @@ function xmlrpc_exports.getBusStats(caller_id)
 
    local publish_stats   = {}
    local subscribe_stats = {}
-   local service_stats   = {0, 0, 0}
+   local service_stats   = {}
 
-   -- fill publish stats
-   --local test_pub = { 123, 1024, 3, true }
-   --local x_test_pub = xmlrpc.newTypedValue(test_pub, xmlrpc.newArray())
-   --table.insert(publish_stats, x_test_pub)
+   for topic, p in pairs(roslua.publishers) do
+      local stats = p.publisher:get_stats()
+      local conns = {}
+      for _, c in ipairs(stats[2]) do
+	 table.insert(conns, xmlrpc.newTypedValue(c, xmlrpc.newArray()))
+      end
+      local ct = {stats[1], conns}
+      table.insert(publish_stats, xmlrpc.newTypedValue(ct, xmlrpc.newArray()))
+   end
+
+   for topic, s in pairs(roslua.subscribers) do
+      print(topic)
+      local stats = s.subscriber:get_stats()
+      local conns = {}
+      for _, c in ipairs(stats[2]) do
+	 table.insert(conns, xmlrpc.newTypedValue(c, xmlrpc.newArray()))
+      end
+      local ct = {stats[1], conns}
+      table.insert(publish_stats, xmlrpc.newTypedValue(ct, xmlrpc.newArray()))
+   end
 
    local x_publish_stats   = xmlrpc.newTypedValue(publish_stats, xmlrpc.newArray())
    local x_subscribe_stats = xmlrpc.newTypedValue(subscribe_stats, xmlrpc.newArray())
-   local x_service_stats   = xmlrpc.newTypedValue(service_stats, xmlrpc.newArray("int"))
+   local x_service_stats   = xmlrpc.newTypedValue(service_stats, xmlrpc.newArray())
 
    local rv = {x_publish_stats, x_subscribe_stats, x_service_stats}
    local xrv = xmlrpc.newTypedValue(rv, xmlrpc.newArray("array"))
 
-   return roseply_encaps(ROS_CODE_SUCCESS, "", xrv)
+   return rosreply_encaps(ROS_CODE_SUCCESS, "", xrv)
 end
 
 
 function xmlrpc_exports.getBusInfo(caller_id)
    assert(caller_id, "Caller ID argument is missing")
 
-   local connid = 1
    local businfo = {}
    local topic, p, s
 
    for topic, s in pairs(roslua.subscribers) do
       for uri, p in pairs(s.subscriber.publishers) do
-	 local conn = {connid, uri, "i", "TCPROS", topic, (p.connection ~= nil)}
+	 local conn = {p.uri, uri, "i", "TCPROS", topic, (p.connection ~= nil)}
 	 local xconn = xmlrpc.newTypedValue(conn, xmlrpc.newArray())
 	 table.insert(businfo, xconn)
-	 connid = connid + 1
       end
    end
 
    for topic, p in pairs(roslua.publishers) do
       for _, s in pairs(p.publisher.subscribers) do
-	 local conn = {connid, "", "o", "TCPROS", topic, (s.connection ~= nil)}
+	 local conn = {s.uri, "", "o", "TCPROS", topic, (s.connection ~= nil)}
 	 local xconn = xmlrpc.newTypedValue(conn, xmlrpc.newArray())
 	 table.insert(businfo, xconn)
-	 connid = connid + 1
       end
    end
 
@@ -140,12 +153,14 @@ end
 function xmlrpc_exports.getMasterUri(caller_id)
    assert(caller_id, "Caller ID argument is missing")
 
-   return rosreply_encaps(ROS_CODE_SUCCESS, "", "uri")
+   return rosreply_encaps(ROS_CODE_SUCCESS, "", roslua.master_uri)
 end
 
 
 function xmlrpc_exports.shutdown(caller_id, msg)
    assert(caller_id, "Caller ID argument is missing")
+
+   roslua.quit = true
 
    return rosreply_encaps(ROS_CODE_SUCCESS, "", 0)
 end
@@ -162,9 +177,10 @@ function xmlrpc_exports.getSubscriptions(caller_id)
    assert(caller_id, "Caller ID argument is missing")
 
    local rv = {}
-   
-   --table.insert(rv, xmlrpc.newTypedValue({"/topic1", "type/1Topic"}, xmlrpc.newArray("string")))
-   --table.insert(rv, xmlrpc.newTypedValue({"/topic2", "type/2Topic"}, xmlrpc.newArray("string")))
+
+   for topic, s in pairs(roslua.subscribers) do
+      table.insert(rv, xmlrpc.newTypedValue({topic, s.type}, xmlrpc.newArray("string")))
+   end
 
    return rosreply_encaps(ROS_CODE_SUCCESS, "", xmlrpc.newTypedValue(rv, xmlrpc.newArray("array")))
 end
@@ -173,8 +189,9 @@ function xmlrpc_exports.getPublications(caller_id)
    assert(caller_id, "Caller ID argument is missing")
    local rv = {}
    
-   --table.insert(rv, xmlrpc.newTypedValue({"/topic1", "type/1Topic"}, xmlrpc.newArray("string")))
-   --table.insert(rv, xmlrpc.newTypedValue({"/topic2", "type/2Topic"}, xmlrpc.newArray("string")))
+   for topic, p in pairs(roslua.publishers) do
+      table.insert(rv, xmlrpc.newTypedValue({topic, p.type}, xmlrpc.newArray("string")))
+   end
 
    return rosreply_encaps(ROS_CODE_SUCCESS, "", xmlrpc.newTypedValue(rv, xmlrpc.newArray("array")))
 end
@@ -210,11 +227,6 @@ function xmlrpc_exports.requestTopic(caller_id, topic, protocols)
    if not roslua.publishers[topic] then
       return rosreply_encaps(ROS_CODE_ERROR, "Topic us not published on this node", 0)
    end
-
-   --for _, p in ipairs(roslua.publishers[topic]) do
-   --   local protodef = {"TCPROS", 1234}
-   --   local rp = xmlrpc.newTypedValue(protodef, xmlrpc.newArray())
-   --end
 
    for _,p in ipairs(protocols) do
       if p[1] == "TCPROS" then

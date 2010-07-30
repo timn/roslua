@@ -59,10 +59,20 @@ function Publisher:accept_connections()
 		    md5sum=self.msgspec:md5()}
       c:receive_header()
 
-      self.subscribers[c.header.callerid] = { uri = c.header.callerid, connection = c }
+      self.subscribers[c.header.callerid] = {uri=c.header.callerid, connection=c}
    end
 end
 
+
+function Publisher:get_stats()
+   local conns = {}
+   for callerid, s in pairs(self.subscribers) do
+      local bytes_rcvd, bytes_sent, age, msgs_rcvd, msgs_sent = s.connection:get_stats()
+      local stats = {callerid, bytes_sent, msgs_sent, true}
+      table.insert(conns, stats)
+   end
+   return {self.topic, conns}
+end
 
 function Publisher:publish(message)
    assert(message.spec.type == self.type, "Message of invalid type cannot be published "

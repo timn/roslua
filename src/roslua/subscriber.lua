@@ -91,6 +91,16 @@ function Subscriber:update_publishers(publishers)
    end
 end
 
+function Subscriber:get_stats()
+   local conns = {}
+   for uri, p in pairs(self.publishers) do
+      local bytes_rcvd, bytes_sent, age, msgs_rcvd, msgs_sent = p.connection:get_stats()
+      local stats = {uri, bytes_rcvd, msgs_rcvd, -1, true}
+      table.insert(conns, stats)
+   end
+   return {self.topic, conns}
+end
+
 function Subscriber:connect()
    for uri, p in pairs(self.publishers) do
       local slave = roslua.get_slave_proxy(uri)

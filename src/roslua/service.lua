@@ -36,6 +36,7 @@ function Service:new(service, srvtype, handler)
    o.srvspec = roslua.get_srvspec(srvtype)
 
    o.clients = {}
+   o.num_calls = 0
 
    -- connect to all publishers
    o:start_server()
@@ -99,6 +100,10 @@ function Service:uri()
 end
 
 
+function Service:get_stats()
+   return {}
+end
+
 function Service:dispatch(client)
    for _, m in ipairs(client.connection.messages) do
       local format, args = m:generate_value_array(false)
@@ -117,6 +122,8 @@ function Service:dispatch(client)
 	 client.connection:close()
 	 self.clients[client.uri] = nil
       end
+
+      self.num_calls = self.num_calls + 1
    end
 end
 
