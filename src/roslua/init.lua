@@ -23,6 +23,7 @@ require("roslua.subscriber")
 require("roslua.publisher")
 require("roslua.service")
 require("roslua.service_client")
+require("roslua.registry")
 
 require("signal")
 
@@ -36,6 +37,18 @@ ServiceClient = roslua.service_client.ServiceClient
 
 get_msgspec = roslua.msg_spec.get_msgspec
 get_srvspec = roslua.srv_spec.get_srvspec
+
+register_subscriber   = roslua.registry.register_subscriber
+register_publisher    = roslua.registry.register_publisher
+register_service      = roslua.registry.register_service
+unregister_subscriber = roslua.registry.unregister_subscriber
+unregister_publisher  = roslua.registry.unregister_publisher
+unregister_service    = roslua.registry.unregister_service
+
+subscribers   = roslua.registry.subscribers
+publishers    = roslua.registry.publishers
+services      = roslua.registry.services
+slave_proxies = {}
 
 quit = false
 
@@ -58,11 +71,6 @@ function init_node(args)
    roslua.parameter_server = roslua.param_proxy.ParamProxy:new(roslua.master_uri, node_name)
    roslua.slave_api.init()
    roslua.slave_uri = roslua.slave_api.slave_uri()
-
-   roslua.subscribers   = {}
-   roslua.publishers    = {}
-   roslua.slave_proxies = {}
-   roslua.services      = {}
 
    signal.signal(signal.SIGINT, roslua.exit)
 end
@@ -140,77 +148,6 @@ function service(service, type, handler)
 end
 
 function service_client(service, type, persistent)
-   local s = ServiceClient:new{service, type, persistent=persistent}
-   return s
-end
-
-function register_subscriber(topic, type, subscriber)
-   assert(not roslua.subscribers[topic], "Subscriber has already been registerd for "
-	  .. topic .. " (" .. type .. ")")
-
-   roslua.subscribers[topic] = { type=type, subscriber=subscriber }
-
-   local ok, pubs_err = pcall(roslua.master.registerSubscriber, roslua.master, topic, type)
-   if not ok then
-      error("Cannot connect to ROS master: " .. pubs_err)
-   end
-   subscriber:update_publishers(pubs_err)
-end
-
-function register_publisher(topic, type, publisher)
-   assert(not roslua.publishers[topic], "Publisher has already been registerd for "
-	  .. topic .. " (" .. type .. ")")
-
-   local ok, subs_err  = pcall(roslua.master.registerPublisher, roslua.master, topic, type)
-   if not ok then
-      error("Cannot connect to ROS master: " .. subs_err)
-   end
-   roslua.publishers[topic] = { type=type, publisher=publisher }
-end
-
-function register_service(service, type, provider)
-   assert(not roslua.services[service], "Service already provided")
-
-   local ok = pcall(roslua.master.registerService, roslua.master, service, provider:uri())
-   if not ok then
-      error("Cannot connect to ROS master: " .. subs_err)
-   end
-   roslua.services[service] = { type=type, provider=provider }
-end
-
-function unregister_subscriber(topic, type, subscriber)
-   assert(roslua.subscribers[topic], "Topic " .. topic .. " has not been subscribed")
-   assert(roslua.subscribers[topic].type == type, "Conflicting type for topic " .. topic
-	  .. " while unregistering subscriber (" .. roslua.subscribers[topic].type
-	  .. " vs. " .. type .. ")")
-   assert(roslua.subscribers[topic].subscriber == subscriber,
-	  "Different subscribers for topic " .. topic .. " on unregistering subscriber")
-
-   roslua.master:unregisterSubscriber(topic)
-   roslua.subscribers[topic] = nil
-end
-
-function unregister_publisher(topic, type, publisher)
-   assert(roslua.publishers[topic], "Topic " .. topic .. " is not published")
-   assert(roslua.publishers[topic].type == type, "Conflicting type for topic " .. topic
-	  .. " while unregistering publisher (" .. roslua.publishers[topic].type
-	  .. " vs. " .. type .. ")")
-   assert(roslua.publishers[topic].publisher == publisher,
-	  "Different publishers for topic " .. topic .. " on unregistering publisher")
-
-   roslua.master:unregisterPublisher(topic)
-   roslua.publishers[topic] = nil
-end
-
-function unregister_service(service, type, provider)
-   assert(roslua.services[service], "Service " .. service .. " is not provided")
-   assert(roslua.services[service].type == type, "Conflicting type for service " .. service
-	  .. " while unregistering provider (" .. roslua.services[service].type
-	  .. " vs. " .. type .. ")")
-   assert(roslua.services[service].provider == provider,
-	  "Different providers for service " .. service .. " on unregistering provider")
-
-   roslua.master:unregisterService(service, roslua.services[service].provider:uri())
-   roslua.services[service] = nil
+   return ServiceClient:new{service, type, persistent=persistent}
 end
 
