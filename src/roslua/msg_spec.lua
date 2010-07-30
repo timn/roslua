@@ -169,5 +169,5 @@ end
 
 
 function MsgSpec:instantiate()
-   return roslua.message.RosMessage:new(self)
+   return roslua.Message:new(self)
 end

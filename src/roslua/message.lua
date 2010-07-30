@@ -14,9 +14,9 @@ module(..., package.seeall)
 require("roslua")
 require("struct")
 
-RosMessage = { spec=nil }
+Message = { spec=nil }
 
-function RosMessage:new(spec)
+function Message:new(spec)
    local o = {}
    setmetatable(o, self)
    self.__index = self
@@ -38,7 +38,7 @@ local function srf(format)
 	  end
 end
 
-RosMessage.read_methods = {
+Message.read_methods = {
    int8     = srf("<!1i1"),   uint8   = srf("<!1I1"),
    int16    = srf("<!1i2"),   uint16  = srf("<!1I2"),
    int32    = srf("<!1i4"),   uint32  = srf("<!1I4"),
@@ -75,7 +75,7 @@ RosMessage.read_methods = {
 	      end
 }
 
-RosMessage.default_values = {
+Message.default_values = {
    int8     = 0,       uint8   = 0,
    int16    = 0,       uint16  = 0,
    int32    = 0,       uint32  = 0,
@@ -86,7 +86,7 @@ RosMessage.default_values = {
    string   = "",      array   = {}
 }
 
-RosMessage.builtin_formats = {
+Message.builtin_formats = {
    int8     = "i1",    uint8   = "I1",
    int16    = "i2",    uint16  = "I2",
    int32    = "i4",    uint32  = "I4",
@@ -97,7 +97,7 @@ RosMessage.builtin_formats = {
    string   = "i4c0",  array   = "I4"
 }
 
-RosMessage.append_functions = {
+Message.append_functions = {
    int8     = "i1",    uint8   = "I1",
    int16    = "i2",    uint16  = "I2",
    int32    = "i4",    uint32  = "I4",
@@ -109,7 +109,7 @@ RosMessage.append_functions = {
 }
 
 
-function RosMessage:deserialize(buffer, i)
+function Message:deserialize(buffer, i)
    local i = i or 1
 
    self.values = {}
@@ -151,7 +151,7 @@ function RosMessage:deserialize(buffer, i)
 end
 
 
-function RosMessage:print(indent)
+function Message:print(indent)
    local indent = indent or ""
 
    print(indent .. self.spec.type)
@@ -171,7 +171,7 @@ function RosMessage:print(indent)
 end
 
 
-function RosMessage:generate_value_array(flat_array)
+function Message:generate_value_array(flat_array)
    local rv = {}
    local format = ""
 
@@ -259,7 +259,7 @@ function RosMessage:generate_value_array(flat_array)
    return format, rv
 end
 
-function RosMessage:serialize()
+function Message:serialize()
    local rv = ""
 
    -- pack values into array in proper order
@@ -288,7 +288,7 @@ function RosMessage:serialize()
 end
 
 
-function RosMessage:set_from_array(arr)
+function Message:set_from_array(arr)
    local i = 1
    for _, f in ipairs(self.spec.fields) do
       local ftype, fname = f.type, f.name

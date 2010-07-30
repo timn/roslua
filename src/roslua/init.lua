@@ -27,7 +27,7 @@ require("signal")
 
 -- Imports from other libs to have a unified entry point
 MsgSpec = roslua.msg_spec.MsgSpec
-Message = roslua.message.RosMessage
+Message = roslua.message.Message
 Subscriber = roslua.subscriber.Subscriber
 Publisher  = roslua.publisher.Publisher
 Service = roslua.service.Service
