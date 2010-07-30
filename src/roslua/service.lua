@@ -13,6 +13,7 @@ module(..., package.seeall)
 
 require("roslua")
 require("struct")
+require("socket")
 
 Service = {}
 
@@ -54,7 +55,8 @@ function Service:start_server()
    self.server = roslua.tcpros.TcpRosServiceProviderConnection:new()
    self.server.srvspec = self.srvspec
    self.server:bind()
-   self.address, self.port = self.server:get_ip_port()
+   _, self.port = self.server:get_ip_port()
+   self.address = socket.dns.gethostname()
 end
 
 
@@ -97,8 +99,8 @@ function Service:uri()
 end
 
 
-function Service:dispatch(connection)
-   for _, m in ipairs(connection.messages) do
+function Service:dispatch(client)
+   for _, m in ipairs(client.connection.messages) do
       local format, args = m:generate_value_array(false)
       local t = type(self.handler)
       local rv
@@ -110,7 +112,11 @@ function Service:dispatch(connection)
 	 self:send_error("Could not handle request")
       end
 
-      self:send_response(connection, rv)
+      self:send_response(client.connection, rv)
+      if not client.connection.header.persistent == 1 then
+	 client.connection:close()
+	 self.clients[client.uri] = nil
+      end
    end
 end
 
@@ -129,7 +135,7 @@ function Service:spin()
 	    error(err)
 	 end
       elseif c.connection:data_received() then
-	 self:dispatch(c.connection)
+	 self:dispatch(c)
       end
    end
 end

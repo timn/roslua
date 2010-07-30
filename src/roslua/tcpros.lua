@@ -99,6 +99,13 @@ function TcpRosConnection:receive_header()
    return self.header
 end
 
+function TcpRosConnection:wait_for_message()
+   repeat
+      local selres = socket.select({self.socket}, {}, -1)
+   until selres[self.socket]
+   self:receive()
+end
+
 function TcpRosConnection:data_available()
    local selres = socket.select({self.socket}, {}, 0)
 
@@ -122,8 +129,13 @@ function TcpRosConnection:data_received()
    return rv
 end
 
-function TcpRosConnection:send(serialized_message)
-   assert(self.socket:send(serialized_message))
+function TcpRosConnection:send(message)
+   if type(message) == "string" then
+      assert(self.socket:send(message))
+   else
+      local s = message:serialize()
+      assert(self.socket:send(s))
+   end
 end
 
 function TcpRosConnection:spin()
@@ -145,8 +157,6 @@ function TcpRosPubSubConnection:new(socket)
    setmetatable(o, self)
    setmetatable(self, TcpRosConnection)
    self.__index = self
-
-   print("Pubsub ctor", tostring(o.receive))
 
    return o
 end
@@ -189,4 +199,38 @@ function TcpRosServiceProviderConnection:receive()
    local message = self.srvspec.reqspec:instantiate()
    message:deserialize(self.payload)
    table.insert(self.messages, message)
+end
+
+
+--- @class TcpRosServiceClientConnection
+-- Connection implementation for service clients
+TcpRosServiceClientConnection = {}
+
+function TcpRosServiceClientConnection:new(socket)
+   local o = TcpRosConnection:new(socket)
+
+   setmetatable(o, self)
+   setmetatable(self, TcpRosConnection)
+   self.__index = self
+
+   return o
+end
+
+function TcpRosServiceClientConnection:receive()
+   -- get OK-byte
+   local ok, ok_byte_d, err = pcall(self.socket.receive, self.socket, 1)
+   if not ok or ok_byte_d == nil then
+      error(err, (err == "closed") and 0)
+   end
+   local ok_byte = struct.unpack("<!1I1", ok_byte_d)
+
+   TcpRosConnection.receive(self)
+
+   if ok_byte then
+      local message = self.srvspec.respspec:instantiate()
+      message:deserialize(self.payload)
+      self.message = message
+   else
+      error(self.payload, 0)
+   end
 end

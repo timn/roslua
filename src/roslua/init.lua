@@ -22,6 +22,7 @@ require("roslua.message")
 require("roslua.subscriber")
 require("roslua.publisher")
 require("roslua.service")
+require("roslua.service_client")
 
 require("signal")
 
@@ -31,6 +32,7 @@ Message = roslua.message.Message
 Subscriber = roslua.subscriber.Subscriber
 Publisher  = roslua.publisher.Publisher
 Service = roslua.service.Service
+ServiceClient = roslua.service_client.ServiceClient
 
 get_msgspec = roslua.msg_spec.get_msgspec
 get_srvspec = roslua.srv_spec.get_srvspec
@@ -74,6 +76,10 @@ function finalize()
    for topic,p in pairs(roslua.publishers) do
       p.publisher:finalize()
       roslua.unregister_publisher(topic, p.type, p.publisher)
+   end
+   for service,s in pairs(roslua.services) do
+      s.provider:finalize()
+      roslua.unregister_service(service, s.type, s.provider)
    end
 end
 
@@ -133,6 +139,11 @@ function service(service, type, handler)
    return roslua.services[service].provider
 end
 
+function service_client(service, type, persistent)
+   local s = ServiceClient:new{service, type, persistent=persistent}
+   return s
+end
+
 function register_subscriber(topic, type, subscriber)
    assert(not roslua.subscribers[topic], "Subscriber has already been registerd for "
 	  .. topic .. " (" .. type .. ")")
@@ -190,3 +201,16 @@ function unregister_publisher(topic, type, publisher)
    roslua.master:unregisterPublisher(topic)
    roslua.publishers[topic] = nil
 end
+
+function unregister_service(service, type, provider)
+   assert(roslua.services[service], "Service " .. service .. " is not provided")
+   assert(roslua.services[service].type == type, "Conflicting type for service " .. service
+	  .. " while unregistering provider (" .. roslua.services[service].type
+	  .. " vs. " .. type .. ")")
+   assert(roslua.services[service].provider == provider,
+	  "Different providers for service " .. service .. " on unregistering provider")
+
+   roslua.master:unregisterService(service, roslua.services[service].provider:uri())
+   roslua.services[service] = nil
+end
+
