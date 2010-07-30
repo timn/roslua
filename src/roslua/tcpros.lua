@@ -9,7 +9,14 @@
 
 -- Licensed under BSD license
 
-module(..., package.seeall)
+--- TCPROS communication implementation.
+-- This module contains classes that implement the TCPROS communication
+-- protocol for topic as well as service communication. The user should not
+-- have to use these directly, rather they are encapsulated by the
+-- Publisher, Subscriber, Service, and ServiceClient classes.
+-- @copyright Tim Niemueller, Carnegie Mellon University, Intel Research Pittsburgh
+-- @release Released under BSD license
+module("roslua.tcpros", package.seeall)
 
 require("socket")
 require("struct")
@@ -17,6 +24,8 @@ require("roslua.msg_spec")
 
 TcpRosConnection = { payload = nil, received = false, max_receives_per_spin = 10 }
 
+--- Constructor.
+-- @param socket optionally a socket to use for communication
 function TcpRosConnection:new(socket)
    local o = {}
    setmetatable(o, self)
@@ -28,23 +37,35 @@ function TcpRosConnection:new(socket)
    return o
 end
 
-
+--- Connect to given host and port.
+-- @param host hostname or IP address of remote side
+-- @param port port of remote side
 function TcpRosConnection:connect(host, port)
    assert(not self.socket, "Socket has already been created")
    self.socket = assert(socket.connect(host, port))
 end
 
+--- Close connection.
 function TcpRosConnection:close()
    self.socket:close()
    self.socket = nil
 end
 
+--- Bind to random port as server.
+-- This will transform the socket into a server socket allowing to
+-- accept connections. The socket will bind to a ephemeral port assigned
+-- by the operating system. It will set the timeout of the socket to
+-- zero to avoid locks on accepting new connections.
+-- @see TcpRosConnection:get_ip_port()
+-- @see TcpRosConnection:accept()
 function TcpRosConnection:bind()
    assert(not self.socket, "Socket has already been created")
    self.socket = assert(socket.bind("*", 0))
    self.socket:settimeout(0)
 end
 
+--- Accept new connections.
+-- @return array of new connections, possibly empty
 function TcpRosConnection:accept()
    local conns = {}
    while true do
@@ -58,10 +79,14 @@ function TcpRosConnection:accept()
    return conns
 end
 
+--- Get IP and port of socket.
+-- @return two values, IP and port of socket
 function TcpRosConnection:get_ip_port()
    return self.socket:getsockname()
 end
 
+--- Send out header.
+-- @param header table with header fields to send
 function TcpRosConnection:send_header(fields)
    local s = ""
 
@@ -74,6 +99,10 @@ function TcpRosConnection:send_header(fields)
    self.socket:send(struct.pack("<!1i4", #s) .. s)
 end
 
+--- Receive header.
+-- This will read the header from the network connection and store
+-- it in the header field as well as return it.
+-- @return table of header fields
 function TcpRosConnection:receive_header()
    self.header = {}
 
@@ -100,6 +129,8 @@ function TcpRosConnection:receive_header()
    return self.header
 end
 
+--- Wait for a message to arrive.
+-- This message blocks until a message has been received.
 function TcpRosConnection:wait_for_message()
    repeat
       local selres = socket.select({self.socket}, {}, -1)
@@ -107,12 +138,16 @@ function TcpRosConnection:wait_for_message()
    self:receive()
 end
 
+--- Check if data is available.
+-- @return true if data can be read, false otherwise
 function TcpRosConnection:data_available()
    local selres = socket.select({self.socket}, {}, 0)
 
    return selres[self.socket] ~= nil
 end
 
+--- Receive data from the network.
+-- Upon return contains the new data in the payload field.
 function TcpRosConnection:receive()
    local ok, packet_size_d, err = pcall(self.socket.receive, self.socket, 4)
    if not ok or packet_size_d == nil then
@@ -126,18 +161,28 @@ function TcpRosConnection:receive()
    self.msg_stats.total    = self.msg_stats.total    + 1
 end
 
+--- Check if data has been received.
+-- @return true if data has been received, false otherwise. This method will
+-- return true only once if data has been received, consecutive calls will
+-- return false unless more data has been read with receive().
 function TcpRosConnection:data_received()
    local rv = self.received
    self.received = false
    return rv
 end
 
+--- Get connection statistics.
+-- @return six values: bytes received, bytes send, socket age in seconds,
+-- messages received, messages sent, total messages processed (sent + received)
 function TcpRosConnection:get_stats()
    local bytes_recv, bytes_sent, age = self.socket:getstats()
    return bytes_recv, bytes_sent, age,
           self.msg_stats.received, self.msg_stats.sent, self.msg_stats.total
 end
 
+--- Send message.
+-- @param message either a serialized message string or a Message
+-- class instance.
 function TcpRosConnection:send(message)
    if type(message) == "string" then
       assert(self.socket:send(message))
@@ -149,6 +194,10 @@ function TcpRosConnection:send(message)
    self.msg_stats.total = self.msg_stats.total + 1
 end
 
+--- Spin ros connection.
+-- This will read messages from the wire when they become available. The
+-- field max_receives_per_spin is used to determine the maximum number
+-- of messages read per spin.
 function TcpRosConnection:spin()
    self.messages = {}
    local i = 1
@@ -158,10 +207,10 @@ function TcpRosConnection:spin()
 end
 
 
---- @class TcpRosPubSubConnection
--- Connection implementation for publishers and subscribers.
 TcpRosPubSubConnection = {}
 
+--- Publisher/Subscriber connection constructor.
+-- @param socket optionally a socket to use for communication
 function TcpRosPubSubConnection:new(socket)
    local o = TcpRosConnection:new(socket)
 
@@ -172,6 +221,8 @@ function TcpRosPubSubConnection:new(socket)
    return o
 end
 
+--- Receive data from the network.
+-- Upon return contains the new messages in the messages array field.
 function TcpRosPubSubConnection:receive()
    TcpRosConnection.receive(self)
 
@@ -180,6 +231,10 @@ function TcpRosPubSubConnection:receive()
    table.insert(self.messages, message)
 end
 
+--- Receive header.
+-- This receives the header, asserts the type and loads the message
+-- specification into the msgspec field.
+-- @return table of headers
 function TcpRosPubSubConnection:receive_header()
    TcpRosConnection.receive_header(self)
 
@@ -190,10 +245,10 @@ function TcpRosPubSubConnection:receive_header()
 end
 
 
---- @class TcpRosServiceProviderConnection
--- Connection implementation for service providers
 TcpRosServiceProviderConnection = {}
 
+--- Service provider connection constructor.
+-- @param socket optionally a socket to use for communication
 function TcpRosServiceProviderConnection:new(socket)
    local o = TcpRosConnection:new(socket)
 
@@ -204,6 +259,8 @@ function TcpRosServiceProviderConnection:new(socket)
    return o
 end
 
+--- Receive data from the network.
+-- Upon return contains the new messages in the messages array field.
 function TcpRosServiceProviderConnection:receive()
    TcpRosConnection.receive(self)
 
@@ -213,10 +270,10 @@ function TcpRosServiceProviderConnection:receive()
 end
 
 
---- @class TcpRosServiceClientConnection
--- Connection implementation for service clients
 TcpRosServiceClientConnection = {}
 
+--- Service client connection constructor.
+-- @param socket optionally a socket to use for communication
 function TcpRosServiceClientConnection:new(socket)
    local o = TcpRosConnection:new(socket)
 
@@ -227,6 +284,8 @@ function TcpRosServiceClientConnection:new(socket)
    return o
 end
 
+--- Receive data from the network.
+-- Upon return contains the new message in the message field.
 function TcpRosServiceClientConnection:receive()
    -- get OK-byte
    local ok, ok_byte_d, err = pcall(self.socket.receive, self.socket, 1)

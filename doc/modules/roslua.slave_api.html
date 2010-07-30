@@ -1,0 +1,644 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../luadoc.css" type="text/css" />
+	<!--meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/-->
+</head>
+
+<body>
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+<div id="main">
+
+<div id="navigation">
+
+
+<h1>LuaDoc</h1>
+<ul>
+	
+	<li><a href="../index.html">Index</a></li>
+	
+</ul>
+
+
+<!-- Module list -->
+
+<h1>Modules</h1>
+<ul>
+
+	<li>
+		<a href="../modules/roslua.html">roslua</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.master_proxy.html">roslua.master_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.message.html">roslua.message</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.msg_spec.html">roslua.msg_spec</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.param_proxy.html">roslua.param_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.publisher.html">roslua.publisher</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.registry.html">roslua.registry</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.service.html">roslua.service</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.service_client.html">roslua.service_client</a>
+	</li>
+
+	<li><strong>roslua.slave_api</strong></li>
+	
+	<li>
+		<a href="../modules/roslua.slave_proxy.html">roslua.slave_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.srv_spec.html">roslua.srv_spec</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.subscriber.html">roslua.subscriber</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.tcpros.html">roslua.tcpros</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.utils.html">roslua.utils</a>
+	</li>
+
+</ul>
+
+
+
+<!-- File list -->
+
+
+
+
+
+
+</div><!-- id="navigation" -->
+
+<div id="content">
+
+<h1>Module <code>roslua.slave_api</code></h1>
+
+<p>Slave API implementation. This module provides the slave API to be called by other nodes. It uses the Xavante HTTP server with the WSAPI interface to process XML-RPC requests. The server is bound to a random port on startup.</p>
+
+
+<p>Copyright&copy; Tim Niemueller, Carnegie Mellon University, Intel Research Pittsburgh</p>
+
+
+<p><small><b>Release:</b> Released under BSD license</small></p>
+
+
+
+<h2>Functions</h2>
+<table class="function_list">
+
+	<tr>
+	<td class="name" nowrap><a href="#init">init</a>&nbsp;()</td>
+	<td class="summary">Init slave API.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#slave_uri">slave_uri</a>&nbsp;()</td>
+	<td class="summary">Get slave URI.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#spin">spin</a>&nbsp;()</td>
+	<td class="summary">Process requests.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#wsapi_handler">wsapi_handler</a>&nbsp;(wsapi_env)</td>
+	<td class="summary">XML-RPC WSAPI handler </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#xmlrpc_exports.getBusInfo">xmlrpc_exports.getBusInfo</a>&nbsp;(caller_id)</td>
+	<td class="summary">Get bus info.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#xmlrpc_exports.getBusStats">xmlrpc_exports.getBusStats</a>&nbsp;(caller_id)</td>
+	<td class="summary">Get bus stats.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#xmlrpc_exports.getMasterUri">xmlrpc_exports.getMasterUri</a>&nbsp;(caller_id)</td>
+	<td class="summary">Get master URI.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#xmlrpc_exports.getPid">xmlrpc_exports.getPid</a>&nbsp;(caller_id)</td>
+	<td class="summary">Get process ID of node.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#xmlrpc_exports.getPublications">xmlrpc_exports.getPublications</a>&nbsp;(caller_id)</td>
+	<td class="summary">Get publications of node.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#xmlrpc_exports.getSubscriptions">xmlrpc_exports.getSubscriptions</a>&nbsp;(caller_id)</td>
+	<td class="summary">Get subscriptions of node.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#xmlrpc_exports.paramUpdate">xmlrpc_exports.paramUpdate</a>&nbsp;(caller_id, param_key, param_value)</td>
+	<td class="summary">Parameter update notification.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#xmlrpc_exports.publisherUpdate">xmlrpc_exports.publisherUpdate</a>&nbsp;(caller_id, topic, publishers)</td>
+	<td class="summary">Publisher update.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#xmlrpc_exports.requestTopic">xmlrpc_exports.requestTopic</a>&nbsp;(caller_id, topic, protocols)</td>
+	<td class="summary">Topic connection request.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#xmlrpc_exports.shutdown">xmlrpc_exports.shutdown</a>&nbsp;(caller_id, msg)</td>
+	<td class="summary">Shutdown this node </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#xmlrpc_exports.system.listMethods">xmlrpc_exports.system.listMethods</a>&nbsp;()</td>
+	<td class="summary">List available methods.</td>
+	</tr>
+
+</table>
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+
+<h2><a name="functions"></a>Functions</h2>
+<dl class="function">
+
+
+
+<dt><a name="init"></a><strong>init</strong>&nbsp;()</dt>
+<dd>
+Init slave API. This configures and starts the HTTP server and XML-RPC API.
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="slave_uri"></a><strong>slave_uri</strong>&nbsp;()</dt>
+<dd>
+Get slave URI.
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+URI for this slave
+
+
+
+</dd>
+
+
+
+
+<dt><a name="spin"></a><strong>spin</strong>&nbsp;()</dt>
+<dd>
+Process requests. This processes XML-RPC API calls.
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="wsapi_handler"></a><strong>wsapi_handler</strong>&nbsp;(wsapi_env)</dt>
+<dd>
+XML-RPC WSAPI handler
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  wsapi_env: WSAPI environment
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="xmlrpc_exports.getBusInfo"></a><strong>xmlrpc_exports.getBusInfo</strong>&nbsp;(caller_id)</dt>
+<dd>
+Get bus info.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  caller_id: ID of the calling node
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+bus info
+
+
+
+</dd>
+
+
+
+
+<dt><a name="xmlrpc_exports.getBusStats"></a><strong>xmlrpc_exports.getBusStats</strong>&nbsp;(caller_id)</dt>
+<dd>
+Get bus stats.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  caller_id: ID of the calling node
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+bus stats
+
+
+
+</dd>
+
+
+
+
+<dt><a name="xmlrpc_exports.getMasterUri"></a><strong>xmlrpc_exports.getMasterUri</strong>&nbsp;(caller_id)</dt>
+<dd>
+Get master URI.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  caller_id: ID of the calling node
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+Master URI this node is connected to
+
+
+
+</dd>
+
+
+
+
+<dt><a name="xmlrpc_exports.getPid"></a><strong>xmlrpc_exports.getPid</strong>&nbsp;(caller_id)</dt>
+<dd>
+Get process ID of node.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  caller_id: ID of the calling node
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+PID
+
+
+
+</dd>
+
+
+
+
+<dt><a name="xmlrpc_exports.getPublications"></a><strong>xmlrpc_exports.getPublications</strong>&nbsp;(caller_id)</dt>
+<dd>
+Get publications of node.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  caller_id: ID of the calling node
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+list of publications
+
+
+
+</dd>
+
+
+
+
+<dt><a name="xmlrpc_exports.getSubscriptions"></a><strong>xmlrpc_exports.getSubscriptions</strong>&nbsp;(caller_id)</dt>
+<dd>
+Get subscriptions of node.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  caller_id: ID of the calling node
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+list of subscriptions
+
+
+
+</dd>
+
+
+
+
+<dt><a name="xmlrpc_exports.paramUpdate"></a><strong>xmlrpc_exports.paramUpdate</strong>&nbsp;(caller_id, param_key, param_value)</dt>
+<dd>
+Parameter update notification. Called by the parameter server if a subscribed value has changed.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  caller_id: ID of the calling node
+	</li>
+	
+	<li>
+	  param_key: key of parameter
+	</li>
+	
+	<li>
+	  param_value: value of parameter
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="xmlrpc_exports.publisherUpdate"></a><strong>xmlrpc_exports.publisherUpdate</strong>&nbsp;(caller_id, topic, publishers)</dt>
+<dd>
+Publisher update. Called when the list of available publishers for a topic changes.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  caller_id: ID of the calling node
+	</li>
+	
+	<li>
+	  topic: topic for which the list changed
+	</li>
+	
+	<li>
+	  publishers: array of currently available slave URIs
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="xmlrpc_exports.requestTopic"></a><strong>xmlrpc_exports.requestTopic</strong>&nbsp;(caller_id, topic, protocols)</dt>
+<dd>
+Topic connection request.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  caller_id: ID of the calling node
+	</li>
+	
+	<li>
+	  topic: requested topic
+	</li>
+	
+	<li>
+	  protocols: list of supported protocols
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+TCPROS connection configuration if topic is published
+
+
+
+</dd>
+
+
+
+
+<dt><a name="xmlrpc_exports.shutdown"></a><strong>xmlrpc_exports.shutdown</strong>&nbsp;(caller_id, msg)</dt>
+<dd>
+Shutdown this node
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  caller_id: ID of the calling node
+	</li>
+	
+	<li>
+	  msg: shutdown message
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+bus stats
+
+
+
+</dd>
+
+
+
+
+<dt><a name="xmlrpc_exports.system.listMethods"></a><strong>xmlrpc_exports.system.listMethods</strong>&nbsp;()</dt>
+<dd>
+List available methods.
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+list of available methods
+
+
+
+</dd>
+
+
+</dl>
+
+
+
+
+
+
+</div> <!-- id="content" -->
+
+</div> <!-- id="main" -->
+
+<div id="about">
+	<p><a href="http://validator.w3.org/check?uri=referer"><img src="http://www.w3.org/Icons/valid-xhtml10" alt="Valid XHTML 1.0!" height="31" width="88" /></a></p>
+</div> <!-- id="about" -->
+
+</div> <!-- id="container" -->	
+</body>
+</html>

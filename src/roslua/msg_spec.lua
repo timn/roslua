@@ -9,7 +9,20 @@
 
 -- Licensed under BSD license
 
-module(..., package.seeall)
+--- Message specification.
+-- This module contains the MsgSpec class to read and represent ROS message
+-- specification (YAML files). Message specifications should be obtained by
+-- using the <code>get_msgspec()</code> function, which is aliased for
+-- convenience as <code>roslua.get_msgspec()</code>.
+-- <br /><br />
+-- The message files are read on the fly, no offline code generation is
+-- necessary. This avoids the need to write yet another code generator. After
+-- reading the table field <code>fields</code> contains key value pairs, where
+-- the keys are the names of the data fields and the value is the type of the
+-- data field.
+-- @copyright Tim Niemueller, Carnegie Mellon University, Intel Research Pittsburgh
+-- @release Released under BSD license
+module("roslua.msg_spec", package.seeall)
 
 require("md5")
 require("roslua.message")
@@ -25,19 +38,34 @@ EXTENDED_TYPES = { time={"uint32", "uint32"}, duration={"int32", "int32"} }
 
 local msgspec_cache = {}
 
+--- Get the base version of type, i.e. the non-array type.
+-- @param type type to get base type for
+-- @return base type, for array types returns the non-array type, for non-array
+-- type returns the given value.
 function base_type(type)
    return type:match("^([^%[]+)") or type
 end
 
+--- Check if type is an array type.
+-- @param type type to check
+-- @return true if given type is an array type, false otherwise
 function is_array_type(type)
    return type:find("%[") ~= nil
 end
 
+--- Check if given type is a built-in type.
+-- @param type type to check
+-- @return true if type is a built-in type, false otherwise
 function is_builtin_type(type)
    local t = base_type(type)
    return BUILTIN_TYPES[t] ~= nil or  EXTENDED_TYPES[t] ~= nil
 end
 
+--- Resolve the given type.
+-- @param type to resolve
+-- @param package to which the type should be resolve relatively
+-- @return the given value if it is either a base type or contains a slash,
+-- otherwise returns package/type.
 function resolve_type(type, package)
    if is_builtin_type(type) or type:find("/") then
       return type
@@ -46,6 +74,10 @@ function resolve_type(type, package)
    end
 end
 
+--- Get message specification.
+-- It is recommended to use the aliased version <code>roslua.get_msgspec()</code>.
+-- @param msg_type message type (e.g. std_msgs/String). The name must include
+-- the package.
 function get_msgspec(msg_type)
    roslua.utils.assert_rospack()
 
@@ -59,6 +91,12 @@ end
 
 MsgSpec = { md5sum = nil }
 
+
+--- Contstructor.
+-- @param o Object initializer, must contain a field type with the string
+-- representation of the type name. Optionally can contain a specstr field,
+-- in which case the string will be parsed as message specification and no
+-- attempt will be made to read the message specification file.
 function MsgSpec:new(o)
    setmetatable(o, self)
    self.__index = self
@@ -83,6 +121,8 @@ function MsgSpec:new(o)
 end
 
 
+-- (internal) load from iterator
+-- @param iterator iterator that returns one line of the specification at a time
 function MsgSpec:load_from_iterator(iterator)
    self.fields = {}
    self.constants = {}
@@ -111,10 +151,15 @@ function MsgSpec:load_from_iterator(iterator)
    end
 end
 
+--- Load specification from string.
+-- @param s string containing the message specification
 function MsgSpec:load_from_string(s)
    return self:load_from_iterator(s:gmatch("(.-)\n"))
 end
 
+--- Load message specification from file.
+-- Will search for the appropriate message specification file (using rospack)
+-- and will then read and parse the file.
 function MsgSpec:load()
    local package_path = roslua.utils.find_rospack(self.package)
    self.file = package_path .. "/msg/" .. self.short_type .. ".msg"
@@ -122,6 +167,8 @@ function MsgSpec:load()
    return self:load_from_iterator(io.lines(self.file))
 end
 
+-- (internal) create string representation appropriate to generate the hash
+-- @return string representation
 function MsgSpec:generate_hashtext()
    local s = ""
    for _, spec in ipairs(self.constants) do
@@ -141,17 +188,27 @@ function MsgSpec:generate_hashtext()
    return s
 end
 
+-- (internal) Calculate MD5 sum.
+-- Generates the MD5 sum for this message type.
+-- @return MD5 sum as text
 function MsgSpec:calc_md5()
    self.md5sum = md5.sumhexa(self:generate_hashtext())
    return self.md5sum
 end
 
 
+--- Get MD5 sum of type specification.
+-- This will create a text representation of the message specification and
+-- generate the MD5 sum for it. The value is cached so concurrent calls will
+-- cause the cached value to be returned
+-- @return MD5 sum of message specification
 function MsgSpec:md5()
    return self.md5sum or self:calc_md5()
 end
 
 
+--- Print specification.
+-- @param indent string (normally spaces) to put before every line of output
 function MsgSpec:print(indent)
    local indent = indent or ""
    print(indent .. "Message " .. self.type)
@@ -168,6 +225,9 @@ function MsgSpec:print(indent)
 end
 
 
+--- Instantiate this message.
+-- @return a Message instance of the specified message type.
+-- @see roslua.message
 function MsgSpec:instantiate()
    return roslua.Message:new(self)
 end

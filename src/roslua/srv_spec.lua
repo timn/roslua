@@ -9,7 +9,20 @@
 
 -- Licensed under BSD license
 
-module(..., package.seeall)
+--- Service specification.
+-- This module contains the SrvSpec class to read and represent ROS service
+-- specification (YAML files). Service specifications should be obtained by
+-- using the <code>get_srvspec()</code> function, which is aliased for
+-- convenience as <code>roslua.get_srvspec()</code>.
+-- <br /><br />
+-- The service files are read on the fly, no offline code generation is
+-- necessary. This avoids the need to write yet another code generator. After
+-- reading the service specifications contains two fields, the reqspec field
+-- contains the request message specification, the respspec field contains the
+-- response message specification.
+-- @copyright Tim Niemueller, Carnegie Mellon University, Intel Research Pittsburgh
+-- @release Released under BSD license
+module("roslua.srv_spec", package.seeall)
 
 require("roslua.msg_spec")
 require("md5")
@@ -18,6 +31,10 @@ local MsgSpec = roslua.msg_spec.MsgSpec
 
 local srvspec_cache = {}
 
+--- Get service specification.
+-- It is recommended to use the aliased version <code>roslua.get_srvspec()</code>.
+-- @param srv_type service type (e.g. std_msgs/String). The name must include
+-- the package.
 function get_srvspec(srv_type)
    roslua.utils.assert_rospack()
 
@@ -31,6 +48,9 @@ end
 
 SrvSpec = { request = nil, response = nil }
 
+--- Constructor.
+-- @param o Object initializer, must contain a field type with the string
+-- representation of the type name.
 function SrvSpec:new(o)
    setmetatable(o, self)
    self.__index = self
@@ -51,6 +71,8 @@ function SrvSpec:new(o)
    return o
 end
 
+-- (internal) load from iterator
+-- @param iterator iterator that returns one line of the specification at a time
 function SrvSpec:load_from_iterator(iterator)
    self.fields = {}
    self.constants = {}
@@ -77,10 +99,15 @@ function SrvSpec:load_from_iterator(iterator)
 			       specstr = response}
 end
 
+--- Load specification from string.
+-- @param s string containing the service specification
 function SrvSpec:load_from_string(s)
    return self:load_from_iterator(s:gmatch("(.-)\n"))
 end
 
+--- Load service specification from file.
+-- Will search for the appropriate service specification file (using rospack)
+-- and will then read and parse the file.
 function SrvSpec:load()
    local package_path = roslua.utils.find_rospack(self.package)
    self.file = package_path .. "/srv/" .. self.short_type .. ".srv"
@@ -88,6 +115,9 @@ function SrvSpec:load()
    return self:load_from_iterator(io.lines(self.file))
 end
 
+-- (internal) Calculate MD5 sum.
+-- Generates the MD5 sum for this message type.
+-- @return MD5 sum as text
 function SrvSpec:calc_md5()
    local s =
       self.reqspec:generate_hashtext() .. self.respspec:generate_hashtext()
@@ -96,10 +126,17 @@ function SrvSpec:calc_md5()
    return self.md5sum
 end
 
+--- Get MD5 sum of type specification.
+-- This will create a text representation of the service specification and
+-- generate the MD5 sum for it. The value is cached so concurrent calls will
+-- cause the cached value to be returned
+-- @return MD5 sum of message specification
 function SrvSpec:md5()
    return self.md5sum or self:calc_md5()
 end
 
+--- Print specification.
+-- @param indent string (normally spaces) to put before every line of output
 function SrvSpec:print()
    print("Service " .. self.type)
    print("MD5: " .. self:md5())

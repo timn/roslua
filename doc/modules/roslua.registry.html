@@ -1,0 +1,453 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../luadoc.css" type="text/css" />
+	<!--meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/-->
+</head>
+
+<body>
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+<div id="main">
+
+<div id="navigation">
+
+
+<h1>LuaDoc</h1>
+<ul>
+	
+	<li><a href="../index.html">Index</a></li>
+	
+</ul>
+
+
+<!-- Module list -->
+
+<h1>Modules</h1>
+<ul>
+
+	<li>
+		<a href="../modules/roslua.html">roslua</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.master_proxy.html">roslua.master_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.message.html">roslua.message</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.msg_spec.html">roslua.msg_spec</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.param_proxy.html">roslua.param_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.publisher.html">roslua.publisher</a>
+	</li>
+
+	<li><strong>roslua.registry</strong></li>
+	
+	<li>
+		<a href="../modules/roslua.service.html">roslua.service</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.service_client.html">roslua.service_client</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.slave_api.html">roslua.slave_api</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.slave_proxy.html">roslua.slave_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.srv_spec.html">roslua.srv_spec</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.subscriber.html">roslua.subscriber</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.tcpros.html">roslua.tcpros</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.utils.html">roslua.utils</a>
+	</li>
+
+</ul>
+
+
+
+<!-- File list -->
+
+
+
+
+
+
+</div><!-- id="navigation" -->
+
+<div id="content">
+
+<h1>Module <code>roslua.registry</code></h1>
+
+<p>Registry housekeeping. This module contains functions used for housekeeping of subscriptions, publishers, and services. They should not be used directly.</p>
+
+
+<p>Copyright&copy; Tim Niemueller, Carnegie Mellon University, Intel Research Pittsburgh</p>
+
+
+<p><small><b>Release:</b> Released under BSD license</small></p>
+
+
+
+<h2>Functions</h2>
+<table class="function_list">
+
+	<tr>
+	<td class="name" nowrap><a href="#register_publisher">register_publisher</a>&nbsp;(topic, type, publisher)</td>
+	<td class="summary">Register publisher.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#register_service">register_service</a>&nbsp;(service, type, provider, topic)</td>
+	<td class="summary">Register service provider.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#register_subscriber">register_subscriber</a>&nbsp;(topic, type, subscriber)</td>
+	<td class="summary">Register subscriber.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#unregister_publisher">unregister_publisher</a>&nbsp;(topic, type, publisher)</td>
+	<td class="summary">Unregister publisher.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#unregister_service">unregister_service</a>&nbsp;(service, type, provider, topic)</td>
+	<td class="summary">Unregister service provider.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#unregister_subscriber">unregister_subscriber</a>&nbsp;(topic, type, subscriber)</td>
+	<td class="summary">Unregister subscriber.</td>
+	</tr>
+
+</table>
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+
+<h2><a name="functions"></a>Functions</h2>
+<dl class="function">
+
+
+
+<dt><a name="register_publisher"></a><strong>register_publisher</strong>&nbsp;(topic, type, publisher)</dt>
+<dd>
+Register publisher. As a side effect registers the publisher with the master.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  topic: topic to register publisher for
+	</li>
+	
+	<li>
+	  type: type of topic
+	</li>
+	
+	<li>
+	  publisher: Publisher instance to register
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+<h3>See also:</h3>
+<ul>
+	
+	<li><a href="">
+		Publisher
+	</a>
+	
+</ul>
+
+</dd>
+
+
+
+
+<dt><a name="register_service"></a><strong>register_service</strong>&nbsp;(service, type, provider, topic)</dt>
+<dd>
+Register service provider. As a side effect registers the service provider with the master.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  service: 
+	</li>
+	
+	<li>
+	  type: type of topic
+	</li>
+	
+	<li>
+	  provider: Service instance to register
+	</li>
+	
+	<li>
+	  topic: topic to register service provider for
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+<h3>See also:</h3>
+<ul>
+	
+	<li><a href="">
+		Service
+	</a>
+	
+</ul>
+
+</dd>
+
+
+
+
+<dt><a name="register_subscriber"></a><strong>register_subscriber</strong>&nbsp;(topic, type, subscriber)</dt>
+<dd>
+Register subscriber. As a side effect registers the subscriber with the master.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  topic: topic to register subscriber for
+	</li>
+	
+	<li>
+	  type: type of topic
+	</li>
+	
+	<li>
+	  subscriber: Subscriber instance to register
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+<h3>See also:</h3>
+<ul>
+	
+	<li><a href="">
+		Subscriber
+	</a>
+	
+</ul>
+
+</dd>
+
+
+
+
+<dt><a name="unregister_publisher"></a><strong>unregister_publisher</strong>&nbsp;(topic, type, publisher)</dt>
+<dd>
+Unregister publisher. As a side effect unregisters the publisher with the master.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  topic: topic to unregister publisher for
+	</li>
+	
+	<li>
+	  type: type of topic
+	</li>
+	
+	<li>
+	  publisher: Publisher instance to unregister
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+<h3>See also:</h3>
+<ul>
+	
+	<li><a href="">
+		Publisher
+	</a>
+	
+</ul>
+
+</dd>
+
+
+
+
+<dt><a name="unregister_service"></a><strong>unregister_service</strong>&nbsp;(service, type, provider, topic)</dt>
+<dd>
+Unregister service provider. As a side effect unregisters the service provider with the master.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  service: 
+	</li>
+	
+	<li>
+	  type: type of topic
+	</li>
+	
+	<li>
+	  provider: Service instance to unregister
+	</li>
+	
+	<li>
+	  topic: topic to unregister service provider for
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+<h3>See also:</h3>
+<ul>
+	
+	<li><a href="">
+		Service
+	</a>
+	
+</ul>
+
+</dd>
+
+
+
+
+<dt><a name="unregister_subscriber"></a><strong>unregister_subscriber</strong>&nbsp;(topic, type, subscriber)</dt>
+<dd>
+Unregister subscriber. As a side effect unregisters the subscriber with the master.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  topic: topic to register subscriber for
+	</li>
+	
+	<li>
+	  type: type of topic
+	</li>
+	
+	<li>
+	  subscriber: Subscriber instance to unregister
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+<h3>See also:</h3>
+<ul>
+	
+	<li><a href="">
+		Subscriber
+	</a>
+	
+</ul>
+
+</dd>
+
+
+</dl>
+
+
+
+
+
+
+</div> <!-- id="content" -->
+
+</div> <!-- id="main" -->
+
+<div id="about">
+	<p><a href="http://validator.w3.org/check?uri=referer"><img src="http://www.w3.org/Icons/valid-xhtml10" alt="Valid XHTML 1.0!" height="31" width="88" /></a></p>
+</div> <!-- id="about" -->
+
+</div> <!-- id="container" -->	
+</body>
+</html>

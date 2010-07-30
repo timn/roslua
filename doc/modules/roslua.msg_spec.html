@@ -1,0 +1,502 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../luadoc.css" type="text/css" />
+	<!--meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/-->
+</head>
+
+<body>
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+<div id="main">
+
+<div id="navigation">
+
+
+<h1>LuaDoc</h1>
+<ul>
+	
+	<li><a href="../index.html">Index</a></li>
+	
+</ul>
+
+
+<!-- Module list -->
+
+<h1>Modules</h1>
+<ul>
+
+	<li>
+		<a href="../modules/roslua.html">roslua</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.master_proxy.html">roslua.master_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.message.html">roslua.message</a>
+	</li>
+
+	<li><strong>roslua.msg_spec</strong></li>
+	
+	<li>
+		<a href="../modules/roslua.param_proxy.html">roslua.param_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.publisher.html">roslua.publisher</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.registry.html">roslua.registry</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.service.html">roslua.service</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.service_client.html">roslua.service_client</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.slave_api.html">roslua.slave_api</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.slave_proxy.html">roslua.slave_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.srv_spec.html">roslua.srv_spec</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.subscriber.html">roslua.subscriber</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.tcpros.html">roslua.tcpros</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.utils.html">roslua.utils</a>
+	</li>
+
+</ul>
+
+
+
+<!-- File list -->
+
+
+
+
+
+
+</div><!-- id="navigation" -->
+
+<div id="content">
+
+<h1>Module <code>roslua.msg_spec</code></h1>
+
+<p>Message specification. This module contains the MsgSpec class to read and represent ROS message specification (YAML files). Message specifications should be obtained by using the <code>get_msgspec()</code> function, which is aliased for convenience as <code>roslua.get_msgspec()</code>. <br /><br /> The message files are read on the fly, no offline code generation is necessary. This avoids the need to write yet another code generator. After reading the table field <code>fields</code> contains key value pairs, where the keys are the names of the data fields and the value is the type of the data field.</p>
+
+
+<p>Copyright&copy; Tim Niemueller, Carnegie Mellon University, Intel Research Pittsburgh</p>
+
+
+<p><small><b>Release:</b> Released under BSD license</small></p>
+
+
+
+<h2>Functions</h2>
+<table class="function_list">
+
+	<tr>
+	<td class="name" nowrap><a href="#MsgSpec:instantiate">MsgSpec:instantiate</a>&nbsp;()</td>
+	<td class="summary">Instantiate this message.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#MsgSpec:load">MsgSpec:load</a>&nbsp;()</td>
+	<td class="summary">Load message specification from file.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#MsgSpec:load_from_string">MsgSpec:load_from_string</a>&nbsp;(s)</td>
+	<td class="summary">Load specification from string.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#MsgSpec:md5">MsgSpec:md5</a>&nbsp;()</td>
+	<td class="summary">Get MD5 sum of type specification.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#MsgSpec:new">MsgSpec:new</a>&nbsp;(o)</td>
+	<td class="summary">Contstructor.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#MsgSpec:print">MsgSpec:print</a>&nbsp;(indent)</td>
+	<td class="summary">Print specification.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#base_type">base_type</a>&nbsp;(type)</td>
+	<td class="summary">Get the base version of type, i.e.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#get_msgspec">get_msgspec</a>&nbsp;(msg_type)</td>
+	<td class="summary">Get message specification.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#is_array_type">is_array_type</a>&nbsp;(type)</td>
+	<td class="summary">Check if type is an array type.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#is_builtin_type">is_builtin_type</a>&nbsp;(type)</td>
+	<td class="summary">Check if given type is a built-in type.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#resolve_type">resolve_type</a>&nbsp;(type, package)</td>
+	<td class="summary">Resolve the given type.</td>
+	</tr>
+
+</table>
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+
+<h2><a name="functions"></a>Functions</h2>
+<dl class="function">
+
+
+
+<dt><a name="MsgSpec:instantiate"></a><strong>MsgSpec:instantiate</strong>&nbsp;()</dt>
+<dd>
+Instantiate this message.
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+a Message instance of the specified message type.
+
+
+
+<h3>See also:</h3>
+<ul>
+	
+	<li><a href="../modules/roslua.message.html">
+		roslua.message
+	</a>
+	
+</ul>
+
+</dd>
+
+
+
+
+<dt><a name="MsgSpec:load"></a><strong>MsgSpec:load</strong>&nbsp;()</dt>
+<dd>
+Load message specification from file. Will search for the appropriate message specification file (using rospack) and will then read and parse the file.
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="MsgSpec:load_from_string"></a><strong>MsgSpec:load_from_string</strong>&nbsp;(s)</dt>
+<dd>
+Load specification from string.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  s: string containing the message specification
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="MsgSpec:md5"></a><strong>MsgSpec:md5</strong>&nbsp;()</dt>
+<dd>
+Get MD5 sum of type specification. This will create a text representation of the message specification and generate the MD5 sum for it. The value is cached so concurrent calls will cause the cached value to be returned
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+MD5 sum of message specification
+
+
+
+</dd>
+
+
+
+
+<dt><a name="MsgSpec:new"></a><strong>MsgSpec:new</strong>&nbsp;(o)</dt>
+<dd>
+Contstructor.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  o: Object initializer, must contain a field type with the string representation of the type name. Optionally can contain a specstr field, in which case the string will be parsed as message specification and no attempt will be made to read the message specification file.
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="MsgSpec:print"></a><strong>MsgSpec:print</strong>&nbsp;(indent)</dt>
+<dd>
+Print specification.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  indent: string (normally spaces) to put before every line of output
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="base_type"></a><strong>base_type</strong>&nbsp;(type)</dt>
+<dd>
+Get the base version of type, i.e. the non-array type.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  type: type to get base type for
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+base type, for array types returns the non-array type, for non-array type returns the given value.
+
+
+
+</dd>
+
+
+
+
+<dt><a name="get_msgspec"></a><strong>get_msgspec</strong>&nbsp;(msg_type)</dt>
+<dd>
+Get message specification. It is recommended to use the aliased version <code>roslua.get_msgspec()</code>.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  msg_type: message type (e.g. std_msgs/String). The name must include the package.
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="is_array_type"></a><strong>is_array_type</strong>&nbsp;(type)</dt>
+<dd>
+Check if type is an array type.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  type: type to check
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+true if given type is an array type, false otherwise
+
+
+
+</dd>
+
+
+
+
+<dt><a name="is_builtin_type"></a><strong>is_builtin_type</strong>&nbsp;(type)</dt>
+<dd>
+Check if given type is a built-in type.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  type: type to check
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+true if type is a built-in type, false otherwise
+
+
+
+</dd>
+
+
+
+
+<dt><a name="resolve_type"></a><strong>resolve_type</strong>&nbsp;(type, package)</dt>
+<dd>
+Resolve the given type.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  type: to resolve
+	</li>
+	
+	<li>
+	  package: to which the type should be resolve relatively
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+the given value if it is either a base type or contains a slash, otherwise returns package/type.
+
+
+
+</dd>
+
+
+</dl>
+
+
+
+
+
+
+</div> <!-- id="content" -->
+
+</div> <!-- id="main" -->
+
+<div id="about">
+	<p><a href="http://validator.w3.org/check?uri=referer"><img src="http://www.w3.org/Icons/valid-xhtml10" alt="Valid XHTML 1.0!" height="31" width="88" /></a></p>
+</div> <!-- id="about" -->
+
+</div> <!-- id="container" -->	
+</body>
+</html>

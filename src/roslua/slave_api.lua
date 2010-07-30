@@ -9,7 +9,13 @@
 
 -- Licensed under BSD license
 
-module(..., package.seeall)
+--- Slave API implementation.
+-- This module provides the slave API to be called by other nodes. It uses
+-- the Xavante HTTP server with the WSAPI interface to process XML-RPC
+-- requests. The server is bound to a random port on startup.
+-- @copyright Tim Niemueller, Carnegie Mellon University, Intel Research Pittsburgh
+-- @release Released under BSD license
+module("roslua.slave_api", package.seeall)
 
 require("roslua")
 require("xavante")
@@ -21,7 +27,8 @@ require("posix")
 require("socket")
 
 
--- XML-RPC WSAPI handler
+--- XML-RPC WSAPI handler
+-- @param wsapi_env WSAPI environment
 function wsapi_handler(wsapi_env)
   local headers = { ["Content-type"] = "text/html" }
 
@@ -59,11 +66,14 @@ local ROS_CODE_ERROR   = -1
 local ROS_CODE_FAILURE =  0
 local ROS_CODE_SUCCESS =  1
 
+-- (internal) encapsulate reply in ROS format
 function rosreply_encaps(status, msg, reply)
    local rv = {status, msg, reply}
    return xmlrpc.newTypedValue(rv, xmlrpc.newArray())
 end
 
+--- List available methods.
+-- @return list of available methods
 function xmlrpc_exports.system.listMethods()
    local rv = {}
    for k,v in pairs(xmlrpc_exports) do
@@ -84,7 +94,9 @@ function xmlrpc_exports.system.listMethods()
    return xmlrpc.newTypedValue(rv, arrtype)
 end
 
-
+--- Get bus stats.
+-- @param caller_id ID of the calling node
+-- @return bus stats
 function xmlrpc_exports.getBusStats(caller_id)
    assert(caller_id, "Caller ID argument is missing")
 
@@ -124,6 +136,9 @@ function xmlrpc_exports.getBusStats(caller_id)
 end
 
 
+--- Get bus info.
+-- @param caller_id ID of the calling node
+-- @return bus info
 function xmlrpc_exports.getBusInfo(caller_id)
    assert(caller_id, "Caller ID argument is missing")
 
@@ -150,6 +165,9 @@ function xmlrpc_exports.getBusInfo(caller_id)
    return rosreply_encaps(ROS_CODE_SUCCESS, "", xrv)
 end
 
+--- Get master URI.
+-- @param caller_id ID of the calling node
+-- @return Master URI this node is connected to
 function xmlrpc_exports.getMasterUri(caller_id)
    assert(caller_id, "Caller ID argument is missing")
 
@@ -157,6 +175,10 @@ function xmlrpc_exports.getMasterUri(caller_id)
 end
 
 
+--- Shutdown this node
+-- @param caller_id ID of the calling node
+-- @param msg shutdown message
+-- @return bus stats
 function xmlrpc_exports.shutdown(caller_id, msg)
    assert(caller_id, "Caller ID argument is missing")
 
@@ -166,6 +188,9 @@ function xmlrpc_exports.shutdown(caller_id, msg)
 end
 
 
+--- Get process ID of node.
+-- @param caller_id ID of the calling node
+-- @return PID
 function xmlrpc_exports.getPid(caller_id)
    assert(caller_id, "Caller ID argument is missing")
 
@@ -173,6 +198,9 @@ function xmlrpc_exports.getPid(caller_id)
    return rosreply_encaps(ROS_CODE_SUCCESS, "", pid)
 end
 
+--- Get subscriptions of node.
+-- @param caller_id ID of the calling node
+-- @return list of subscriptions
 function xmlrpc_exports.getSubscriptions(caller_id)
    assert(caller_id, "Caller ID argument is missing")
 
@@ -185,6 +213,9 @@ function xmlrpc_exports.getSubscriptions(caller_id)
    return rosreply_encaps(ROS_CODE_SUCCESS, "", xmlrpc.newTypedValue(rv, xmlrpc.newArray("array")))
 end
 
+--- Get publications of node.
+-- @param caller_id ID of the calling node
+-- @return list of publications
 function xmlrpc_exports.getPublications(caller_id)
    assert(caller_id, "Caller ID argument is missing")
    local rv = {}
@@ -196,7 +227,11 @@ function xmlrpc_exports.getPublications(caller_id)
    return rosreply_encaps(ROS_CODE_SUCCESS, "", xmlrpc.newTypedValue(rv, xmlrpc.newArray("array")))
 end
 
-
+--- Parameter update notification.
+-- Called by the parameter server if a subscribed value has changed.
+-- @param caller_id ID of the calling node
+-- @param param_key key of parameter
+-- @param param_value value of parameter
 function xmlrpc_exports.paramUpdate(caller_id, param_key, param_value)
    assert(caller_id, "Caller ID argument is missing")
    assert(param_key, "Parameter key is missing")
@@ -206,6 +241,11 @@ function xmlrpc_exports.paramUpdate(caller_id, param_key, param_value)
 end
 
 
+--- Publisher update.
+-- Called when the list of available publishers for a topic changes.
+-- @param caller_id ID of the calling node
+-- @param topic topic for which the list changed
+-- @param publishers array of currently available slave URIs
 function xmlrpc_exports.publisherUpdate(caller_id, topic, publishers)
    assert(caller_id, "Caller ID argument is missing")
    assert(topic, "Topic name is missing")
@@ -219,6 +259,11 @@ function xmlrpc_exports.publisherUpdate(caller_id, topic, publishers)
 end
 
 
+--- Topic connection request.
+-- @param caller_id ID of the calling node
+-- @param topic requested topic
+-- @param protocols list of supported protocols
+-- @return TCPROS connection configuration if topic is published
 function xmlrpc_exports.requestTopic(caller_id, topic, protocols)
    assert(caller_id, "Caller ID argument is missing")
    assert(topic, "Topic name is missing")
@@ -247,16 +292,22 @@ local rules = {{ match = ".", with = wsapi.xavante.makeHandler(wsapi_handler) }}
 local config = { server = {host = "*", port = 0}, defaultHost = { rules = rules} }
 
 
+--- Init slave API.
+-- This configures and starts the HTTP server and XML-RPC API.
 function init()
    xmlrpc.srvMethods(xmlrpc_exports)
    xavante.HTTP(config)
 end
 
+--- Get slave URI.
+-- @return URI for this slave
 function slave_uri()
    local port = xavante.httpd.get_ports()[1]
    return "http://" .. socket.dns.gethostname() .. ":" .. port
 end
 
+--- Process requests.
+-- This processes XML-RPC API calls.
 function spin()
    copas.step(0.1)
 end

@@ -9,7 +9,14 @@
 
 -- Licensed under BSD license
 
-module(..., package.seeall)
+--- ROS language binding for Lua.
+-- This module and its sub-modules provides the necessary tools to write
+-- ROS nodes in the Lua programming language. It supports subscribing to
+-- and publishing topics, providing and calling services, and interacts with
+-- the standard ROS tools to provide introspection information.
+-- @copyright Tim Niemueller, Carnegie Mellon University, Intel Research Pittsburgh
+-- @release Released under BSD license
+module("roslua", package.seeall)
 
 require("roslua.master_proxy")
 require("roslua.param_proxy")
@@ -35,23 +42,40 @@ Publisher  = roslua.publisher.Publisher
 Service = roslua.service.Service
 ServiceClient = roslua.service_client.ServiceClient
 
+--- Get message specification.
+-- @name get_msgspec
+-- @class function
+-- @param msg_type message type (e.g. std_msgs/String). The name must include
+-- the package.
+
+--- Get service specification.
+-- @name get_srvspec
+-- @class function
+-- @param srv_type service type (e.g. std_msgs/String). The name must include
+-- the package.
+
 get_msgspec = roslua.msg_spec.get_msgspec
 get_srvspec = roslua.srv_spec.get_srvspec
-
-register_subscriber   = roslua.registry.register_subscriber
-register_publisher    = roslua.registry.register_publisher
-register_service      = roslua.registry.register_service
-unregister_subscriber = roslua.registry.unregister_subscriber
-unregister_publisher  = roslua.registry.unregister_publisher
-unregister_service    = roslua.registry.unregister_service
 
 subscribers   = roslua.registry.subscribers
 publishers    = roslua.registry.publishers
 services      = roslua.registry.services
 slave_proxies = {}
 
+--- Query this flag in your main loop and exit the application when it is set to
+-- true.
 quit = false
 
+
+--- Initialize ROS node.
+-- This function must be called before any other interaction with ROS or roslua
+-- is possible. Note that the library can always accomodate only one ROS node per
+-- interpreter instance!
+-- A signal handler is set for SIGINT (e.g. after pressing Ctrl-C) to set the quit
+-- flag to true if the signal is received.
+-- @param args a table with argument entries. The following fields are mandatory:
+-- master_uri The ROS master URI
+-- node_name the name of the node using the library
 function init_node(args)
    roslua.master_uri = args.master_uri
    roslua.node_name  = args.node_name
@@ -75,6 +99,9 @@ function init_node(args)
    signal.signal(signal.SIGINT, roslua.exit)
 end
 
+--- Finalize this node.
+-- Call this function when existing the program to allow for proper unregistering
+-- of topic and services and to perform other cleanup tasks.
 function finalize()
    -- shutdown all connections
    for topic,s in pairs(roslua.subscribers) do
@@ -91,11 +118,18 @@ function finalize()
    end
 end
 
-
+--- Exit the program.
+-- This sets the quit flag to true and will cause (proper) programs to exit.
 function exit()
    roslua.quit = true
 end
 
+
+--- Spin the roslua main loop.
+-- This will spin all registered subscribers, publishers and services, execute
+-- callbacks and accpet new connections. Call this at the desired frequency. It is
+-- recommended to call it as fast as possible, as the call frequency influences
+-- the overall latency e.g. for processing service calls or delivering messages.
 function spin()
    roslua.slave_api.spin()
 
@@ -113,6 +147,14 @@ function spin()
    end
 end
 
+--- Get a slave proxy.
+-- Slave proxies are XML-RPC client-side wrappers to communicate with another
+-- ROS node via the XML-RPC protocol, e.g. for requesting information or
+-- topics. The proxies are maintained in a cache and there is always only one
+-- instance of a slave for a specific remote node.
+-- @param uri URI of remote slave
+-- @return SlaveProxy instance
+-- @see SlaveProxy
 function get_slave_proxy(uri)
    assert(uri, "No slave URI given")
 
@@ -122,6 +164,14 @@ function get_slave_proxy(uri)
    return roslua.slave_proxies[uri]
 end
 
+--- Get a new subscriber for a topic.
+-- Request the creation of a subscriber for a specific topic. Subscribers are
+-- maintained in a cache, and for any one topic there is always at most one
+-- subscriber which is shared.
+-- @param topic name of topic to request subscriber for
+-- @param type type of topic
+-- @return Subscriber instance for the requested topic
+-- @see Publisher
 function subscriber(topic, type)
    if not roslua.subscribers[topic] then
       local s = Subscriber:new(topic, type)
@@ -130,6 +180,14 @@ function subscriber(topic, type)
    return roslua.subscribers[topic].subscriber
 end
 
+--- Get a new publisher for a topic.
+-- Request the creation of a publisher for a specific topic. Publishers are
+-- maintained in a cache, and for any one topic there is always at most one
+-- publisher which is shared.
+-- @param topic name of topic to request publisher for
+-- @param type type of topic
+-- @return Publisher instance for the requested topic
+-- @see Publisher
 function publisher(topic, type)
    if not roslua.publishers[topic] then
       local s = Publisher:new(topic, type)
@@ -139,6 +197,15 @@ function publisher(topic, type)
 end
 
 
+--- Get a new service handler.
+-- Request the creation of a new service, i.e. the server side or provider of
+-- the service. An error is thrown if the service has already been registered.
+-- @param service name of the provided service
+-- @param type type of the provided service
+-- @param handler the service handler, this is either a function or a class
+-- instance which provides a service_call() method.
+-- @see Service
+-- @return Service instance for the requested service
 function service(service, type, handler)
    assert(not roslua.services[service], "Service already provided")
    local s = Service:new(service, type, handler)
@@ -147,6 +214,14 @@ function service(service, type, handler)
    return roslua.services[service].provider
 end
 
+--- Get a service client.
+-- Request the creation of a new service client to access a ROS service.
+-- Service clients are not cached and a new client is created for every
+-- new creation request.
+-- @param service name of the requested service
+-- @param type type of service
+-- @param persistent true to request a persistent connection to the service
+-- @see ServiceClient
 function service_client(service, type, persistent)
    return ServiceClient:new{service, type, persistent=persistent}
 end

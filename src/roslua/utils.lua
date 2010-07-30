@@ -9,9 +9,16 @@
 
 -- Licensed under BSD license
 
-module(..., package.seeall)
+--- General roslua utilities.
+-- This module contains useful functions used in roslua.
+-- @copyright Tim Niemueller, Carnegie Mellon University, Intel Research Pittsburgh
+-- @release Released under BSD license
+module("roslua.utils", package.seeall)
 
 local asserted_rospack = false
+--- Assert availability of rospack.
+-- Throws an error if rospack cannot be executed, for example because ROS is
+-- not installed or the binary is not in the PATH.
 function assert_rospack()
    if not asserted_rospack then
       local rv = os.execute("rospack 2>/dev/null")
@@ -22,6 +29,12 @@ end
 
 local rospack_path_cache = {}
 
+--- Get path for a package.
+-- Uses rospack to find the path to a certain package. The path is cached so
+-- that consecutive calls will not trigger another rospack execution, but are
+-- rather handled directly from the cache. An error is thrown if the package
+-- cannot be found.
+-- @return path to give package
 function find_rospack(package)
    if not rospack_path_cache[package] then
       local p = io.popen("rospack find " .. package)

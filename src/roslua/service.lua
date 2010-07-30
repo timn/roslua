@@ -9,7 +9,20 @@
 
 -- Licensed under BSD license
 
-module(..., package.seeall)
+--- Service provider.
+-- This module contains the Service class to provide services to other ROS
+-- nodes. It is created using the function <code>roslua.service()</code>.
+-- <br /><br />
+-- The service needs a handler to which incoming requests are dispatched.
+-- A handler is either a function or a class instance with a service_call()
+-- method. On a connection, the request message is called with the fields
+-- of the message passed as positional arguments. Sub-messages (i.e.
+-- non-builtin complex types) are themselves passed as arrays with the
+-- entries being the sub-message fields. This is done recursively for
+-- larger hierarchies of parameters.
+-- @copyright Tim Niemueller, Carnegie Mellon University, Intel Research Pittsburgh
+-- @release Released under BSD license
+module("roslua.service", package.seeall)
 
 require("roslua")
 require("struct")
@@ -17,6 +30,11 @@ require("socket")
 
 Service = {}
 
+--- Constructor.
+-- Create a new service provider instance.
+-- @param service name of the provided service
+-- @param type type of the service
+-- @param handler handler function or class instance
 function Service:new(service, srvtype, handler)
    local o = {}
    setmetatable(o, self)
@@ -45,6 +63,7 @@ function Service:new(service, srvtype, handler)
 end
 
 
+--- Finalize instance.
 function Service:finalize()
    for uri, c in pairs(self.clients) do
       c.connection:close()
@@ -52,6 +71,7 @@ function Service:finalize()
    self.subscribers = {}
 end
 
+--- Start the internal TCP server to accept ROS RPC connections.
 function Service:start_server()
    self.server = roslua.tcpros.TcpRosServiceProviderConnection:new()
    self.server.srvspec = self.srvspec
@@ -61,6 +81,7 @@ function Service:start_server()
 end
 
 
+-- (internal) Called by spin() to accept new connections.
 function Service:accept_connections()
    local conns = self.server:accept()
    for _, c in ipairs(conns) do
@@ -76,6 +97,11 @@ function Service:accept_connections()
 end
 
 
+-- (internal) Send response to the given connection
+-- @param connection connection to send response with
+-- @param msg_or_vals Either message object or value array to send
+-- as response. A value array must be given in the same format as the parameters
+-- that are passed to the handler.
 function Service:send_response(connection, msg_or_vals)
    local m
    if getmetatable(msg_or_vals) == roslua.Message then
@@ -90,20 +116,31 @@ function Service:send_response(connection, msg_or_vals)
    connection:send(s .. m:serialize())
 end
 
-function Service:send_error(message)
+-- (internal) send error message.
+-- @param connection connection to send error response with
+-- @param message error message to send
+function Service:send_error(connection, message)
    local s = struct.pack("<!1I1I4c0", 0, #message, message)
+   connection:send(s)
 end
 
 
+--- Get the URI for this service.
+-- @return rosrpc URI
 function Service:uri()
    return "rosrpc://" .. self.address .. ":" .. self.port
 end
 
 
+--- Get stats.
+-- @return currently empty array until this is fixed in the XML-RPC
+-- specification.
 function Service:get_stats()
    return {}
 end
 
+--- Dispatch incoming service requests from client.
+-- @param client client whose requests to process
 function Service:dispatch(client)
    for _, m in ipairs(client.connection.messages) do
       local format, args = m:generate_value_array(false)
@@ -114,7 +151,7 @@ function Service:dispatch(client)
       elseif t == "table" then
 	 rv = self.handler:service_call(unpack(args))
       else
-	 self:send_error("Could not handle request")
+	 self:send_error(client.connection, "Could not handle request")
       end
 
       self:send_response(client.connection, rv)
@@ -127,6 +164,9 @@ function Service:dispatch(client)
    end
 end
 
+--- Spin service provider.
+-- This will accept new connections to the service and dispatch incoming
+-- service requests.
 function Service:spin()
    self:accept_connections()
 

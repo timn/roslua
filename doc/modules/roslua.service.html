@@ -1,0 +1,347 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../luadoc.css" type="text/css" />
+	<!--meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/-->
+</head>
+
+<body>
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+<div id="main">
+
+<div id="navigation">
+
+
+<h1>LuaDoc</h1>
+<ul>
+	
+	<li><a href="../index.html">Index</a></li>
+	
+</ul>
+
+
+<!-- Module list -->
+
+<h1>Modules</h1>
+<ul>
+
+	<li>
+		<a href="../modules/roslua.html">roslua</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.master_proxy.html">roslua.master_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.message.html">roslua.message</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.msg_spec.html">roslua.msg_spec</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.param_proxy.html">roslua.param_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.publisher.html">roslua.publisher</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.registry.html">roslua.registry</a>
+	</li>
+
+	<li><strong>roslua.service</strong></li>
+	
+	<li>
+		<a href="../modules/roslua.service_client.html">roslua.service_client</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.slave_api.html">roslua.slave_api</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.slave_proxy.html">roslua.slave_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.srv_spec.html">roslua.srv_spec</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.subscriber.html">roslua.subscriber</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.tcpros.html">roslua.tcpros</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.utils.html">roslua.utils</a>
+	</li>
+
+</ul>
+
+
+
+<!-- File list -->
+
+
+
+
+
+
+</div><!-- id="navigation" -->
+
+<div id="content">
+
+<h1>Module <code>roslua.service</code></h1>
+
+<p>Service provider. This module contains the Service class to provide services to other ROS nodes. It is created using the function <code>roslua.service()</code>. <br /><br /> The service needs a handler to which incoming requests are dispatched. A handler is either a function or a class instance with a service_call() method. On a connection, the request message is called with the fields of the message passed as positional arguments. Sub-messages (i.e. non-builtin complex types) are themselves passed as arrays with the entries being the sub-message fields. This is done recursively for larger hierarchies of parameters.</p>
+
+
+<p>Copyright&copy; Tim Niemueller, Carnegie Mellon University, Intel Research Pittsburgh</p>
+
+
+<p><small><b>Release:</b> Released under BSD license</small></p>
+
+
+
+<h2>Functions</h2>
+<table class="function_list">
+
+	<tr>
+	<td class="name" nowrap><a href="#Service:dispatch">Service:dispatch</a>&nbsp;(client)</td>
+	<td class="summary">Dispatch incoming service requests from client.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Service:finalize">Service:finalize</a>&nbsp;()</td>
+	<td class="summary">Finalize instance.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Service:get_stats">Service:get_stats</a>&nbsp;()</td>
+	<td class="summary">Get stats.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Service:new">Service:new</a>&nbsp;(service, srvtype, handler, type)</td>
+	<td class="summary">Constructor.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Service:spin">Service:spin</a>&nbsp;()</td>
+	<td class="summary">Spin service provider.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Service:start_server">Service:start_server</a>&nbsp;()</td>
+	<td class="summary">Start the internal TCP server to accept ROS RPC connections.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Service:uri">Service:uri</a>&nbsp;()</td>
+	<td class="summary">Get the URI for this service.</td>
+	</tr>
+
+</table>
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+
+<h2><a name="functions"></a>Functions</h2>
+<dl class="function">
+
+
+
+<dt><a name="Service:dispatch"></a><strong>Service:dispatch</strong>&nbsp;(client)</dt>
+<dd>
+Dispatch incoming service requests from client.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  client: client whose requests to process
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Service:finalize"></a><strong>Service:finalize</strong>&nbsp;()</dt>
+<dd>
+Finalize instance.
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Service:get_stats"></a><strong>Service:get_stats</strong>&nbsp;()</dt>
+<dd>
+Get stats.
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+currently empty array until this is fixed in the XML-RPC specification.
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Service:new"></a><strong>Service:new</strong>&nbsp;(service, srvtype, handler, type)</dt>
+<dd>
+Constructor. Create a new service provider instance.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  service: name of the provided service
+	</li>
+	
+	<li>
+	  srvtype: 
+	</li>
+	
+	<li>
+	  handler: handler function or class instance
+	</li>
+	
+	<li>
+	  type: type of the service
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Service:spin"></a><strong>Service:spin</strong>&nbsp;()</dt>
+<dd>
+Spin service provider. This will accept new connections to the service and dispatch incoming service requests.
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Service:start_server"></a><strong>Service:start_server</strong>&nbsp;()</dt>
+<dd>
+Start the internal TCP server to accept ROS RPC connections.
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Service:uri"></a><strong>Service:uri</strong>&nbsp;()</dt>
+<dd>
+Get the URI for this service.
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+rosrpc URI
+
+
+
+</dd>
+
+
+</dl>
+
+
+
+
+
+
+</div> <!-- id="content" -->
+
+</div> <!-- id="main" -->
+
+<div id="about">
+	<p><a href="http://validator.w3.org/check?uri=referer"><img src="http://www.w3.org/Icons/valid-xhtml10" alt="Valid XHTML 1.0!" height="31" width="88" /></a></p>
+</div> <!-- id="about" -->
+
+</div> <!-- id="container" -->	
+</body>
+</html>

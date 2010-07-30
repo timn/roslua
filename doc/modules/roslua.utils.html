@@ -1,0 +1,213 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../luadoc.css" type="text/css" />
+	<!--meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/-->
+</head>
+
+<body>
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+<div id="main">
+
+<div id="navigation">
+
+
+<h1>LuaDoc</h1>
+<ul>
+	
+	<li><a href="../index.html">Index</a></li>
+	
+</ul>
+
+
+<!-- Module list -->
+
+<h1>Modules</h1>
+<ul>
+
+	<li>
+		<a href="../modules/roslua.html">roslua</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.master_proxy.html">roslua.master_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.message.html">roslua.message</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.msg_spec.html">roslua.msg_spec</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.param_proxy.html">roslua.param_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.publisher.html">roslua.publisher</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.registry.html">roslua.registry</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.service.html">roslua.service</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.service_client.html">roslua.service_client</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.slave_api.html">roslua.slave_api</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.slave_proxy.html">roslua.slave_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.srv_spec.html">roslua.srv_spec</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.subscriber.html">roslua.subscriber</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.tcpros.html">roslua.tcpros</a>
+	</li>
+
+	<li><strong>roslua.utils</strong></li>
+	
+</ul>
+
+
+
+<!-- File list -->
+
+
+
+
+
+
+</div><!-- id="navigation" -->
+
+<div id="content">
+
+<h1>Module <code>roslua.utils</code></h1>
+
+<p>General roslua utilities. This module contains useful functions used in roslua.</p>
+
+
+<p>Copyright&copy; Tim Niemueller, Carnegie Mellon University, Intel Research Pittsburgh</p>
+
+
+<p><small><b>Release:</b> Released under BSD license</small></p>
+
+
+
+<h2>Functions</h2>
+<table class="function_list">
+
+	<tr>
+	<td class="name" nowrap><a href="#assert_rospack">assert_rospack</a>&nbsp;()</td>
+	<td class="summary">Assert availability of rospack.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#find_rospack">find_rospack</a>&nbsp;(package)</td>
+	<td class="summary">Get path for a package.</td>
+	</tr>
+
+</table>
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+
+<h2><a name="functions"></a>Functions</h2>
+<dl class="function">
+
+
+
+<dt><a name="assert_rospack"></a><strong>assert_rospack</strong>&nbsp;()</dt>
+<dd>
+Assert availability of rospack. Throws an error if rospack cannot be executed, for example because ROS is not installed or the binary is not in the PATH.
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="find_rospack"></a><strong>find_rospack</strong>&nbsp;(package)</dt>
+<dd>
+Get path for a package. Uses rospack to find the path to a certain package. The path is cached so that consecutive calls will not trigger another rospack execution, but are rather handled directly from the cache. An error is thrown if the package cannot be found.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  package: 
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+path to give package
+
+
+
+</dd>
+
+
+</dl>
+
+
+
+
+
+
+</div> <!-- id="content" -->
+
+</div> <!-- id="main" -->
+
+<div id="about">
+	<p><a href="http://validator.w3.org/check?uri=referer"><img src="http://www.w3.org/Icons/valid-xhtml10" alt="Valid XHTML 1.0!" height="31" width="88" /></a></p>
+</div> <!-- id="about" -->
+
+</div> <!-- id="container" -->	
+</body>
+</html>

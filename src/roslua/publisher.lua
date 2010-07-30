@@ -9,12 +9,26 @@
 
 -- Licensed under BSD license
 
-module(..., package.seeall)
+--- Topic publisher.
+-- This module contains the Publisher class to publish to a ROS topic. The
+-- class is used to publish messages to a specified topic. It is created using
+-- the function <code>roslua.publisher()</code>.
+-- <br /><br />
+-- The main interaction for applications is using the <code>publish()</code>
+-- method to send new messages. The publisher spins automatically when created
+-- using <code>roslua.publisher()</code>.
+-- @copyright Tim Niemueller, Carnegie Mellon University, Intel Research Pittsburgh
+-- @release Released under BSD license
+module("roslua.publisher", package.seeall)
 
 require("roslua")
 
 Publisher = {}
 
+--- Constructor.
+-- Create a new publisher instance.
+-- @param topic topic to publish to
+-- @param type type of the topic
 function Publisher:new(topic, type)
    local o = {}
    setmetatable(o, self)
@@ -36,6 +50,7 @@ function Publisher:new(topic, type)
    return o
 end
 
+--- Finalize instance.
 function Publisher:finalize()
    for uri, s in pairs(self.subscribers) do
       s.connection:close()
@@ -43,6 +58,7 @@ function Publisher:finalize()
    self.subscribers = {}
 end
 
+--- Start the internal TCP server to accept ROS subscriber connections.
 function Publisher:start_server()
    self.server = roslua.tcpros.TcpRosPubSubConnection:new()
    self.server:bind()
@@ -50,6 +66,7 @@ function Publisher:start_server()
 end
 
 
+-- (internal) Called by spin() to accept new connections.
 function Publisher:accept_connections()
    local conns = self.server:accept()
    for _, c in ipairs(conns) do
@@ -64,6 +81,12 @@ function Publisher:accept_connections()
 end
 
 
+--- Get statistics about this publisher.
+-- @return an array containing the topic name as the first entry, and another array
+-- as the second entry. This array contains itself tables with four fields each:
+-- the remote caller ID of the connection, the number of bytes sent, number of
+-- messages sent and connection aliveness (always true). Suitable for
+-- getBusStats of slave API.
 function Publisher:get_stats()
    local conns = {}
    for callerid, s in pairs(self.subscribers) do
@@ -74,6 +97,10 @@ function Publisher:get_stats()
    return {self.topic, conns}
 end
 
+--- Publish message to topic.
+-- The messages are sent immediately. Busy or bad network connections or a large number
+-- of subscribers can slow down this method.
+-- @param message message to publish
 function Publisher:publish(message)
    assert(message.spec.type == self.type, "Message of invalid type cannot be published "
 	  .. " (topic " .. self.topic .. ", " .. self.type .. " vs. " .. message.spec.type)
@@ -89,6 +116,8 @@ function Publisher:publish(message)
    end
 end
 
+--- Spin function.
+-- While spinning the publisher accepts new connections.
 function Publisher:spin()
    self:accept_connections()
 end

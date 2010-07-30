@@ -9,12 +9,39 @@
 
 -- Licensed under BSD license
 
-module(..., package.seeall)
+--- Service client.
+-- This module contains the ServiceClient class to access services provided
+-- by other ROS nodes. It is created using the function
+-- <code>roslua.service_client()</code>.
+-- <br /><br />
+-- The service client employs the <code>__call()</code> meta method, such that
+-- the service can be called just as <code>service_client(...)</code>. As arguments
+-- you must pass the exact number of fields required for the request message in
+-- the exact order and of the proper type as they are defined in the service
+-- description file.
+-- @copyright Tim Niemueller, Carnegie Mellon University, Intel Research Pittsburgh
+-- @release Released under BSD license
+module("roslua.service_client", package.seeall)
 
 require("roslua")
 
 ServiceClient = { persistent = true }
 
+--- Constructor.
+-- The constructor can be called in two ways, either with positional or
+-- named arguments. The latter form allows to set additional parameters.
+-- In the positional form the ctor takes two arguments, the name and the type
+-- of the service. For named parameters the parameter names are service (for
+-- the name), type (service type) and persistent. If the latter is set to true
+-- the connection to the service provider ROS node will not be closed after
+-- one service call. This is beneficial when issuing many service calls in
+-- a row, but no guarantee is made that the connection is re-opened if it
+-- fails.<br /><br />
+-- Examples:<br />
+-- Positional: <code>ServiceClient:new("/myservice", "myservice/MyType")</code>
+-- Named: <code>ServiceClient:new{service="/myservice", type="myservice/MyType",persistent=true}</code> (mind the curly braces instead of round brackets!)
+-- @param args_or_service argument table or service name, see above
+-- @param srvtype service type, only used in positional case
 function ServiceClient:new(args_or_service, srvtype)
    local o = {}
    setmetatable(o, self)
@@ -43,6 +70,7 @@ function ServiceClient:new(args_or_service, srvtype)
 end
 
 
+--- Finalize instance.
 function ServiceClient:finalize()
    if self.persistent and self.connection then
       -- disconnect
@@ -52,6 +80,7 @@ function ServiceClient:finalize()
 end
 
 
+--- Connect to service provider.
 function ServiceClient:connect()
    assert(not self.connection, "Already connected")
 
@@ -64,7 +93,6 @@ function ServiceClient:connect()
    -- parse uri
    local host, port = uri:match("rosrpc://([^:]+):(%d+)$")
    assert(host and port, "Parsing ROSRCP uri " .. uri .. " failed")
-   print(uri, host, port)
 
    self.connection:connect(host, port)
    self.connection:send_header{callerid=roslua.node_name,
@@ -75,6 +103,11 @@ function ServiceClient:connect()
    self.connection:receive_header()
 end
 
+--- Execute service.
+-- This method is set as __call entry in the meta table. See the module documentation
+-- on the passed arguments. The method will return only after it has received a reply
+-- from the service provider!
+-- @param args argument array
 function ServiceClient:execute(args)
    if not self.connection then
       self:connect()
