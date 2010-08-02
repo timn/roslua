@@ -1,0 +1,21 @@
+lua:
+  fedora: lua
+  ubuntu: lua5.1
+lua-md5:
+  fedora: lua-md5
+  ubuntu: liblua5.1-md5-0
+lua-posix:
+  fedora: lua-posix
+  ubuntu: liblua5.1-posix1
+lua-socket:
+  fedora: lua-socket
+  ubuntu: liblua5.1-socket2
+lua-wsapi:
+  fedora: lua-wsapi
+  ubuntu: liblua5.1-wsapi1
+lua-xmlrpc:
+  fedora: lua-xmlrpc
+  ubuntu: liblua5.1-xmlrpc0
+xavante:
+  fedora: xavante
+  ubuntu: xavante

@@ -8,7 +8,11 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/roslua</url>
   <depend package="roslang"/>
-  <depend package="roscpp"/>
-  <depend package="roslib"/>
-
+  <rosdep name="lua" />
+  <rosdep name="lua-md5" />
+  <rosdep name="lua-posix" />
+  <rosdep name="lua-socket" />
+  <rosdep name="lua-wsapi" />
+  <rosdep name="lua-xmlrpc" />
+  <rosdep name="xavante" />
 </package>
