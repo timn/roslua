@@ -106,15 +106,15 @@ function finalize()
    -- shutdown all connections
    for topic,s in pairs(roslua.subscribers) do
       s.subscriber:finalize()
-      roslua.unregister_subscriber(topic, s.type, s.subscriber)
+      roslua.registry.unregister_subscriber(topic, s.type, s.subscriber)
    end
    for topic,p in pairs(roslua.publishers) do
       p.publisher:finalize()
-      roslua.unregister_publisher(topic, p.type, p.publisher)
+      roslua.registry.unregister_publisher(topic, p.type, p.publisher)
    end
    for service,s in pairs(roslua.services) do
       s.provider:finalize()
-      roslua.unregister_service(service, s.type, s.provider)
+      roslua.registry.unregister_service(service, s.type, s.provider)
    end
 end
 
@@ -175,7 +175,7 @@ end
 function subscriber(topic, type)
    if not roslua.subscribers[topic] then
       local s = Subscriber:new(topic, type)
-      roslua.register_subscriber(topic, type, s) -- this sets the subscribers table entry
+      roslua.registry.register_subscriber(topic, type, s) -- this sets the subscribers table entry
    end
    return roslua.subscribers[topic].subscriber
 end
@@ -191,7 +191,7 @@ end
 function publisher(topic, type)
    if not roslua.publishers[topic] then
       local s = Publisher:new(topic, type)
-      roslua.register_publisher(topic, type, s) -- this sets the publishers table entry
+      roslua.registry.register_publisher(topic, type, s) -- this sets the publishers table entry
    end
    return roslua.publishers[topic].publisher
 end
@@ -209,7 +209,7 @@ end
 function service(service, type, handler)
    assert(not roslua.services[service], "Service already provided")
    local s = Service:new(service, type, handler)
-   roslua.register_service(service, type, s)
+   roslua.registry.register_service(service, type, s)
 
    return roslua.services[service].provider
 end
