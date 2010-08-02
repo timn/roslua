@@ -9,9 +9,6 @@
 
 -- Licensed under BSD license
 
-package.path  = ";;/homes/timn/ros/local/roslua/src/?/init.lua;/homes/timn/ros/local/roslua/src/?.lua;/usr/share/lua/5.1/?/init.lua;/usr/share/lua/5.1/?.lua"
-package.cpath = ";;/homes/timn/ros/local/roslua/src/roslua/?.luaso;/usr/lib/lua/5.1/?.so"
-
 require("roslua")
 
 print()
