@@ -16,6 +16,9 @@ lua-wsapi:
 lua-xmlrpc:
   fedora: lua-xmlrpc
   ubuntu: liblua5.1-xmlrpc0
+tolua++:
+  fedora: tolua++
+  ubuntu: libtolua++5.1-dev
 xavante:
   fedora: xavante
   ubuntu: xavante
