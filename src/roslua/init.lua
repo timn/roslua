@@ -60,11 +60,14 @@ get_srvspec = roslua.srv_spec.get_srvspec
 subscribers   = roslua.registry.subscribers
 publishers    = roslua.registry.publishers
 services      = roslua.registry.services
-slave_proxies = {}
+
+local slave_proxies = {}
+local spinners = {}
 
 --- Query this flag in your main loop and exit the application when it is set to
--- true.
-quit = false
+-- true. We default to true, it is set to false in init_node(). This way we ensure
+-- that init_node() was called.
+quit = true
 
 
 --- Initialize ROS node.
@@ -96,7 +99,34 @@ function init_node(args)
    roslua.slave_api.init()
    roslua.slave_uri = roslua.slave_api.slave_uri()
 
+   quit = false;
    signal.signal(signal.SIGINT, roslua.exit)
+end
+
+--- Add a spinner.
+-- The spinner will be called in every loop after the other events have been
+-- processed.
+-- @param spinner spinner to add, must be a function that is called without
+-- any arguments in each spin.
+function add_spinner(spinner)
+   assert(type(spinner) == "function", "Spinner must be a function")
+   for _, s in ipairs(spinners) do
+      if s == spinner then
+	 error("Spinner has already been registered", 0)
+      end
+   end
+   table.insert(spinners, spinner);
+end
+
+--- Remove spinner.
+-- @param spinner spinner to remove
+function remove_spinner(spinner)
+   for i, s in ipairs(spinners) do
+      if s == spinner then
+	 table.remove(spinners, i)
+	 break;
+      end
+   end
 end
 
 --- Finalize this node.
@@ -145,6 +175,17 @@ function spin()
    for _,s in pairs(roslua.services) do
       s.provider:spin()
    end
+
+   -- Spin all registered spinners
+   -- work on a copy of the list as the list might change while we run the
+   -- spinners if one of the removes itself
+   local tmpspinners = {}
+   for i, s in ipairs(spinners) do
+      tmpspinners[i] = s
+   end
+   for _, s in ipairs(spinners) do
+      s()
+   end
 end
 
 --- Get a slave proxy.
@@ -158,10 +199,10 @@ end
 function get_slave_proxy(uri)
    assert(uri, "No slave URI given")
 
-   if not roslua.slave_proxies[uri] then
-      roslua.slave_proxies[uri] = roslua.slave_proxy.SlaveProxy:new(uri, roslua.node_name)
+   if not slave_proxies[uri] then
+      slave_proxies[uri] = roslua.slave_proxy.SlaveProxy:new(uri, roslua.node_name)
    end
-   return roslua.slave_proxies[uri]
+   return slave_proxies[uri]
 end
 
 --- Get a new subscriber for a topic.
