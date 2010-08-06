@@ -34,6 +34,8 @@ require("roslua.registry")
 
 require("signal")
 
+local utils = require("roslua.utils")
+
 -- Imports from other libs to have a unified entry point
 MsgSpec = roslua.msg_spec.MsgSpec
 Message = roslua.message.Message
@@ -69,6 +71,9 @@ local spinners = {}
 -- that init_node() was called.
 quit = true
 
+-- Add our custom loader, we do this outside of init to avoid having to call
+-- init before loading required modules
+table.insert(package.loaders, 4, utils.package_loader)
 
 --- Initialize ROS node.
 -- This function must be called before any other interaction with ROS or roslua

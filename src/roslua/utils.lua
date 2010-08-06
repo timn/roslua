@@ -48,3 +48,48 @@ function find_rospack(package)
    assert(rospack_path_cache[package] ~= "", "Package path could not be found")
    return rospack_path_cache[package]
 end
+
+--- Split string.
+-- Splits a string at a given separator and returns the parts in a table.
+-- @param s string to split
+-- @param sep separator to split at
+-- @return table with splitted parts
+function split(s, sep)
+   local sep, fields = sep or ":", {}
+   local pattern = string.format("([^%s]+)", sep)
+   string.gsub(s, pattern, function(c) fields[#fields+1] = c end)
+   return fields
+end
+
+--- Package loader to find Lua modules in ROS packages.
+-- This will use the first part of the module name and assume it to
+-- be the name of a ROS package. It will then try to determine the path using
+-- rospack and if found try to load the module in the package directory.
+-- @param module module name as given to require()
+-- @return function of loaded code if module was found, nil otherwise
+function package_loader(module)
+   local package = string.match(module, "^[^%.]+")
+   if not package then return end
+
+   local try_paths = { "%s/src/%s.lua", "%s/src/%s/init.lua" }
+   local errmsg = ""
+
+   local ok, packpath = pcall(find_rospack, package)
+   if ok then
+      errmsg = errmsg .. string.format("\n\tFound matching ROS package %s (%s)",
+				       package, packpath)
+
+      for _, tp in ipairs(try_paths) do
+	 local modulepath = string.gsub(module, "%.", "/")
+	 local filename = string.format(tp, packpath, modulepath)
+	 local file = io.open(filename, "rb")
+	 if file then
+	    -- Compile and return the module
+	    return assert(loadstring(assert(file:read("*a")), filename))
+	 end
+	 errmsg = errmsg .. string.format("\n\tno file %s (ROS loader)", filename)
+      end
+   end
+
+   return errmsg
+end
