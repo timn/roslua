@@ -132,6 +132,16 @@
 	<td class="summary">Get path for a package.</td>
 	</tr>
 
+	<tr>
+	<td class="name" nowrap><a href="#package_loader">package_loader</a>&nbsp;(module)</td>
+	<td class="summary">Package loader to find Lua modules in ROS packages.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#split">split</a>&nbsp;(s, sep)</td>
+	<td class="summary">Split string.</td>
+	</tr>
+
 </table>
 
 
@@ -187,6 +197,68 @@ Get path for a package. Uses rospack to find the path to a certain package. The 
 
 <h3>Return value:</h3>
 path to give package
+
+
+
+</dd>
+
+
+
+
+<dt><a name="package_loader"></a><strong>package_loader</strong>&nbsp;(module)</dt>
+<dd>
+Package loader to find Lua modules in ROS packages. This will use the first part of the module name and assume it to be the name of a ROS package. It will then try to determine the path using rospack and if found try to load the module in the package directory.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  module: module name as given to require()
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+function of loaded code if module was found, nil otherwise
+
+
+
+</dd>
+
+
+
+
+<dt><a name="split"></a><strong>split</strong>&nbsp;(s, sep)</dt>
+<dd>
+Split string. Splits a string at a given separator and returns the parts in a table.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  s: string to split
+	</li>
+	
+	<li>
+	  sep: separator to split at
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+table with splitted parts
 
 
 

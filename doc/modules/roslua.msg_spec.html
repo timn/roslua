@@ -128,6 +128,11 @@
 	</tr>
 
 	<tr>
+	<td class="name" nowrap><a href="#MsgSpec:is_instance">MsgSpec:is_instance</a>&nbsp;(message)</td>
+	<td class="summary">Check if given message is an instance of this spec.</td>
+	</tr>
+
+	<tr>
 	<td class="name" nowrap><a href="#MsgSpec:load">MsgSpec:load</a>&nbsp;()</td>
 	<td class="summary">Load message specification from file.</td>
 	</tr>
@@ -158,7 +163,7 @@
 	</tr>
 
 	<tr>
-	<td class="name" nowrap><a href="#get_msgspec">get_msgspec</a>&nbsp;(msg_type)</td>
+	<td class="name" nowrap><a href="#get_msgspec">get_msgspec</a>&nbsp;(msg_type, specstr)</td>
 	<td class="summary">Get message specification.</td>
 	</tr>
 
@@ -170,6 +175,11 @@
 	<tr>
 	<td class="name" nowrap><a href="#is_builtin_type">is_builtin_type</a>&nbsp;(type)</td>
 	<td class="summary">Check if given type is a built-in type.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#is_msgspec">is_msgspec</a>&nbsp;(testobj)</td>
+	<td class="summary">Check if the given object is a message spec.</td>
 	</tr>
 
 	<tr>
@@ -217,6 +227,35 @@ a Message instance of the specified message type.
 	</a>
 	
 </ul>
+
+</dd>
+
+
+
+
+<dt><a name="MsgSpec:is_instance"></a><strong>MsgSpec:is_instance</strong>&nbsp;(message)</dt>
+<dd>
+Check if given message is an instance of this spec.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  message: message instance to check
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+true if the message is an instantiation of this spec, false otherwise
+
+
 
 </dd>
 
@@ -367,7 +406,7 @@ base type, for array types returns the non-array type, for non-array type return
 
 
 
-<dt><a name="get_msgspec"></a><strong>get_msgspec</strong>&nbsp;(msg_type)</dt>
+<dt><a name="get_msgspec"></a><strong>get_msgspec</strong>&nbsp;(msg_type, specstr)</dt>
 <dd>
 Get message specification. It is recommended to use the aliased version <code>roslua.get_msgspec()</code>.
 
@@ -377,6 +416,10 @@ Get message specification. It is recommended to use the aliased version <code>ro
 	
 	<li>
 	  msg_type: message type (e.g. std_msgs/String). The name must include the package.
+	</li>
+	
+	<li>
+	  specstr: 
 	</li>
 	
 </ul>
@@ -443,6 +486,35 @@ Check if given type is a built-in type.
 
 <h3>Return value:</h3>
 true if type is a built-in type, false otherwise
+
+
+
+</dd>
+
+
+
+
+<dt><a name="is_msgspec"></a><strong>is_msgspec</strong>&nbsp;(testobj)</dt>
+<dd>
+Check if the given object is a message spec.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  testobj: object to test
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+true if testobj is a message spec, false otherwise
 
 
 

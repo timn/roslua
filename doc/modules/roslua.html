@@ -123,6 +123,11 @@
 <table class="function_list">
 
 	<tr>
+	<td class="name" nowrap><a href="#add_spinner">add_spinner</a>&nbsp;(spinner)</td>
+	<td class="summary">Add a spinner.</td>
+	</tr>
+
+	<tr>
 	<td class="name" nowrap><a href="#exit">exit</a>&nbsp;()</td>
 	<td class="summary">Exit the program.</td>
 	</tr>
@@ -155,6 +160,11 @@
 	<tr>
 	<td class="name" nowrap><a href="#publisher">publisher</a>&nbsp;(topic, type)</td>
 	<td class="summary">Get a new publisher for a topic.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#remove_spinner">remove_spinner</a>&nbsp;(spinner)</td>
+	<td class="summary">Remove spinner.</td>
 	</tr>
 
 	<tr>
@@ -191,6 +201,32 @@
 
 <h2><a name="functions"></a>Functions</h2>
 <dl class="function">
+
+
+
+<dt><a name="add_spinner"></a><strong>add_spinner</strong>&nbsp;(spinner)</dt>
+<dd>
+Add a spinner. The spinner will be called in every loop after the other events have been processed.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  spinner: spinner to add, must be a function that is called without any arguments in each spin.
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
 
 
 
@@ -380,6 +416,32 @@ Publisher instance for the requested topic
 	</a>
 	
 </ul>
+
+</dd>
+
+
+
+
+<dt><a name="remove_spinner"></a><strong>remove_spinner</strong>&nbsp;(spinner)</dt>
+<dd>
+Remove spinner.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  spinner: spinner to remove
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
 
 </dd>
 
