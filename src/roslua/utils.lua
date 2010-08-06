@@ -65,6 +65,10 @@ end
 -- This will use the first part of the module name and assume it to
 -- be the name of a ROS package. It will then try to determine the path using
 -- rospack and if found try to load the module in the package directory.
+-- Additionally it appends the string "_lua" to the package name, thus
+-- allowing a module named my_module in the ROS package my_module_lua. This
+-- is done to allow to mark Lua ROS packages, but avoid having to have
+-- the _lua suffix in module names. The suffixed version takes precedence.
 -- @param module module name as given to require()
 -- @return function of loaded code if module was found, nil otherwise
 function package_loader(module)
@@ -72,22 +76,25 @@ function package_loader(module)
    if not package then return end
 
    local try_paths = { "%s/src/%s.lua", "%s/src/%s/init.lua" }
+   local try_packages = { package .. "_lua", package }
    local errmsg = ""
 
-   local ok, packpath = pcall(find_rospack, package)
-   if ok then
-      errmsg = errmsg .. string.format("\n\tFound matching ROS package %s (%s)",
-				       package, packpath)
+   for _, package in ipairs(try_packages) do
+      local ok, packpath = pcall(find_rospack, package)
+      if ok then
+	 errmsg = errmsg .. string.format("\n\tFound matching ROS package %s (%s)",
+					  package, packpath)
 
-      for _, tp in ipairs(try_paths) do
-	 local modulepath = string.gsub(module, "%.", "/")
-	 local filename = string.format(tp, packpath, modulepath)
-	 local file = io.open(filename, "rb")
-	 if file then
-	    -- Compile and return the module
-	    return assert(loadstring(assert(file:read("*a")), filename))
+	 for _, tp in ipairs(try_paths) do
+	    local modulepath = string.gsub(module, "%.", "/")
+	    local filename = string.format(tp, packpath, modulepath)
+	    local file = io.open(filename, "rb")
+	    if file then
+	       -- Compile and return the module
+	       return assert(loadstring(assert(file:read("*a")), filename))
+	    end
+	    errmsg = errmsg .. string.format("\n\tno file %s (ROS loader)", filename)
 	 end
-	 errmsg = errmsg .. string.format("\n\tno file %s (ROS loader)", filename)
       end
    end
 
