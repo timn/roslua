@@ -25,6 +25,8 @@
 module("roslua.service", package.seeall)
 
 require("roslua")
+require("roslua.srv_spec")
+
 require("struct")
 require("socket")
 
@@ -41,17 +43,20 @@ function Service:new(service, srvtype, handler)
    self.__index = self
 
    o.service     = service
-   o.type        = srvtype
    o.handler     = handler
+   if roslua.srv_spec.is_srvspec(srvtype) then
+      o.type    = srvtype.type
+      o.srvspec = srvtype
+   else
+      o.type    = srvtype
+      o.srvspec = roslua.get_msgspec(srvtype)
+   end
    assert(o.service, "Service name is missing")
    assert(o.type, "Service type is missing")
    assert(o.handler, "No service handler given")
    assert(type(handler) == "function" or
        (type(handler) == "table" and handler.service_call),
     "Service handler must be function or class")
-
-   -- get message specification
-   o.srvspec = roslua.get_srvspec(srvtype)
 
    o.clients = {}
    o.num_calls = 0

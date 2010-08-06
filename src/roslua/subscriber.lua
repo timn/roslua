@@ -22,6 +22,7 @@
 module("roslua.subscriber", package.seeall)
 
 require("roslua")
+require("roslua.msg_spec")
 require("roslua.tcpros")
 
 Subscriber = {}
@@ -36,14 +37,18 @@ function Subscriber:new(topic, type)
    self.__index = self
 
    o.topic       = topic
-   o.type        = type
-   o.listeners   = {}
+   if roslua.msg_spec.is_msgspec(type) then
+      o.type    = type.type
+      o.msgspec = type
+   else
+      o.type    = type
+      o.msgspec = roslua.get_msgspec(type)
+   end
    assert(o.topic, "Topic name is missing")
    assert(o.type, "Topic type is missing")
 
-   -- get message specification
-   o.msgspec = roslua.get_msgspec(type)
    o.publishers = {}
+   o.listeners  = {}
 
    return o
 end

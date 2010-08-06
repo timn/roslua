@@ -221,7 +221,7 @@ end
 function subscriber(topic, type)
    if not roslua.subscribers[topic] then
       local s = Subscriber:new(topic, type)
-      roslua.registry.register_subscriber(topic, type, s) -- this sets the subscribers table entry
+      roslua.registry.register_subscriber(topic, s.type, s) -- this sets subscribers table entry
    end
    return roslua.subscribers[topic].subscriber
 end
@@ -236,8 +236,8 @@ end
 -- @see Publisher
 function publisher(topic, type)
    if not roslua.publishers[topic] then
-      local s = Publisher:new(topic, type)
-      roslua.registry.register_publisher(topic, type, s) -- this sets the publishers table entry
+      local p = Publisher:new(topic, type)
+      roslua.registry.register_publisher(topic, p.type, p) -- this sets publishers table entry
    end
    return roslua.publishers[topic].publisher
 end
@@ -255,7 +255,7 @@ end
 function service(service, type, handler)
    assert(not roslua.services[service], "Service already provided")
    local s = Service:new(service, type, handler)
-   roslua.registry.register_service(service, type, s)
+   roslua.registry.register_service(service, s.type, s)
 
    return roslua.services[service].provider
 end
@@ -271,4 +271,3 @@ end
 function service_client(service, type, persistent)
    return ServiceClient:new{service, type, persistent=persistent}
 end
-

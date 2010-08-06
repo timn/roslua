@@ -24,6 +24,7 @@
 module("roslua.service_client", package.seeall)
 
 require("roslua")
+require("roslua.srv_spec")
 
 ServiceClient = { persistent = true }
 
@@ -48,19 +49,25 @@ function ServiceClient:new(args_or_service, srvtype)
    self.__index = self
    self.__call  = self.execute
 
+   local type
    if type(args_or_service) == "table" then
       o.service    = args_or_service[1] or args_or_service.service
-      o.type       = args_or_service[2] or args_or_service.type
+      type         = args_or_service[2] or args_or_service.type
       o.persistent = args_or_service.persistent
    else
-      o.service     = args_or_service
-      o.type        = srvtype
+      o.service    = args_or_service
+      type         = srvtype
    end
+   if roslua.srv_spec.is_srvspec(type) then
+      o.type    = type.type
+      o.srvspec = type
+   else
+      o.type    = type
+      o.srvspec = roslua.get_msgspec(type)
+   end
+
    assert(o.service, "Service name is missing")
    assert(o.type, "Service type is missing")
-
-   -- get message specification
-   o.srvspec = roslua.get_srvspec(o.type)
 
    if o.persistent then
       o:connect()

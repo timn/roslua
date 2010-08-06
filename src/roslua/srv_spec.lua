@@ -45,6 +45,18 @@ function get_srvspec(srv_type)
    return srvspec_cache[srv_type]
 end
 
+--- Check if the given object is a message spec.
+-- @param testobj object to test
+-- @return true if testobj is a message spec, false otherwise
+function is_srvspec(testobj)
+   if type(testobj) == "table" then
+      if getmetatable(testobj) == SrvSpec then
+	 return true
+      end
+   end
+   return false
+end
+
 
 SrvSpec = { request = nil, response = nil }
 

@@ -78,15 +78,29 @@ end
 -- It is recommended to use the aliased version <code>roslua.get_msgspec()</code>.
 -- @param msg_type message type (e.g. std_msgs/String). The name must include
 -- the package.
-function get_msgspec(msg_type)
+function get_msgspec(msg_type, specstr)
    roslua.utils.assert_rospack()
 
    if not msgspec_cache[msg_type] then
-      msgspec_cache[msg_type] = MsgSpec:new{type=msg_type}
+      msgspec_cache[msg_type] = MsgSpec:new{type=msg_type, specstr=specstr}
    end
 
    return msgspec_cache[msg_type]
 end
+
+--- Check if the given object is a message spec.
+-- @param testobj object to test
+-- @return true if testobj is a message spec, false otherwise
+function is_msgspec(testobj)
+   if type(testobj) == "table" then
+      if getmetatable(testobj) == MsgSpec then
+	 return true
+      end
+   end
+   return false
+end
+
+
 
 
 MsgSpec = { md5sum = nil }
@@ -139,7 +153,7 @@ function MsgSpec:load_from_iterator(iterator)
 	    table.insert(self.fields, {ftype, fname, type=ftype, name=fname,
 				       base_type=base_type(ftype)})
 	 else -- check for constant
-	    local ctype, cname, cvalue = line:match("^([%w_]+) ([%w_]+)=([%w]+)$")
+	    local ctype, cname, cvalue = line:match("^([%w_]+) ([%w_]+)[%s]*=[%s]*([-%w]+)$")
 	    if ctype and cname and cvalue then
 	       self.constants[cname] = { ctype, cvalue }
 	       table.insert(self.constants, {ctype, cname, cvalue})
@@ -224,6 +238,15 @@ function MsgSpec:print(indent)
    print(indent .. "MD5: " .. self:md5())
 end
 
+
+--- Check if given message is an instance of this spec.
+-- @param message message instance to check
+-- @return true if the message is an instantiation of this spec, false otherwise
+function MsgSpec:is_instance(message)
+   return type(message) == "table"
+          and getmetatable(message) == roslua.Message
+          and message.spec == self
+end
 
 --- Instantiate this message.
 -- @return a Message instance of the specified message type.
