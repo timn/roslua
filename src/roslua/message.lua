@@ -40,7 +40,24 @@ function Message:new(spec)
    o.values = {}
    assert(o.spec, "Message specification instance missing")
 
+   o:prefill()
+
    return o
+end
+
+
+function Message:prefill()
+   for _, f in ipairs(self.spec.fields) do
+      if not self.values[f.name] then
+	 if roslua.msg_spec.is_array_type(f.type) then -- just assume empty array
+	    self.values[f.name] = {}
+	 elseif roslua.msg_spec.is_builtin_type(f.type) then -- set default builtin value
+	    self.values[f.name] = self.default_values[f.type]
+	 else -- generate new complex message with no values set to trigger defaults
+	    self.values[f.name] = f.spec:instantiate()
+	 end
+      end
+   end
 end
 
 -- simple read function
@@ -68,7 +85,7 @@ Message.read_methods = {
    time     = function (buffer, i)
 		 local s, u
 		 s, u, i = struct.unpack("<!1I4I4", buffer, i)
-		 return {s, u}, i
+		 return roslua.Time:new(s, u), i
 	      end,
    string   = function (buffer, i)
 		 local l
@@ -114,6 +131,25 @@ Message.builtin_formats = {
    string   = "i4c0",  array   = "I4"
 }
 
+
+--- Deserialize single value
+function Message:deserialize_value(buffer, i, field, ftype, fname)
+   local rm = self.read_methods[ftype]
+   local rv
+
+   assert(i <= #buffer, self.spec.type .. ": buffer too short for message type (" ..
+		i .. " <= " .. #buffer .. ")")
+   if rm then -- standard type
+      return rm(buffer, i)
+   else -- must be complex type, try to instantiate and deserialize
+      rv = field.spec:instantiate()
+      assert(rv, "Could not instantiate message of type " .. ftype)
+
+      i = rv:deserialize(buffer, i)
+      return rv, i
+   end
+end
+
 --- Deserialize received message.
 -- This will deserialize the message according to the message specification.
 -- Not that it is the users obligation to make sure that the buffer is correctly
@@ -131,7 +167,7 @@ function Message:deserialize(buffer, i)
 	     i .. " <= " .. #buffer .. ")")
 
       local fname = f.name
-      local ftype = f.type
+      local ftype = self.spec:resolve_type(f.type)
       local is_array = roslua.msg_spec.is_array_type(ftype)
       local num_values = 1
 
@@ -140,21 +176,16 @@ function Message:deserialize(buffer, i)
 	 num_values, i = self.read_methods["uint32"](buffer, i)
       end
 
-      local rm = self.read_methods[ftype]
-
-      for n = 1, num_values do
-	 assert(i <= #buffer, self.spec.type .. ": buffer too short for message type (" ..
-		i .. " <= " .. #buffer .. ")")
-	 if rm then -- standard type
-	    self.values[fname], i = rm(buffer, i)
-	 else -- must be complex type, try to instantiate and deserialize
-	    if not self.values[fname] then
-	       local msgspec = roslua.msg_spec.get_msgspec(ftype)
-	       self.values[fname] = msgspec:instantiate()
-	    end
-	    assert(self.values[fname], "Could not instantiate message of type " .. ftype)
-
-	    i = self.values[fname]:deserialize(buffer, i)
+      if num_values == 0 then -- only an array can have zero entries
+	 self.values[fname] = {}
+      elseif num_values == 1 then -- single value
+	 self.values[fname], i = self:deserialize_value(buffer, i, f, ftype, fname)
+      else -- array
+	 self.values[fname] = {}
+	 for n = 1, num_values do
+	    local v
+	    v, i = self:deserialize_value(buffer, i, f, ftype, fname)
+	    table.insert(self.values[fname], n, v)
 	 end
       end
    end
@@ -163,6 +194,29 @@ function Message:deserialize(buffer, i)
 end
 
 
+function Message:print_value(indent, ftype, fname, fvalue)
+   if type(fvalue) == "table" then
+      if ftype == "time" or ftype == "duration" then
+	 print(indent .. "  " .. "k" .. "=" .. fvalue[1] .. "." .. fvalue[2])
+      elseif roslua.msg_spec.is_array_type(ftype) then
+	 if #fvalue == 0 then
+	    print(indent .. "  " .. fname .. " = []")
+	 else
+	    for i, a in ipairs(fvalue) do
+	       self:print_value(indent .. "  ", roslua.msg_spec.base_type(ftype),
+				fname .. "[" .. tostring(i) .. "]", a)
+	    end
+	 end
+      elseif fvalue.print then
+	 fvalue:print(indent .. "  ")
+      else
+	 print(indent .. "  " .. fname .. " [cannot print]")
+      end
+   else
+      print(indent .. "  " .. fname .. "=" .. tostring(fvalue))
+   end
+end
+
 --- Print message.
 -- @param indent string (normally spaces) to put before every line of output
 function Message:print(indent)
@@ -170,17 +224,7 @@ function Message:print(indent)
 
    print(indent .. self.spec.type)
    for k, v in pairs(self.values) do
-      if type(v) == "table" then
-	 if self.spec.fields[k] == "time" or self.spec.fields[k] == "duration" then
-	    print(indent .. "  " .. "k" .. "=" .. v[1] .. "." .. v[2])
-	 elseif v.print then
-	    v:print(indent .. "  ")
-	 else
-	    print(indent .. "  " .. k .. " [cannot print]")
-	 end
-      else
-	 print(indent .. "  " .. k .. "=" .. tostring(v))
-      end
+      self:print_value(indent, self.spec.fields[k], k, v)
    end
 end
 
@@ -211,7 +255,7 @@ function Message:generate_value_array(flat_array)
       end
 
       -- if no value has been set, set default value
-      if not self.values[fname] then
+      if self.values[fname] == nil then
 	 if is_array then -- just assume empty array
 	    self.values[fname] = {}
 	 elseif is_builtin_type then -- set default builtin value from table
@@ -228,8 +272,13 @@ function Message:generate_value_array(flat_array)
 	 table.insert(rv, #self.values[fname])
 	 for _,v in ipairs(self.values[fname]) do
 	    if ftype == "duration" or ftype == "time" then
-	       table.insert(rv, v[1])
-	       table.insert(rv, v[2])
+	       if roslua.Time.is_instance(v) then
+		  table.insert(rv, v.sec)
+		  table.insert(rv, v.nsec)
+	       else
+		  table.insert(rv, v[1])
+		  table.insert(rv, v[2])
+	       end
 	    elseif ftype == "string" then
 	       table.insert(rv, #v)
 	       table.insert(rv, v)
@@ -241,8 +290,13 @@ function Message:generate_value_array(flat_array)
       elseif is_builtin_type then
 	 format = format .. self.builtin_formats[ftype]
 	 if ftype == "duration" or ftype == "time" then
-	    table.insert(rv, self.values[fname][1])
-	    table.insert(rv, self.values[fname][2])
+	    if roslua.Time.is_instance(self.values[fname]) then
+	       table.insert(rv, self.values[fname].sec)
+	       table.insert(rv, self.values[fname].nsec)
+	    else
+	       table.insert(rv, self.values[fname][1])
+	       table.insert(rv, self.values[fname][2])
+	    end
 	 elseif ftype == "string" then
 	    table.insert(rv, #self.values[fname])
 	    table.insert(rv, self.values[fname])
@@ -252,6 +306,10 @@ function Message:generate_value_array(flat_array)
 
       elseif is_array then -- it is a complex type and an array
 	 for _,v in ipairs(self.values[fname]) do
+	    if f.spec then
+	       assert(f.spec:is_instance(v), "Expected message type is " .. f.spec.type
+		   .. " but got type " .. tostring(v.type))
+	    end
 	    local f, va = v:generate_value_array()
 	    format = format .. f
 	    if flat_array then
@@ -264,6 +322,13 @@ function Message:generate_value_array(flat_array)
 	 end
 
       else -- complex type, but *not* an array
+	 if f.spec then
+	    if not self.values[fname] then
+	       self.values[fname] = f.spec:instantiate()
+	    end
+	    assert(f.spec:is_instance(self.values[fname]), "Expected message type is "
+		.. f.spec.type .. " but got type " .. tostring(self.values[fname].type))
+	 end
 	 local f, va = self.values[fname]:generate_value_array()
 	 format = format .. f
 	 if flat_array then

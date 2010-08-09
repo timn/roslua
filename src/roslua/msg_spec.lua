@@ -135,6 +135,16 @@ function MsgSpec:new(o)
 end
 
 
+--- Resolve a type relative to this message spec.
+-- This is similar to the global resolve_type function, but the package parameter
+-- can be omitted as it is taken from the message spec instance.
+-- @param type type to resolve
+-- @return resolved type
+-- @see resolve_type()
+function MsgSpec:resolve_type(type)
+   return resolve_type(type, self.package)
+end
+
 -- (internal) load from iterator
 -- @param iterator iterator that returns one line of the specification at a time
 function MsgSpec:load_from_iterator(iterator)
@@ -150,12 +160,19 @@ function MsgSpec:load_from_iterator(iterator)
 	 if ftype and fname then
 	    if ftype == "Header" then ftype = "roslib/Header" end
 	    self.fields[fname] = ftype
-	    table.insert(self.fields, {ftype, fname, type=ftype, name=fname,
-				       base_type=base_type(ftype)})
+	    local msgspec = nil
+	    if not is_builtin_type(ftype) then
+	       -- load sub-spec
+	       msgspec = get_msgspec(self:resolve_type(base_type(ftype)))
+	    end
+	    table.insert(self.fields, {ftype, fname, msgspec, type=ftype, name=fname,
+				       base_type=base_type(ftype), spec=msgspec})
 	 else -- check for constant
 	    local ctype, cname, cvalue = line:match("^([%w_]+) ([%w_]+)[%s]*=[%s]*([-%w]+)$")
 	    if ctype and cname and cvalue then
-	       self.constants[cname] = { ctype, cvalue }
+	       local nv = tonumber(cvalue)
+	       if nv ~= nil then cvalue = nv end
+	       self.constants[cname] = { ctype, cvalue, type=ctype, value=cvalue }
 	       table.insert(self.constants, {ctype, cname, cvalue})
 	    else
 	       error("Unparsable line: " .. line)
