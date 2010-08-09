@@ -31,6 +31,7 @@ require("roslua.publisher")
 require("roslua.service")
 require("roslua.service_client")
 require("roslua.registry")
+require("roslua.time")
 
 require("signal")
 
@@ -43,6 +44,7 @@ Subscriber = roslua.subscriber.Subscriber
 Publisher  = roslua.publisher.Publisher
 Service = roslua.service.Service
 ServiceClient = roslua.service_client.ServiceClient
+Time = roslua.time.Time
 
 --- Get message specification.
 -- @name get_msgspec
