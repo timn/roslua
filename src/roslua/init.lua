@@ -162,6 +162,16 @@ function exit()
 end
 
 
+--- Spin until program is stopped.
+-- This will spin infinitely until roslua.quit is set to true, e.g. by
+-- a interrupt signal after pressing Ctrl-C.
+function run()
+   while not roslua.quit do
+      roslua.spin()
+   end
+   roslua.finalize()
+end
+
 --- Spin the roslua main loop.
 -- This will spin all registered subscribers, publishers and services, execute
 -- callbacks and accpet new connections. Call this at the desired frequency. It is
