@@ -26,30 +26,35 @@ require("xmlrpc")
 require("posix")
 require("socket")
 
+__DEBUG = false
 
 --- XML-RPC WSAPI handler
 -- @param wsapi_env WSAPI environment
 function wsapi_handler(wsapi_env)
-  local headers = { ["Content-type"] = "text/html" }
+  local headers = { ["Content-type"] = "text/xml" }
 
   local req = wsapi.request.new(wsapi_env)
 
-  local function xmlrpc_reply(wsapienv)
-     local method, arg_table = xmlrpc.srvDecode(req.POST.post_data)
+  local method, arg_table = xmlrpc.srvDecode(req.POST.post_data)
 
-     local func = xmlrpc.dispatch(method)
-     local result = { pcall(func, unpack(arg_table or {})) }
-     local ok = result[1]
-     if not ok then
-	result = { code = 3, message = result[2] }
-     else
-	table.remove(result, 1)
-	if table.getn(result) == 1 then
-	   result = result[1]
-	end
+  if __DEBUG then print("XML-RPC Slave API: " .. method .. " called") end
+
+  local func = xmlrpc.dispatch(method)
+  local result = { pcall(func, unpack(arg_table or {})) }
+  local ok = result[1]
+  if not ok then
+     result = { code = 3, message = result[2] }
+  else
+     table.remove(result, 1)
+     if table.getn(result) == 1 then
+	result = result[1]
      end
+  end
 
-     local r = xmlrpc.srvEncode(result, not ok)
+  local r = xmlrpc.srvEncode(result, not ok)
+  headers["Content-length"] = tostring(#r)
+
+  local function xmlrpc_reply(wsapienv)
      coroutine.yield(r)
   end
 
@@ -270,7 +275,11 @@ function xmlrpc_exports.requestTopic(caller_id, topic, protocols)
    assert(protocols, "Protocols are missing")
 
    if not roslua.publishers[topic] then
-      return rosreply_encaps(ROS_CODE_ERROR, "Topic us not published on this node", 0)
+      return rosreply_encaps(ROS_CODE_ERROR, "Topic is not published on this node", 0)
+   end
+
+   if __DEBUG then
+      print(caller_id .. " requests topic " .. topic)
    end
 
    for _,p in ipairs(protocols) do
@@ -279,6 +288,11 @@ function xmlrpc_exports.requestTopic(caller_id, topic, protocols)
 	 local protodef = {"TCPROS", socket.dns.gethostname(),
 			   roslua.publishers[topic].publisher.port}
 	 local xprotodef = xmlrpc.newTypedValue(protodef, xmlrpc.newArray())
+	 if __DEBUG then
+	    print("Found suitable protocol combination, proto TCPROS, host "
+	       .. socket.dns.gethostname() .. " port " ..
+	    roslua.publishers[topic].publisher.port)
+	 end
 	 return rosreply_encaps(ROS_CODE_SUCCESS, "", xprotodef)
       end
    end
