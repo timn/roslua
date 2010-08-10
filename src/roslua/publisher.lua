@@ -70,6 +70,20 @@ function Publisher:start_server()
 end
 
 
+--- Wait for a subscriber to connect.
+function Publisher:wait_for_subscriber()
+   local have_subscriber = false
+   repeat
+      assert(not roslua.quit, "Aborted while waiting for subscriber for topic "
+	     .. self.topic)
+      for _, _ in pairs(self.subscribers) do
+	 have_subscriber = true
+	 break
+      end
+      roslua.spin()
+   until have_subscriber
+end
+
 -- (internal) Called by spin() to accept new connections.
 function Publisher:accept_connections()
    local conns = self.server:accept()
@@ -79,6 +93,8 @@ function Publisher:accept_connections()
 		    type=self.type,
 		    md5sum=self.msgspec:md5()}
       c:receive_header()
+
+      --print("Accepted connection from " .. c.header.callerid)
 
       self.subscribers[c.header.callerid] = {uri=c.header.callerid, connection=c}
    end
