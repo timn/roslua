@@ -46,10 +46,8 @@
 		<a href="../modules/roslua.logging.rosout.html">roslua.logging.rosout</a>
 	</li>
 
-	<li>
-		<a href="../modules/roslua.logging.stdout.html">roslua.logging.stdout</a>
-	</li>
-
+	<li><strong>roslua.logging.stdout</strong></li>
+	
 	<li>
 		<a href="../modules/roslua.master_proxy.html">roslua.master_proxy</a>
 	</li>
@@ -106,8 +104,10 @@
 		<a href="../modules/roslua.time.html">roslua.time</a>
 	</li>
 
-	<li><strong>roslua.utils</strong></li>
-	
+	<li>
+		<a href="../modules/roslua.utils.html">roslua.utils</a>
+	</li>
+
 </ul>
 
 
@@ -123,9 +123,9 @@
 
 <div id="content">
 
-<h1>Module <code>roslua.utils</code></h1>
+<h1>Module <code>roslua.logging.stdout</code></h1>
 
-<p>General roslua utilities. This module contains useful functions used in roslua.</p>
+<p>Logging facilities for roslua. This module provides a logger that logs to stdout.</p>
 
 
 <p>Copyright&copy; Tim Niemueller, Carnegie Mellon University, Intel Research Pittsburgh</p>
@@ -139,23 +139,13 @@
 <table class="function_list">
 
 	<tr>
-	<td class="name" nowrap><a href="#assert_rospack">assert_rospack</a>&nbsp;()</td>
-	<td class="summary">Assert availability of rospack.</td>
+	<td class="name" nowrap><a href="#get_logger">get_logger</a>&nbsp;()</td>
+	<td class="summary">Get logger.</td>
 	</tr>
 
 	<tr>
-	<td class="name" nowrap><a href="#find_rospack">find_rospack</a>&nbsp;(package)</td>
-	<td class="summary">Get path for a package.</td>
-	</tr>
-
-	<tr>
-	<td class="name" nowrap><a href="#package_loader">package_loader</a>&nbsp;(module)</td>
-	<td class="summary">Package loader to find Lua modules in ROS packages.</td>
-	</tr>
-
-	<tr>
-	<td class="name" nowrap><a href="#split">split</a>&nbsp;(s, sep)</td>
-	<td class="summary">Split string.</td>
+	<td class="name" nowrap><a href="#log_stdout">log_stdout</a>&nbsp;(level, time, msg)</td>
+	<td class="summary">Log message to stdout.</td>
 	</tr>
 
 </table>
@@ -175,15 +165,18 @@
 
 
 
-<dt><a name="assert_rospack"></a><strong>assert_rospack</strong>&nbsp;()</dt>
+<dt><a name="get_logger"></a><strong>get_logger</strong>&nbsp;()</dt>
 <dd>
-Assert availability of rospack. Throws an error if rospack cannot be executed, for example because ROS is not installed or the binary is not in the PATH.
+Get logger.
 
 
 
 
 
 
+
+<h3>Return value:</h3>
+initialized stdout logger
 
 
 
@@ -192,16 +185,24 @@ Assert availability of rospack. Throws an error if rospack cannot be executed, f
 
 
 
-<dt><a name="find_rospack"></a><strong>find_rospack</strong>&nbsp;(package)</dt>
+<dt><a name="log_stdout"></a><strong>log_stdout</strong>&nbsp;(level, time, msg)</dt>
 <dd>
-Get path for a package. Uses rospack to find the path to a certain package. The path is cached so that consecutive calls will not trigger another rospack execution, but are rather handled directly from the cache. An error is thrown if the package cannot be found.
+Log message to stdout.
 
 
 <h3>Parameters</h3>
 <ul>
 	
 	<li>
-	  package: 
+	  level: log level
+	</li>
+	
+	<li>
+	  time: timestamp of message
+	</li>
+	
+	<li>
+	  msg: message
 	</li>
 	
 </ul>
@@ -210,71 +211,6 @@ Get path for a package. Uses rospack to find the path to a certain package. The 
 
 
 
-
-<h3>Return value:</h3>
-path to give package
-
-
-
-</dd>
-
-
-
-
-<dt><a name="package_loader"></a><strong>package_loader</strong>&nbsp;(module)</dt>
-<dd>
-Package loader to find Lua modules in ROS packages. This will use the first part of the module name and assume it to be the name of a ROS package. It will then try to determine the path using rospack and if found try to load the module in the package directory. Additionally it appends the string "_lua" to the package name, thus allowing a module named my_module in the ROS package my_module_lua. This is done to allow to mark Lua ROS packages, but avoid having to have the _lua suffix in module names. The suffixed version takes precedence.
-
-
-<h3>Parameters</h3>
-<ul>
-	
-	<li>
-	  module: module name as given to require()
-	</li>
-	
-</ul>
-
-
-
-
-
-
-<h3>Return value:</h3>
-function of loaded code if module was found, nil otherwise
-
-
-
-</dd>
-
-
-
-
-<dt><a name="split"></a><strong>split</strong>&nbsp;(s, sep)</dt>
-<dd>
-Split string. Splits a string at a given separator and returns the parts in a table.
-
-
-<h3>Parameters</h3>
-<ul>
-	
-	<li>
-	  s: string to split
-	</li>
-	
-	<li>
-	  sep: separator to split at
-	</li>
-	
-</ul>
-
-
-
-
-
-
-<h3>Return value:</h3>
-table with splitted parts
 
 
 

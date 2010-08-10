@@ -37,6 +37,18 @@
 	<li><strong>roslua</strong></li>
 	
 	<li>
+		<a href="../modules/roslua.logging.html">roslua.logging</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.logging.rosout.html">roslua.logging.rosout</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.logging.stdout.html">roslua.logging.stdout</a>
+	</li>
+
+	<li>
 		<a href="../modules/roslua.master_proxy.html">roslua.master_proxy</a>
 	</li>
 
@@ -86,6 +98,10 @@
 
 	<li>
 		<a href="../modules/roslua.tcpros.html">roslua.tcpros</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.time.html">roslua.time</a>
 	</li>
 
 	<li>
@@ -165,6 +181,11 @@
 	<tr>
 	<td class="name" nowrap><a href="#remove_spinner">remove_spinner</a>&nbsp;(spinner)</td>
 	<td class="summary">Remove spinner.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#run">run</a>&nbsp;()</td>
+	<td class="summary">Spin until program is stopped.</td>
 	</tr>
 
 	<tr>
@@ -363,7 +384,7 @@ Initialize ROS node. This function must be called before any other interaction w
 <ul>
 	
 	<li>
-	  args: a table with argument entries. The following fields are mandatory: master_uri The ROS master URI node_name the name of the node using the library
+	  args: a table with argument entries. The following fields are mandatory: <dl> <dt>master_uri</dt><dd>The ROS master URI</dd> <dt>node_name</dt><dd>the name of the node using the library</dd> </dl> The following fields are optional. <dl> <dt>no_rosout</dt><dd>Do not log to /rosout.</dd> <dt>no_signal_handler</dt><dd>Do not register default signal handler.</dd> </dl>
 	</li>
 	
 </ul>
@@ -435,6 +456,23 @@ Remove spinner.
 	</li>
 	
 </ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="run"></a><strong>run</strong>&nbsp;()</dt>
+<dd>
+Spin until program is stopped. This will spin infinitely until roslua.quit is set to true, e.g. by a interrupt signal after pressing Ctrl-C.
+
 
 
 

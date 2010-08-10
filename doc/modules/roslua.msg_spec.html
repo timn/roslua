@@ -39,6 +39,18 @@
 	</li>
 
 	<li>
+		<a href="../modules/roslua.logging.html">roslua.logging</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.logging.rosout.html">roslua.logging.rosout</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.logging.stdout.html">roslua.logging.stdout</a>
+	</li>
+
+	<li>
 		<a href="../modules/roslua.master_proxy.html">roslua.master_proxy</a>
 	</li>
 
@@ -86,6 +98,10 @@
 
 	<li>
 		<a href="../modules/roslua.tcpros.html">roslua.tcpros</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.time.html">roslua.time</a>
 	</li>
 
 	<li>
@@ -155,6 +171,11 @@
 	<tr>
 	<td class="name" nowrap><a href="#MsgSpec:print">MsgSpec:print</a>&nbsp;(indent)</td>
 	<td class="summary">Print specification.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#MsgSpec:resolve_type">MsgSpec:resolve_type</a>&nbsp;(type)</td>
+	<td class="summary">Resolve a type relative to this message spec.</td>
 	</tr>
 
 	<tr>
@@ -371,6 +392,44 @@ Print specification.
 
 
 
+
+</dd>
+
+
+
+
+<dt><a name="MsgSpec:resolve_type"></a><strong>MsgSpec:resolve_type</strong>&nbsp;(type)</dt>
+<dd>
+Resolve a type relative to this message spec. This is similar to the global resolve_type function, but the package parameter can be omitted as it is taken from the message spec instance.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  type: type to resolve
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+resolved type
+
+
+
+<h3>See also:</h3>
+<ul>
+	
+	<li><a href="">
+		resolve_type()
+	</a>
+	
+</ul>
 
 </dd>
 
