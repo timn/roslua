@@ -32,6 +32,9 @@ require("roslua.service")
 require("roslua.service_client")
 require("roslua.registry")
 require("roslua.time")
+require("roslua.logging")
+require("roslua.logging.stdout")
+require("roslua.logging.rosout")
 
 require("signal")
 
@@ -84,8 +87,16 @@ table.insert(package.loaders, 4, utils.package_loader)
 -- A signal handler is set for SIGINT (e.g. after pressing Ctrl-C) to set the quit
 -- flag to true if the signal is received.
 -- @param args a table with argument entries. The following fields are mandatory:
--- master_uri The ROS master URI
--- node_name the name of the node using the library
+-- <dl>
+--  <dt>master_uri</dt><dd>The ROS master URI</dd>
+--  <dt>node_name</dt><dd>the name of the node using the library</dd>
+-- </dl>
+-- The following fields are optional.
+-- <dl>
+--  <dt>no_rosout</dt><dd>Do not log to /rosout.</dd>
+--  <dt>no_signal_handler</dt><dd>Do not register default signal handler.</dd>
+-- </dl>
+
 function init_node(args)
    roslua.master_uri = args.master_uri
    roslua.node_name  = args.node_name
@@ -106,8 +117,16 @@ function init_node(args)
    roslua.slave_api.init()
    roslua.slave_uri = roslua.slave_api.slave_uri()
 
+   roslua.logging.register_print_funcs(_G)
+   roslua.logging.add_logger(roslua.logging.stdout.get_logger())
+   if not args.no_rosout then
+      roslua.logging.add_logger(roslua.logging.rosout.get_logger())
+   end
+
    quit = false;
-   signal.signal(signal.SIGINT, roslua.exit)
+   if not args.no_signal_handler then
+      signal.signal(signal.SIGINT, roslua.exit)
+   end
 end
 
 --- Add a spinner.
