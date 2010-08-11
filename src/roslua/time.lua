@@ -10,13 +10,34 @@
 -- Licensed under BSD license
 
 --- Time utility class for roslua.
--- This module provides the Time class. Currently, it always uses the local
--- system time and not the central ROS time.
+-- This module provides the Time class. It uses the local clock or the
+-- /clock topic depending whether simulation time has been initialized or
+-- not.
 -- @copyright Tim Niemueller, Carnegie Mellon University, Intel Research Pittsburgh
 -- @release Released under BSD license
 module("roslua.time", package.seeall)
 
 require("pimpedposix")
+
+local sub_clock
+local sim_time
+
+--- Local function called on simtime updates, i.e. new messages
+-- for /clock.
+-- @param message new Clock message
+local function simtime_update(message)
+   sim_time = message.values.clock
+end
+
+--- Initialize simulation time.
+-- This initializes the simulation time by subscribing to the /clock topic.
+-- This function is called automatically from roslua.init_node() if required,
+-- so you should not call this function directly.
+function init_simtime()
+   sub_clock = roslua.subscriber("/clock", "roslib/Clock")
+   sub_clock.add_listener(simtime_update)
+end
+
 
 Time = { sec = 0, nsec = 0 }
 
@@ -64,7 +85,11 @@ end
 
 --- Set to current time.
 function Time:stamp()
-   self.sec, self.nsec = posix.clock_gettime(posix.CLOCK_REALTIME)
+   if sim_time then
+      self.sec, self.nsec = sim_time.sec, sim_time.nsec
+   else
+      self.sec, self.nsec = posix.clock_gettime("realtime")
+   end
 end
 
 --- Create Time from seconds.

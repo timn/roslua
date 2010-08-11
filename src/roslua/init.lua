@@ -123,6 +123,13 @@ function init_node(args)
       roslua.logging.add_logger(roslua.logging.rosout.get_logger())
    end
 
+   if roslua.parameter_server:has_param("/use_sim_time parameter") then
+      local use_sim_time = roslua.parameter_server:get_param("/use_sim_time parameter")
+      if use_sim_time then
+	 roslua.time.init_simtime()
+      end
+   end
+
    quit = false;
    if not args.no_signal_handler then
       signal.signal(signal.SIGINT, roslua.exit)
