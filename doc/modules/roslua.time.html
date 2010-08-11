@@ -125,7 +125,7 @@
 
 <h1>Module <code>roslua.time</code></h1>
 
-<p>Time utility class for roslua. This module provides the Time class. Currently, it always uses the local system time and not the central ROS time.</p>
+<p>Time utility class for roslua. This module provides the Time class. It uses the local clock or the /clock topic depending whether simulation time has been initialized or not.</p>
 
 
 <p>Copyright&copy; Tim Niemueller, Carnegie Mellon University, Intel Research Pittsburgh</p>
@@ -221,6 +221,16 @@
 	<tr>
 	<td class="name" nowrap><a href="#Time:to_sec">Time:to_sec</a>&nbsp;()</td>
 	<td class="summary">Convert time to seconds.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#init_simtime">init_simtime</a>&nbsp;()</td>
+	<td class="summary">Initialize simulation time.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#simtime_update">simtime_update</a>&nbsp;(message)</td>
+	<td class="summary">Local function called on simtime updates, i.e.</td>
 	</tr>
 
 </table>
@@ -711,6 +721,49 @@ Convert time to seconds.
 
 <h3>Return value:</h3>
 floating point number in seconds.
+
+
+
+</dd>
+
+
+
+
+<dt><a name="init_simtime"></a><strong>init_simtime</strong>&nbsp;()</dt>
+<dd>
+Initialize simulation time. This initializes the simulation time by subscribing to the /clock topic. This function is called automatically from roslua.init_node() if required, so you should not call this function directly.
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="simtime_update"></a><strong>simtime_update</strong>&nbsp;(message)</dt>
+<dd>
+Local function called on simtime updates, i.e. new messages for /clock.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  message: new Clock message
+	</li>
+	
+</ul>
+
+
+
+
+
 
 
 
