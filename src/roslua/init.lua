@@ -38,6 +38,11 @@ require("roslua.logging.rosout")
 
 require("signal")
 
+VERSION_MAJOR = 0
+VERSION_MINOR = 3
+VERSION_MICRO = 0
+VERSION = VERSION_MAJOR .. "." .. VERSION_MINOR .. "." .. VERSION_MICRO
+
 local utils = require("roslua.utils")
 
 -- Imports from other libs to have a unified entry point
