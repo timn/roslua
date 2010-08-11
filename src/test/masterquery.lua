@@ -85,15 +85,15 @@ master:unregisterService("/masterquery", "rosrpc://localhost:12345", "http://loc
 
 print()
 print("Listing parameter names")
-local param_names = parmserv:getParamNames()
+local param_names = parmserv:get_param_names()
 for _,n in ipairs(param_names) do
-   local param_value = parmserv:getParam(n)
+   local param_value = parmserv:get_param(n)
    print("", n,"=", param_value)
 end
 
 print()
 print("Checking for parameter /run_id")
-local has_param = parmserv:hasParam("/run_id")
+local has_param = parmserv:has_param("/run_id")
 if has_param then
    print("", "YES")
 else
@@ -103,16 +103,16 @@ end
 
 print()
 print("Custom value test with /masterquery")
-parmserv:setParam("/masterquery", 1234)
-local set_ok = parmserv:hasParam("/masterquery")
+parmserv:set_param("/masterquery", 1234)
+local set_ok = parmserv:has_param("/masterquery")
 if set_ok then
    print("setting worked, fetching")
-   local val = parmserv:getParam("/masterquery")
+   local val = parmserv:get_param("/masterquery")
    print("Value", val)
 
    print("Deleting value")
-   parmserv:deleteParam("/masterquery")
-   local del_ok = parmserv:hasParam("/masterquery")
+   parmserv:delete_param("/masterquery")
+   local del_ok = parmserv:has_param("/masterquery")
    if del_ok then
       print("Failed to delete value")
    else
@@ -124,7 +124,7 @@ end
 
 print()
 print("Searching bogus key")
-local ok, fkey = pcall(parmserv.searchParam, parmserv, "/bogus")
+local ok, fkey = pcall(parmserv.search_param, parmserv, "/bogus")
 if ok then
    print("WTF, our bogus search found something!?", fkey)
 else
@@ -134,5 +134,6 @@ end
 
 print()
 print("Searching run_id key")
-local fkey = parmserv:searchParam("run_id")
+local fkey = parmserv:search_param("run_id")
 print("Found", fkey)
+

@@ -57,7 +57,7 @@ end
 
 --- Get names of all available parameters.
 -- @return array with names of all parameters
-function ParamProxy:getParamNames()
+function ParamProxy:get_param_names()
    local res = self:do_call("getParamNames")
 
    return res[3]
@@ -66,7 +66,7 @@ end
 --- Check if parameter exists.
 -- @param key key of the parameter to query
 -- @return true if the parameter exists, false otherwise
-function ParamProxy:hasParam(key)
+function ParamProxy:has_param(key)
    local res = self:do_call("hasParam", key)
 
    return res[3]
@@ -84,20 +84,20 @@ end
 --- Set parameter.
 -- @param key key of the parameter to set
 -- @param value value of the parameter to set
-function ParamProxy:setParam(key, value)
+function ParamProxy:set_param(key, value)
    self:do_call("setParam", key, value)
 end
 
 --- Delete parameter.
 -- @param key key of the parameter to delete
-function ParamProxy:deleteParam(key)
+function ParamProxy:delete_param(key)
    self:do_call("deleteParam", key)
 end
 
 --- Search for parameter.
 -- @param key substring of the key to look for
 -- @return first key that matched
-function ParamProxy:searchParam(key)
+function ParamProxy:search_param(key)
    local res = self:do_call("searchParam", key)
 
    return res[3]
@@ -105,7 +105,7 @@ end
 
 --- Subscribe to parameter.
 -- @param key key to subscribe to
-function ParamProxy:subscribeParam(key)
+function ParamProxy:subscribe_param(key)
    local res = self:do_call("subscribeParam", roslua.slave_uri, key)
 
    return res[3]
@@ -113,7 +113,7 @@ end
 
 --- Unsubscribe from parameter.
 -- @param key key to unsubscribe from
-function ParamProxy:unsubscribeParam(key)
+function ParamProxy:unsubscribe_param(key)
    self:do_call("subscribeParam", roslua.slave_uri, key)
 end
 
