@@ -53,6 +53,7 @@ Publisher  = roslua.publisher.Publisher
 Service = roslua.service.Service
 ServiceClient = roslua.service_client.ServiceClient
 Time = roslua.time.Time
+Duration = roslua.time.Duration
 
 --- Get message specification.
 -- @name get_msgspec
@@ -208,25 +209,42 @@ end
 -- callbacks and accpet new connections. Call this at the desired frequency. It is
 -- recommended to call it as fast as possible, as the call frequency influences
 -- the overall latency e.g. for processing service calls or delivering messages.
+local spin_count = 0
+local last_loop  = roslua.Time.now()
 function spin()
-   roslua.slave_api.spin()
+   --local tracked_times = {}
+   --tracked_times.total = {start = roslua.Time.now()}
 
-   -- spin subscribers for receiving
+   --*** Spin XML-RPC API Slave
+   --tracked_times.api_slave = {start = roslua.Time.now()}
+   roslua.slave_api.spin()
+   --tracked_times.api_slave.endtime = roslua.Time.now()
+
+   --*** spin subscribers for receiving
+   --tracked_times.subscribers = {start = roslua.Time.now()}
    for _,s in pairs(roslua.subscribers) do
       s.subscriber:spin()
    end
-   -- spin publishers for accepting
+   --tracked_times.subscribers.endtime = roslua.Time.now()
+
+   --*** spin publishers for accepting
+   -- tracked_times.publishers = {start = roslua.Time.now()}
    for _,p in pairs(roslua.publishers) do
       p.publisher:spin()
    end
-   -- spin service providers for accepting and processing
+   --tracked_times.publishers.endtime = roslua.Time.now()
+
+   --*** spin service providers for accepting and processing
+   --tracked_times.providers = {start = roslua.Time.now()}
    for _,s in pairs(roslua.services) do
       s.provider:spin()
    end
+   --tracked_times.providers.endtime = roslua.Time.now()
 
-   -- Spin all registered spinners
+   --*** Spin all registered spinners
    -- work on a copy of the list as the list might change while we run the
    -- spinners if one of the removes itself
+   --tracked_times.spinners = {start = roslua.Time.now()}
    local tmpspinners = {}
    for i, s in ipairs(spinners) do
       tmpspinners[i] = s
@@ -234,6 +252,24 @@ function spin()
    for _, s in ipairs(spinners) do
       s()
    end
+
+   --tracked_times.spinners.endtime = roslua.Time.now()
+   --tracked_times.total.endtime = roslua.Time.now()
+
+   --[[
+   spin_count = spin_count + 1
+   local now = roslua.Time.now()
+   if (now - last_loop):to_sec() > 1 then
+      printf("Currently making %d spins/sec", spin_count)
+      last_loop = now
+      spin_count = 0
+
+      for k, t in pairs(tracked_times) do
+	 local difftime = t.endtime - t.start
+	 printf("%s spin time: %f sec", k, difftime:to_sec())
+      end
+   end
+   --]]
 end
 
 --- Get a slave proxy.
