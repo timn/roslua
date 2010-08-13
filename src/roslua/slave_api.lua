@@ -323,5 +323,5 @@ end
 --- Process requests.
 -- This processes XML-RPC API calls.
 function spin()
-   copas.step(0.1)
+   copas.step(0)
 end
