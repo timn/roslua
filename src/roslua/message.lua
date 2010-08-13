@@ -31,16 +31,17 @@ Message = { spec=nil }
 
 --- Constructor.
 -- @param spec message specification
-function Message:new(spec)
+function Message:new(spec, no_prefill)
    local o = {}
    setmetatable(o, self)
    self.__index = self
 
    o.spec   = spec
-   o.values = {}
    assert(o.spec, "Message specification instance missing")
 
-   o:prefill()
+   o.values = {}
+
+   if not no_prefill then o:prefill() end
 
    return o
 end
@@ -49,9 +50,9 @@ end
 function Message:prefill()
    for _, f in ipairs(self.spec.fields) do
       if not self.values[f.name] then
-	 if roslua.msg_spec.is_array_type(f.type) then -- just assume empty array
+	 if f.is_array then -- just assume empty array
 	    self.values[f.name] = {}
-	 elseif roslua.msg_spec.is_builtin_type(f.type) then -- set default builtin value
+	 elseif f.is_builtin then -- set default builtin value
 	    self.values[f.name] = self.default_values[f.type]
 	 else -- generate new complex message with no values set to trigger defaults
 	    self.values[f.name] = f.spec:instantiate()
@@ -59,53 +60,6 @@ function Message:prefill()
       end
    end
 end
-
--- simple read function
-local function srf(format)
-   return function (buffer, i)
-	     local s, v
-	     v, i = struct.unpack(format, buffer, i)
-	     return v, i
-	  end
-end
-
--- (internal) table of read methods for built-in types
-Message.read_methods = {
-   int8     = srf("<!1i1"),   uint8   = srf("<!1I1"),
-   int16    = srf("<!1i2"),   uint16  = srf("<!1I2"),
-   int32    = srf("<!1i4"),   uint32  = srf("<!1I4"),
-   int64    = srf("<!1i8"),   uint64  = srf("<!1I8"),
-   float32  = srf("<!1f"),    float64 = srf("<!1d"),
-   char     = srf("<!1i1"),   byte    = srf("<!1I1"),
-   duration = function (buffer, i)
-		 local s, u
-		 s, u, i = struct.unpack("<!1i4i4", buffer, i)
-		 return {s, u}, i
-	      end,
-   time     = function (buffer, i)
-		 local s, u
-		 s, u, i = struct.unpack("<!1I4I4", buffer, i)
-		 return roslua.Time:new(s, u), i
-	      end,
-   string   = function (buffer, i)
-		 local l
-		 l, i = struct.unpack("<!1I4", buffer, i)
-		 --print("String", i, l)
-		 return buffer:sub(i,i+l-1), i+l
-	      end,
-
-   array    = function (buffer, i, typefunc)
-		 local l, v, rv = {}
-		 l, i = struct.unpack("<!1I4", buffer, i)
-		 for li = 1, l do
-		    local v
-		    v, i = typefunc(buffer, i)
-		    table.insert(rv, v)
-		 end
-		 
-		 return rv, i
-	      end
-}
 
 -- (internal) table of default values for built-in types
 Message.default_values = {
@@ -132,24 +86,6 @@ Message.builtin_formats = {
 }
 
 
---- Deserialize single value
-function Message:deserialize_value(buffer, i, field, ftype, fname)
-   local rm = self.read_methods[ftype]
-   local rv
-
-   assert(i <= #buffer, self.spec.type .. ": buffer too short for message type (" ..
-		i .. " <= " .. #buffer .. ")")
-   if rm then -- standard type
-      return rm(buffer, i)
-   else -- must be complex type, try to instantiate and deserialize
-      rv = field.spec:instantiate()
-      assert(rv, "Could not instantiate message of type " .. ftype)
-
-      i = rv:deserialize(buffer, i)
-      return rv, i
-   end
-end
-
 --- Deserialize received message.
 -- This will deserialize the message according to the message specification.
 -- Not that it is the users obligation to make sure that the buffer is correctly
@@ -157,42 +93,98 @@ end
 -- @param buffer buffer that contains the message as read from the TCPROS connection
 -- @param i Index from where to start parsing in the buffer, optional argument
 -- that defaults to 1
-function Message:deserialize(buffer, i)
-   local i = i or 1
+function Message:deserialize(buffer)
+   local format = self:format_string(buffer, 1)
+   local values = {struct.unpack(format, buffer)}
+   self:read_values(values)
+end
 
-   self.values = {}
 
-   for _, f in ipairs(self.spec.fields) do
-      assert(i <= #buffer, self.spec.type .. ": buffer too short for message type (" ..
-	     i .. " <= " .. #buffer .. ")")
-
-      local fname = f.name
-      local ftype = self.spec:resolve_type(f.type)
-      local is_array = roslua.msg_spec.is_array_type(ftype)
-      local num_values = 1
-
-      if is_array then
-	 ftype = roslua.msg_spec.base_type(ftype)
-	 num_values, i = self.read_methods["uint32"](buffer, i)
-      end
-
-      if num_values == 0 then -- only an array can have zero entries
-	 self.values[fname] = {}
-      elseif num_values == 1 then -- single value
-	 self.values[fname], i = self:deserialize_value(buffer, i, f, ftype, fname)
-      else -- array
-	 self.values[fname] = {}
-	 for n = 1, num_values do
-	    local v
-	    v, i = self:deserialize_value(buffer, i, f, ftype, fname)
-	    table.insert(self.values[fname], n, v)
+--- Generate format string.
+-- The format string is based on the base format of the message specification,
+-- but takes into account actual array sizes, replicating array parts as
+-- necessary.
+-- @param buffer incoming buffer to be deserialized
+-- @param i index from where to start reading buffer
+-- @param farray base format array from message spec, if nil the one from
+-- internal spec is used (recursion parameter)
+-- @param format prefix if nil set to little endian and 1 byte alignment
+-- (recursion parameter)
+function Message:format_string(buffer, i, farray, prefix)
+   local rv = prefix or "<!1"
+   local farray = farray or self.spec.base_farray
+   for j, f in ipairs(farray) do
+      if type(f) == "string" then
+	 rv = rv .. f
+	 local s = struct.size(f, buffer, i)
+	 i = i + s
+      else
+	 local num
+	 num, i = struct.unpack("I4", buffer, i)
+	 rv = rv .. "I4"
+	 if num > 0 then
+	    local tmp, newi = self:format_string(buffer, i, f, "")
+	    local offset = newi
+	    i = i + (offset * num)
 	 end
       end
    end
-
-   return i
+   return rv, i
 end
 
+--- Read values into values field.
+-- This iterates over the given array and copies the values to the internal
+-- values field, instantiating sub-classes as necessary.
+-- @param values array, flat array with all values of the message
+-- @param start index from where to start reading the values array
+function Message:read_values(values, start)
+   local fi = start or 1
+   for _, f in ipairs(self.spec.fields) do
+      if f.is_array then
+	 local num = values[fi]
+	 fi = fi + 1
+	 local array = {}
+	 self.values[f.name] = array
+	 if f.is_builtin then
+	    if f.base_type == "time" or f.base_type == "duration" then
+	       local class = roslua.Time
+	       if f.base_type == "duration" then class = roslua.Duration end
+	       for i = 1, num do
+		  array[i] = class:new(values[fi], values[fi+1])
+		  fi = fi + 2
+	       end
+	    else
+	       for i = 1, num do
+		  array[i] = values[fi]
+		  fi = fi + 1
+	       end
+	    end
+	 else
+	    for i = 1, num do
+	       array[i] = f.spec:instantiate(false)
+	       fi = array[i]:read_values(values, fi)
+	    end
+	 end
+      else
+	 if f.is_builtin then
+	    if f.base_type == "time" then
+	       self.values[f.name] = roslua.Time:new(values[fi], values[fi+1])
+	       fi = fi + 2
+	    elseif f.base_type == "duration" then
+	       self.values[f.name] = roslua.Duration:new(values[fi], values[fi+1])
+	       fi = fi + 2
+	    else
+	       self.values[f.name] = values[fi]
+	       fi = fi + 1
+	    end
+	 else
+	    self.values[f.name] = f.spec:instantiate(false)
+	    fi = self.values[f.name]:read_values(values, fi)
+	 end
+      end
+   end
+   return fi
+end
 
 function Message:print_value(indent, ftype, fname, fvalue)
    if type(fvalue) == "table" then
@@ -247,18 +239,16 @@ function Message:generate_value_array(flat_array)
 
       local fname = f.name
       local ftype = f.type
-      local is_builtin_type = roslua.msg_spec.is_builtin_type(ftype)
-      local is_array = roslua.msg_spec.is_array_type(ftype)
 
-      if is_array then
-	 ftype = roslua.msg_spec.base_type(ftype)
+      if f.is_array then
+	 ftype = f.base_type
       end
 
       -- if no value has been set, set default value
       if self.values[fname] == nil then
-	 if is_array then -- just assume empty array
+	 if f.is_array then -- just assume empty array
 	    self.values[fname] = {}
-	 elseif is_builtin_type then -- set default builtin value from table
+	 elseif f.is_builtin then -- set default builtin value from table
 	    self.values[fname] = self.default_values[ftype]
 	 else -- generate new complex message with no values set to trigger defaults
 	    self.values[fname] = roslua.get_msgspec(ftype):instantiate()
@@ -267,7 +257,7 @@ function Message:generate_value_array(flat_array)
 
 
       local v, j
-      if is_builtin_type and is_array then
+      if f.is_builtin and f.is_array then
 	 format = format .. "I4" .. string.rep(self.builtin_formats[ftype], #self.values[fname])
 	 table.insert(rv, #self.values[fname])
 	 for _,v in ipairs(self.values[fname]) do
@@ -287,7 +277,7 @@ function Message:generate_value_array(flat_array)
 	    end
 	 end
 	    
-      elseif is_builtin_type then
+      elseif f.is_builtin then
 	 format = format .. self.builtin_formats[ftype]
 	 if ftype == "duration" or ftype == "time" then
 	    if roslua.Time.is_instance(self.values[fname]) then
@@ -304,7 +294,9 @@ function Message:generate_value_array(flat_array)
 	    table.insert(rv, self.values[fname])
 	 end
 
-      elseif is_array then -- it is a complex type and an array
+      elseif f.is_array then -- it is a complex type and an array
+	 format = format .. "I4"
+	 table.insert(rv, #self.values[fname])
 	 for _,v in ipairs(self.values[fname]) do
 	    if f.spec then
 	       assert(f.spec:is_instance(v), "Expected message type is " .. f.spec.type
@@ -359,7 +351,7 @@ function Message:serialize()
       local num_values = 1
 
       if is_array then
-	 ftype = roslua.msg_spec.base_type(ftype)
+	 ftype = f.base_type
       end
 
       -- generate format string
@@ -389,7 +381,7 @@ function Message:set_from_array(arr)
 	 self.values[fname] = arr[i]
       else
 	 local ms = roslua.get_msgspec(ftype)
-	 local m = ms:instantiate()
+	 local m = ms:instantiate(false)
 	 m:set_from_array(arr[i])
 	 self.values[fname] = m
       end
