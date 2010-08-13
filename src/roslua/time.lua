@@ -147,7 +147,7 @@ end
 --- Convert time to seconds.
 -- @return floating point number in seconds.
 function Time:to_sec()
-   return self.sec + self.nsec / 1000000
+   return self.sec + self.nsec / 1000000000
 end
 
 
@@ -159,7 +159,7 @@ function Time.__add(t1, t2)
    local t = Time:new()
    t.sec  = t1.sec + t2.sec
    t.nsec = t1.nsec + t2.nsec
-   if t.nsec > 1000000 then
+   if t.nsec > 1000000000 then
       local n = math.floor(t.nsec / 1000000000)
       t.sec  = t.sec  + n
       t.nsec = t.nsec - n * 1000000000
