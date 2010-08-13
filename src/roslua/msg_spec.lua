@@ -131,6 +131,8 @@ function MsgSpec:new(o)
       o:load()
    end
 
+   o.base_format, o.base_farray = o:generate_base_format()
+
    return o
 end
 
@@ -151,6 +153,8 @@ function MsgSpec:load_from_iterator(iterator)
    self.fields = {}
    self.constants = {}
 
+   local field_i = 1
+
    for line in iterator do
       line = line:match("^([^#]*)") or ""   -- strip comment
       line = line:match("(.-)%s+$") or line -- strip trailing whitespace
@@ -159,14 +163,19 @@ function MsgSpec:load_from_iterator(iterator)
 	 local ftype, fname = string.match(line, "^([%w_/%[%]]+) ([%w_%[%]]+)$")
 	 if ftype and fname then
 	    if ftype == "Header" then ftype = "roslib/Header" end
-	    self.fields[fname] = ftype
+	    ftype = self:resolve_type(ftype)
 	    local msgspec = nil
 	    if not is_builtin_type(ftype) then
 	       -- load sub-spec
-	       msgspec = get_msgspec(self:resolve_type(base_type(ftype)))
+	       msgspec = get_msgspec(base_type(ftype))
 	    end
-	    table.insert(self.fields, {ftype, fname, msgspec, type=ftype, name=fname,
-				       base_type=base_type(ftype), spec=msgspec})
+	    local typeinfo = {ftype, fname, msgspec, type=ftype, name=fname,
+			      base_type=base_type(ftype), spec=msgspec,
+			      is_array=is_array_type(ftype), is_builtin=is_builtin_type(ftype),
+			      value_index=field_i}
+	    self.fields[fname] = typeinfo
+	    table.insert(self.fields, typeinfo)
+	    field_i = field_i + 1
 	 else -- check for constant
 	    local ctype, cname, cvalue = line:match("^([%w_]+) ([%w_]+)[%s]*=[%s]*([-%w]+)$")
 	    if ctype and cname and cvalue then
@@ -198,6 +207,48 @@ function MsgSpec:load()
    return self:load_from_iterator(io.lines(self.file))
 end
 
+
+function MsgSpec:generate_base_format(prefix)
+   local format = prefix or "<!1"
+   local farray = {}
+   local curfor = ""
+   for _, f in ipairs(self.fields) do
+      local fname = f.name
+      local ftype = f.type
+      local is_array   = is_array_type(ftype)
+      local is_builtin = is_builtin_type(ftype)
+
+      if is_array then
+	 format = format .. "I4("
+	 table.insert(farray, curfor)
+	 curfor = ""
+	 if is_builtin then
+	    format = format .. roslua.message.Message.builtin_formats[f.base_type]
+	    table.insert(farray, {roslua.message.Message.builtin_formats[f.base_type]})
+	 else
+	    local subformat, subfarray = f.spec:generate_base_format("")
+	    format = format .. subformat
+	    table.insert(farray, subfarray)
+	 end
+	 format = format .. ")"
+      else
+	 if is_builtin then
+	    format = format .. roslua.message.Message.builtin_formats[ftype]
+	    curfor = curfor .. roslua.message.Message.builtin_formats[ftype]
+	 else
+	    local subformat = f.spec:generate_base_format("")
+	    format = format .. subformat
+	    curfor = curfor .. subformat
+	 end
+      end
+   end
+   if curfor ~= "" then
+      table.insert(farray, curfor)
+   end
+
+   return format, farray
+end
+
 -- (internal) create string representation appropriate to generate the hash
 -- @return string representation
 function MsgSpec:generate_hashtext()
@@ -210,7 +261,7 @@ function MsgSpec:generate_hashtext()
       if is_builtin_type(spec[1]) then
 	 s = s .. string.format("%s %s\n", spec[1], spec[2])
       else
-	 local msgspec = get_msgspec(base_type(resolve_type(spec[1], self.package)))
+	 local msgspec = get_msgspec(base_type(spec[1]))
 	 s = s .. msgspec:md5() .. " " .. spec[2] .. "\n"
       end
    end
@@ -247,12 +298,13 @@ function MsgSpec:print(indent)
    for _,s in ipairs(self.fields) do
       print(indent .. "  " .. s[1] .. " " .. s[2])
       if not is_builtin_type(s[1]) then
-	 local msgspec = get_msgspec(base_type(resolve_type(s[1], self.package)))
+	 local msgspec = get_msgspec(base_type(s[1]))
 	 msgspec:print(indent .. "    ")
       end
    end
 
-   print(indent .. "MD5: " .. self:md5())
+   print(indent .. "MD5:    " .. self:md5())
+   print(indent .. "Format: " .. self.base_format)
 end
 
 
@@ -268,6 +320,6 @@ end
 --- Instantiate this message.
 -- @return a Message instance of the specified message type.
 -- @see roslua.message
-function MsgSpec:instantiate()
-   return roslua.Message:new(self)
+function MsgSpec:instantiate(no_prefill)
+   return roslua.Message:new(self, no_prefill)
 end
