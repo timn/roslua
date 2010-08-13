@@ -153,7 +153,7 @@ end
 
 --- Add the given times t1 and t2.
 -- @param t1 first time to add
--- @param t2 second time to add
+-- @param t2 second time or duration to add
 -- @return new time instance with the sum of t1 and t2
 function Time.__add(t1, t2)
    local t = Time:new()
@@ -170,7 +170,7 @@ end
 
 --- Subtract t2 from t1.
 -- @param t1 time to subtract from
--- @param t2 time to subtract
+-- @param t2 time or duration to subtract
 -- @return new time instance for the result of t1 - t2
 function Time.__sub(t1, t2)
    local t = Time:new()
@@ -229,4 +229,153 @@ function Time:format(format)
    local format = format or "%H:%M:%S"
    local tm = posix.localtime(t.sec)
    return posix.strftime(format, tm) .. "." ..tostring(t.nsec)
+end
+
+
+
+Duration = { sec = 0, nsec = 0 }
+
+--- Contructor.
+-- @param sec seconds, 0 if not supplied
+-- @param nsec nano seconds, 0 if not supploed
+-- @return new Time instance
+function Duration:new(sec, nsec)
+   local o = {}
+   setmetatable(o, self)
+   self.__index = self
+
+   o.sec  = sec  or 0
+   o.nsec = nsec or 0
+
+   -- for deserialization compatibility
+   o[1]   = o.sec
+   o[2]   = o.nsec
+
+   return o
+end
+
+--- Check if given table is an instance of Time.
+-- @param t instance to check
+-- @return true if given object t is an instance of Time
+function Duration.is_instance(t)
+   return getmetatable(t) == Duration
+end
+
+--- Clone an instance (copy constructor).
+-- @param time Time instance to clone
+-- @return new instances for the same time as the given one
+function Duration:clone()
+   return Duration:new(self.sec, self.nsec)
+end
+
+--- Create Time from seconds.
+-- @param sec seconds since the epoch as a floating point number,
+-- the fraction is converted internally to nanoseconds
+-- @return new instance for the given time
+function Duration.from_sec(sec)
+   local d = Duration:new()
+   d.sec  = math.floor(sec)
+   d.nsec = (sec - d.sec) * 1000000000
+   return d
+end
+
+
+--- Create Time from message array.
+-- @param a array that contains two entries, index 1 must be seconds, index 2 must
+-- be nano seconds.
+-- @return new instance for the given time
+function Duration.from_message_array(a)
+   local d = Duration:new()
+   d.sec  = a[1]
+   d.nsec = math.floor(a[2] / 1000.)
+   return t
+end
+
+--- Check if time is zero.
+-- @return true if sec and nsec fields are zero, false otherwise
+function Duration:is_zero()
+   return self.sec == 0 and self.nsec == 0
+end
+
+
+--- Set sec and nsec values.
+-- @param sec new seconds value
+-- @param nsec new nano seconds value
+function Duration:set(sec, nsec)
+   self.sec  = sec or 0
+   self.nsec = nsec or 0
+end
+
+
+--- Convert duration to seconds.
+-- @return floating point number in seconds.
+function Duration:to_sec()
+   return self.sec + self.nsec / 1000000000
+end
+
+
+--- Add the given durations d1 and d2.
+-- @param d1 first duration to add
+-- @param d2 second duration to add
+-- @return new duration instance with the sum of d1 and d2
+function Duration.__add(d1, d2)
+   local d = Duration:new()
+   d.sec  = d1.sec + d2.sec
+   d.nsec = d1.nsec + d2.nsec
+   if d.nsec > 1000000000 then
+      local n = math.floor(d.nsec / 1000000000)
+      d.sec  = d.sec  + n
+      d.nsec = d.nsec - n * 1000000000
+   end
+   return d
+end
+
+
+--- Subtract d2 from d1.
+-- @param d1 duration to subtract from
+-- @param d2 duration to subtract
+-- @return new duration instance for the result of d1 - d2
+function Duration.__sub(d1, d2)
+   local t = Duration:new()
+   t.sec = d1.sec - d2.sec
+   t.nsec = d1.nsec - d2.nsec
+   if t.nsec < 0 then
+      local n = math.floor(-t.nsec / 1000000000)
+      t.sec  = t.sec  - n
+      t.nsec = t.nsec + n * 1000000000
+   end
+   return t
+end
+
+
+--- Check if durations equal.
+-- @param d1 first duration to compare
+-- @param d2 second duration to compare
+-- @return true if d1 == d2, false otherwise
+function Duration.__eq(d1, d2)
+   return d1.sec == d2.sec and d1.nsec == d2.nsec
+end
+
+--- Check if d1 is less than d2.
+-- @param d1 first duration to compare
+-- @param d2 second duration to compare
+-- @return true if d1 < d2, false otherwise
+function Duration.__lt(d1, d2)
+   return d1.sec < d2.sec or (d1.sec == d2.sec and d1.nsec < d2.nsec)
+end
+
+--- Check if d1 is greater than d2.
+-- @param d1 first duration to compare
+-- @param d2 second duration to compare
+-- @return true if d1 > d2, false otherwise
+function Duration.__gt(d1, d2)
+   return d1.sec > d2.sec or (d1.sec == d2.sec and d1.nsec > d2.nsec)
+end
+
+
+--- Convert duration to string.
+-- @param t duration to convert
+-- @return string representing this duration
+function Duration.__tostring(t)
+   return tostring(t.sec) .. "." .. tostring(t.nsec)
 end
