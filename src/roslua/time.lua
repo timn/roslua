@@ -26,6 +26,12 @@ local sim_time
 -- for /clock.
 -- @param message new Clock message
 local function simtime_update(message)
+   -- Have to actually test with a simulator, until then just give warning
+   assert(sim_time < message.values.clock, "The time received from the simulator is smaller "..
+	  "than the curerntly set time. This happened because of small increments to the "..
+	  "nsec part of the last sim time update. It indicates that the simulator is "..
+	  "producing updates too slow for too small increments of time. Check with roslua "..
+	  "authors on what to do")
    sim_time = message.values.clock
 end
 
@@ -86,6 +92,13 @@ end
 --- Set to current time.
 function Time:stamp()
    if sim_time then
+      -- Add 1 to the nsec value to ensure that two consecutive calls to stamp will
+      -- never return the same time, they wouldn't on a real system as well
+      sim_time.nsec = sim_time.nsec + 1
+      if sim_time.nsec >= 1000000000 then
+	 sim_time.sec  = sim_time.sec + 1
+	 sim_time.nsec = 0
+      end
       self.sec, self.nsec = sim_time.sec, sim_time.nsec
    else
       self.sec, self.nsec = posix.clock_gettime("realtime")
