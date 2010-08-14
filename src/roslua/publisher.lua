@@ -122,8 +122,8 @@ end
 -- of subscribers can slow down this method.
 -- @param message message to publish
 function Publisher:publish(message)
-   assert(message.spec.type == self.type, "Message of invalid type cannot be published "
-	  .. " (topic " .. self.topic .. ", " .. self.type .. " vs. " .. message.spec.type)
+   --assert(message.spec.type == self.type, "Message of invalid type cannot be published "
+	--  .. " (topic " .. self.topic .. ", " .. self.type .. " vs. " .. message.spec.type)
 
    local sm = message:serialize()
    local uri, s
