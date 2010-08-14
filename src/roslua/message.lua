@@ -229,8 +229,8 @@ end
 -- for the sub-messages are integrated verbatim as array at the appropriate
 -- position.
 -- @return positional array of values, output depends on flat_array param, see above.
-function Message:generate_value_array(flat_array)
-   local rv = {}
+function Message:generate_value_array(flat_array, array)
+   local rv = array or {}
    local format = ""
 
    if flat_array == nil then flat_array = true end
@@ -302,15 +302,8 @@ function Message:generate_value_array(flat_array)
 	       assert(f.spec:is_instance(v), "Expected message type is " .. f.spec.type
 		   .. " but got type " .. tostring(v.type))
 	    end
-	    local f, va = v:generate_value_array()
+	    local f = v:generate_value_array(flat_array, rv)
 	    format = format .. f
-	    if flat_array then
-	       for _, j in ipairs(va) do
-		  table.insert(rv, j)
-	       end
-	    else
-	       table.insert(rv, va)
-	    end
 	 end
 
       else -- complex type, but *not* an array
@@ -321,15 +314,8 @@ function Message:generate_value_array(flat_array)
 	    assert(f.spec:is_instance(self.values[fname]), "Expected message type is "
 		.. f.spec.type .. " but got type " .. tostring(self.values[fname].type))
 	 end
-	 local f, va = self.values[fname]:generate_value_array()
+	 local f, va = self.values[fname]:generate_value_array(flat_array, rv)
 	 format = format .. f
-	 if flat_array then
-	    for _, j in ipairs(va) do
-	       table.insert(rv, j)
-	    end
-	 else
-	    table.insert(rv, va)
-	 end
       end
    end
 
@@ -344,15 +330,6 @@ function Message:serialize()
 
    -- pack values into array in proper order
    for _, f in ipairs(self.spec.fields) do
-
-      local fname = f.name
-      local ftype = f.type
-      local is_array = roslua.msg_spec.is_array_type(ftype)
-      local num_values = 1
-
-      if is_array then
-	 ftype = f.base_type
-      end
 
       -- generate format string
       local format, arr = self:generate_value_array(true)
