@@ -36,7 +36,8 @@ require("roslua.logging")
 require("roslua.logging.stdout")
 require("roslua.logging.rosout")
 
-require("signal")
+local signal = require("signal")
+local socket = require("socket")
 
 VERSION_MAJOR = 0
 VERSION_MINOR = 3
@@ -202,6 +203,33 @@ function run()
       roslua.spin()
    end
    roslua.finalize()
+end
+
+--- Sleep the given number of seconds.
+-- During the sleep time events will be processed if the sleep time is at least
+-- 0.05 sec.
+-- @param sec time in seconds or duration to sleep
+function sleep(sec_or_duration)
+   local duration
+   if Duration.is_instance(sec_or_duration) then
+      duration = sec_or_duration
+   else
+      local sec_full = math.floor(sec_or_duration)
+      local sec_frac = math.floor((sec_or_duration - sec_full) * 1000000000)
+      duration = Duration:new(sec_full, sec_frac)
+   end
+   local end_time = Time.now() + duration
+   local now = Time.now()
+   while now < end_time do
+      spin()
+      local diff = (end_time - now):to_sec()
+      if diff > 0.05 then
+	 socket.sleep(0.05)
+      else
+	 socket.sleep(diff)
+      end
+      now = Time.now()
+   end
 end
 
 --- Spin the roslua main loop.
