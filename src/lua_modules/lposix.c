@@ -1362,7 +1362,7 @@ static const luaL_reg R[] =
 	lua_pushnumber(L, value);	\
 	lua_settable(L, -3)
 
-LUALIB_API int luaopen_pimpedposix (lua_State *L)
+LUALIB_API int luaopen_posix (lua_State *L)
 {
 	luaL_register(L,MYNAME,R);
 	lua_pushliteral(L,"version");		/** version */

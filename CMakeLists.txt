@@ -38,7 +38,7 @@ include_directories(/usr/include/lua5.1)
 
 rosbuild_add_library(signal src/lua_modules/lsignal.c)
 rosbuild_add_library(struct src/lua_modules/struct.c)
-rosbuild_add_library(pimpedposix src/lua_modules/lposix.c)
+rosbuild_add_library(posix src/lua_modules/lposix.c)
 
-target_link_libraries(pimpedposix rt crypt)
+target_link_libraries(posix rt crypt)
 
