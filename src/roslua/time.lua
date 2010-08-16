@@ -17,7 +17,7 @@
 -- @release Released under BSD license
 module("roslua.time", package.seeall)
 
-require("pimpedposix")
+require("roslua.posix")
 
 local sub_clock
 local sim_time

@@ -19,7 +19,7 @@
 module("roslua.tcpros", package.seeall)
 
 require("socket")
-require("struct")
+require("roslua.struct")
 require("roslua.msg_spec")
 
 TcpRosConnection = { payload = nil, received = false, max_receives_per_spin = 10 }

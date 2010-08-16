@@ -18,6 +18,13 @@
 -- @release Released under BSD license
 module("roslua", package.seeall)
 
+local utils = require("roslua.utils")
+
+-- Add our custom loader, we do this outside of init to avoid having to call
+-- init before loading required modules
+table.insert(package.loaders, 4, utils.package_loader)
+table.insert(package.loaders, 5, utils.c_package_loader)
+
 require("roslua.master_proxy")
 require("roslua.param_proxy")
 require("roslua.slave_api")
@@ -36,15 +43,13 @@ require("roslua.logging")
 require("roslua.logging.stdout")
 require("roslua.logging.rosout")
 
-local signal = require("signal")
+local signal = require("roslua.signal")
 local socket = require("socket")
 
 VERSION_MAJOR = 0
 VERSION_MINOR = 3
 VERSION_MICRO = 0
 VERSION = VERSION_MAJOR .. "." .. VERSION_MINOR .. "." .. VERSION_MICRO
-
-local utils = require("roslua.utils")
 
 -- Imports from other libs to have a unified entry point
 MsgSpec = roslua.msg_spec.MsgSpec
@@ -82,10 +87,6 @@ local spinners = {}
 -- true. We default to true, it is set to false in init_node(). This way we ensure
 -- that init_node() was called.
 quit = true
-
--- Add our custom loader, we do this outside of init to avoid having to call
--- init before loading required modules
-table.insert(package.loaders, 4, utils.package_loader)
 
 --- Initialize ROS node.
 -- This function must be called before any other interaction with ROS or roslua

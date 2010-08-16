@@ -37,7 +37,7 @@ local rospack_path_cache = {}
 -- @return path to give package
 function find_rospack(package)
    if not rospack_path_cache[package] then
-      local p = io.popen("rospack find " .. package)
+      local p = io.popen("rospack find " .. package .. " 2>/dev/null")
       local path = p:read("*a")
       -- strip trailing newline
       rospack_path_cache[package] = string.gsub(path, "^(.+)\n$", "%1")
@@ -82,7 +82,7 @@ function package_loader(module)
    for _, package in ipairs(try_packages) do
       local ok, packpath = pcall(find_rospack, package)
       if ok then
-	 errmsg = errmsg .. string.format("\n\tFound matching ROS package %s (%s)",
+	 errmsg = errmsg .. string.format("\n\tFound matching ROS package %s at s (ROS Lua loader)",
 					  package, packpath)
 
 	 for _, tp in ipairs(try_paths) do
@@ -93,8 +93,62 @@ function package_loader(module)
 	       -- Compile and return the module
 	       return assert(loadstring(assert(file:read("*a")), filename))
 	    end
-	    errmsg = errmsg .. string.format("\n\tno file %s (ROS loader)", filename)
+	    errmsg = errmsg .. string.format("\n\tno file %s (ROS Lua loader)", filename)
 	 end
+      else
+	 errmsg = errmsg .. "\n\tno ROS package '" .. package .. "' found (ROS Lua loader)"
+      end
+   end
+
+   return errmsg
+end
+
+
+--- Package loader to find Lua modules written in C in ROS packages.
+-- This will use the first part of the module name and assume it to
+-- be the name of a ROS package. It will then try to determine the path using
+-- rospack and if found try to load the module in the package directory.
+-- Additionally it appends the string "_lua" to the package name, thus
+-- allowing a module named my_module in the ROS package my_module_lua. This
+-- is done to allow to mark Lua ROS packages, but avoid having to have
+-- the _lua suffix in module names. The suffixed version takes precedence.
+-- @param module module name as given to require()
+-- @return function of loaded code if module was found, nil otherwise
+function c_package_loader(module)
+   local package_name = string.match(module, "^[^%.]+")
+   local submod       = string.sub(module, #package_name + 2)
+
+   local try_packages = { package_name .. "_lua", package_name }
+   local errmsg = ""
+
+   for _, tpackage in ipairs(try_packages) do
+      local ok, packpath = pcall(find_rospack, tpackage)
+      if ok then
+	 errmsg = errmsg .. string.format("\n\tFound matching ROS package %s at %s (ROS C loader)",
+					  tpackage, packpath)
+
+	 local try_paths = {{string.format("%s/lib/%s.luaso", packpath, package_name), string.gsub(module, "%.", "_")}}
+	 if submod ~= nil or submod ~= "" then
+	    table.insert(try_paths, {string.format("%s/lib/%s.luaso", packpath, submod),
+				     string.gsub(submod, "%.", "_")})
+	 end
+
+	 for _, pathinfo in ipairs(try_paths) do
+	    local symbolname = string.gsub(module, "%.", "_")
+	    local file = io.open(pathinfo[1], "rb")
+	    if file then
+	       file:close()
+	       -- Load and return the module loader
+	       local loader, msg = package.loadlib(pathinfo[1], "luaopen_"..pathinfo[2])
+	       if not loader then
+		  error("error loading module '" .. module .. "' from file '".. pathinfo[1] .."':\n\t" .. msg, 3)
+	       end
+	       return loader
+	    end
+	    errmsg = errmsg .. "\n\tno file '" .. pathinfo[1] .. "' (ROS C loader)"
+	 end
+      else
+	 errmsg = errmsg .. "\n\tno ROS package '" .. tpackage .. "' found (ROS C loader)"
       end
    end
 

@@ -25,7 +25,7 @@
 module("roslua.message", package.seeall)
 
 require("roslua")
-require("struct")
+require("roslua.struct")
 
 Message = { spec=nil }
 
