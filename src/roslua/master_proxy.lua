@@ -4,6 +4,8 @@
 --
 --  Created: Thu Jul 22 11:31:05 2010 (at Intel Research, Pittsburgh)
 --  Copyright  2010  Tim Niemueller [www.niemueller.de]
+--             2010  Carnegie Mellon University
+--             2010  Intel Research Pittsburgh
 --
 ----------------------------------------------------------------------------
 
