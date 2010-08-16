@@ -49,21 +49,21 @@ function ServiceClient:new(args_or_service, srvtype)
    self.__index = self
    self.__call  = self.execute
 
-   local type
+   local lsrvtype
    if type(args_or_service) == "table" then
       o.service    = args_or_service[1] or args_or_service.service
-      type         = args_or_service[2] or args_or_service.type
+      lsrvtype     = args_or_service[2] or args_or_service.type
       o.persistent = args_or_service.persistent
    else
       o.service    = args_or_service
-      type         = srvtype
+      lsrvtype     = srvtype
    end
-   if roslua.srv_spec.is_srvspec(type) then
+   if roslua.srv_spec.is_srvspec(lsrvtype) then
       o.type    = type.type
-      o.srvspec = type
+      o.srvspec = lsrvtype
    else
-      o.type    = type
-      o.srvspec = roslua.get_msgspec(type)
+      o.type    = lsrvtype
+      o.srvspec = roslua.get_srvspec(lsrvtype)
    end
 
    assert(o.service, "Service name is missing")

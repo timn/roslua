@@ -49,7 +49,7 @@ function Service:new(service, srvtype, handler)
       o.srvspec = srvtype
    else
       o.type    = srvtype
-      o.srvspec = roslua.get_msgspec(srvtype)
+      o.srvspec = roslua.get_srvspec(srvtype)
    end
    assert(o.service, "Service name is missing")
    assert(o.type, "Service type is missing")
