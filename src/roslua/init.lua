@@ -199,9 +199,26 @@ end
 --- Spin until program is stopped.
 -- This will spin infinitely until roslua.quit is set to true, e.g. by
 -- a interrupt signal after pressing Ctrl-C.
-function run()
+-- @param desired loop frequency in Hz. If set to anything less or equal to zero
+-- will run as fast as possible Warning, may cause high CPU load. Defaults to 25 Hz.
+-- You should increase the loop frequency if you need small communication latencies.
+function run(loop_frequency)
+   if loop_frequency == nil then
+      spin_time = 1. / 25
+   elseif loop_frequency <= 0 then
+      spin_time = 0
+   else -- if loop_frequency > 0 then
+      spin_time = 1. / loop_frequency
+   end
    while not roslua.quit do
+      local spin_start = roslua.Time.now()
       roslua.spin()
+      local spin_end   = roslua.Time.now()
+      local spin_runtime   = (spin_end - spin_start):to_sec()
+      local time_remaining = spin_time - spin_runtime
+      if time_remaining > 0 then
+	 sleep(time_remaining)
+      end
    end
    roslua.finalize()
 end
