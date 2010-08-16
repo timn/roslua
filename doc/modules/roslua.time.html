@@ -12,7 +12,7 @@
 
 <div id="product">
 	<div id="product_logo"></div>
-	<div id="product_name"><big><b></b></big></div>
+	<div id="product_name"><big><b>roslua: ROS client library for Lua</b></big></div>
 	<div id="product_description"></div>
 </div> <!-- id="product" -->
 
@@ -21,7 +21,8 @@
 <div id="navigation">
 
 
-<h1>LuaDoc</h1>
+<h1>roslua</h1>
+
 <ul>
 	
 	<li><a href="../index.html">Index</a></li>
@@ -40,14 +41,6 @@
 
 	<li>
 		<a href="../modules/roslua.logging.html">roslua.logging</a>
-	</li>
-
-	<li>
-		<a href="../modules/roslua.logging.rosout.html">roslua.logging.rosout</a>
-	</li>
-
-	<li>
-		<a href="../modules/roslua.logging.stdout.html">roslua.logging.stdout</a>
 	</li>
 
 	<li>
@@ -137,6 +130,76 @@
 
 <h2>Functions</h2>
 <table class="function_list">
+
+	<tr>
+	<td class="name" nowrap><a href="#Duration.__add">Duration.__add</a>&nbsp;(d1, d2)</td>
+	<td class="summary">Add the given durations d1 and d2.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Duration.__eq">Duration.__eq</a>&nbsp;(d1, d2)</td>
+	<td class="summary">Check if durations equal.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Duration.__gt">Duration.__gt</a>&nbsp;(d1, d2)</td>
+	<td class="summary">Check if d1 is greater than d2.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Duration.__lt">Duration.__lt</a>&nbsp;(d1, d2)</td>
+	<td class="summary">Check if d1 is less than d2.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Duration.__sub">Duration.__sub</a>&nbsp;(d1, d2)</td>
+	<td class="summary">Subtract d2 from d1.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Duration.__tostring">Duration.__tostring</a>&nbsp;(t)</td>
+	<td class="summary">Convert duration to string.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Duration.from_message_array">Duration.from_message_array</a>&nbsp;(a)</td>
+	<td class="summary">Create Time from message array.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Duration.from_sec">Duration.from_sec</a>&nbsp;(sec)</td>
+	<td class="summary">Create Time from seconds.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Duration.is_instance">Duration.is_instance</a>&nbsp;(t)</td>
+	<td class="summary">Check if given table is an instance of Time.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Duration:clone">Duration:clone</a>&nbsp;(time)</td>
+	<td class="summary">Clone an instance (copy constructor).</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Duration:is_zero">Duration:is_zero</a>&nbsp;()</td>
+	<td class="summary">Check if time is zero.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Duration:new">Duration:new</a>&nbsp;(sec, nsec)</td>
+	<td class="summary">Contructor.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Duration:set">Duration:set</a>&nbsp;(sec, nsec)</td>
+	<td class="summary">Set sec and nsec values.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Duration:to_sec">Duration:to_sec</a>&nbsp;()</td>
+	<td class="summary">Convert duration to seconds.</td>
+	</tr>
 
 	<tr>
 	<td class="name" nowrap><a href="#Time.__add">Time.__add</a>&nbsp;(t1, t2)</td>
@@ -250,6 +313,419 @@
 
 
 
+<dt><a name="Duration.__add"></a><strong>Duration.__add</strong>&nbsp;(d1, d2)</dt>
+<dd>
+Add the given durations d1 and d2.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  d1: first duration to add
+	</li>
+	
+	<li>
+	  d2: second duration to add
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+new duration instance with the sum of d1 and d2
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Duration.__eq"></a><strong>Duration.__eq</strong>&nbsp;(d1, d2)</dt>
+<dd>
+Check if durations equal.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  d1: first duration to compare
+	</li>
+	
+	<li>
+	  d2: second duration to compare
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+true if d1 == d2, false otherwise
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Duration.__gt"></a><strong>Duration.__gt</strong>&nbsp;(d1, d2)</dt>
+<dd>
+Check if d1 is greater than d2.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  d1: first duration to compare
+	</li>
+	
+	<li>
+	  d2: second duration to compare
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+true if d1 > d2, false otherwise
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Duration.__lt"></a><strong>Duration.__lt</strong>&nbsp;(d1, d2)</dt>
+<dd>
+Check if d1 is less than d2.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  d1: first duration to compare
+	</li>
+	
+	<li>
+	  d2: second duration to compare
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+true if d1 < d2, false otherwise
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Duration.__sub"></a><strong>Duration.__sub</strong>&nbsp;(d1, d2)</dt>
+<dd>
+Subtract d2 from d1.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  d1: duration to subtract from
+	</li>
+	
+	<li>
+	  d2: duration to subtract
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+new duration instance for the result of d1 - d2
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Duration.__tostring"></a><strong>Duration.__tostring</strong>&nbsp;(t)</dt>
+<dd>
+Convert duration to string.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  t: duration to convert
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+string representing this duration
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Duration.from_message_array"></a><strong>Duration.from_message_array</strong>&nbsp;(a)</dt>
+<dd>
+Create Time from message array.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  a: array that contains two entries, index 1 must be seconds, index 2 must be nano seconds.
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+new instance for the given time
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Duration.from_sec"></a><strong>Duration.from_sec</strong>&nbsp;(sec)</dt>
+<dd>
+Create Time from seconds.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  sec: seconds since the epoch as a floating point number, the fraction is converted internally to nanoseconds
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+new instance for the given time
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Duration.is_instance"></a><strong>Duration.is_instance</strong>&nbsp;(t)</dt>
+<dd>
+Check if given table is an instance of Time.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  t: instance to check
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+true if given object t is an instance of Time
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Duration:clone"></a><strong>Duration:clone</strong>&nbsp;(time)</dt>
+<dd>
+Clone an instance (copy constructor).
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  time: Time instance to clone
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+new instances for the same time as the given one
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Duration:is_zero"></a><strong>Duration:is_zero</strong>&nbsp;()</dt>
+<dd>
+Check if time is zero.
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+true if sec and nsec fields are zero, false otherwise
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Duration:new"></a><strong>Duration:new</strong>&nbsp;(sec, nsec)</dt>
+<dd>
+Contructor.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  sec: seconds, 0 if not supplied
+	</li>
+	
+	<li>
+	  nsec: nano seconds, 0 if not supploed
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+new Time instance
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Duration:set"></a><strong>Duration:set</strong>&nbsp;(sec, nsec)</dt>
+<dd>
+Set sec and nsec values.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  sec: new seconds value
+	</li>
+	
+	<li>
+	  nsec: new nano seconds value
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Duration:to_sec"></a><strong>Duration:to_sec</strong>&nbsp;()</dt>
+<dd>
+Convert duration to seconds.
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+floating point number in seconds.
+
+
+
+</dd>
+
+
+
+
 <dt><a name="Time.__add"></a><strong>Time.__add</strong>&nbsp;(t1, t2)</dt>
 <dd>
 Add the given times t1 and t2.
@@ -263,7 +739,7 @@ Add the given times t1 and t2.
 	</li>
 	
 	<li>
-	  t2: second time to add
+	  t2: second time or duration to add
 	</li>
 	
 </ul>
@@ -395,7 +871,7 @@ Subtract t2 from t1.
 	</li>
 	
 	<li>
-	  t2: time to subtract
+	  t2: time or duration to subtract
 	</li>
 	
 </ul>

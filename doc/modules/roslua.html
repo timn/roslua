@@ -12,7 +12,7 @@
 
 <div id="product">
 	<div id="product_logo"></div>
-	<div id="product_name"><big><b></b></big></div>
+	<div id="product_name"><big><b>roslua: ROS client library for Lua</b></big></div>
 	<div id="product_description"></div>
 </div> <!-- id="product" -->
 
@@ -21,7 +21,8 @@
 <div id="navigation">
 
 
-<h1>LuaDoc</h1>
+<h1>roslua</h1>
+
 <ul>
 	
 	<li><a href="../index.html">Index</a></li>
@@ -38,14 +39,6 @@
 	
 	<li>
 		<a href="../modules/roslua.logging.html">roslua.logging</a>
-	</li>
-
-	<li>
-		<a href="../modules/roslua.logging.rosout.html">roslua.logging.rosout</a>
-	</li>
-
-	<li>
-		<a href="../modules/roslua.logging.stdout.html">roslua.logging.stdout</a>
 	</li>
 
 	<li>
@@ -199,8 +192,8 @@
 	</tr>
 
 	<tr>
-	<td class="name" nowrap><a href="#spin">spin</a>&nbsp;()</td>
-	<td class="summary">Spin the roslua main loop.</td>
+	<td class="name" nowrap><a href="#sleep">sleep</a>&nbsp;(sec_or_duration, sec)</td>
+	<td class="summary">Sleep the given number of seconds.</td>
 	</tr>
 
 	<tr>
@@ -575,10 +568,23 @@ Get a service client. Request the creation of a new service client to access a R
 
 
 
-<dt><a name="spin"></a><strong>spin</strong>&nbsp;()</dt>
+<dt><a name="sleep"></a><strong>sleep</strong>&nbsp;(sec_or_duration, sec)</dt>
 <dd>
-Spin the roslua main loop. This will spin all registered subscribers, publishers and services, execute callbacks and accpet new connections. Call this at the desired frequency. It is recommended to call it as fast as possible, as the call frequency influences the overall latency e.g. for processing service calls or delivering messages.
+Sleep the given number of seconds. During the sleep time events will be processed if the sleep time is at least 0.05 sec.
 
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  sec_or_duration: 
+	</li>
+	
+	<li>
+	  sec: time in seconds or duration to sleep
+	</li>
+	
+</ul>
 
 
 

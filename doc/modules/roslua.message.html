@@ -12,7 +12,7 @@
 
 <div id="product">
 	<div id="product_logo"></div>
-	<div id="product_name"><big><b></b></big></div>
+	<div id="product_name"><big><b>roslua: ROS client library for Lua</b></big></div>
 	<div id="product_description"></div>
 </div> <!-- id="product" -->
 
@@ -21,7 +21,8 @@
 <div id="navigation">
 
 
-<h1>LuaDoc</h1>
+<h1>roslua</h1>
+
 <ul>
 	
 	<li><a href="../index.html">Index</a></li>
@@ -40,14 +41,6 @@
 
 	<li>
 		<a href="../modules/roslua.logging.html">roslua.logging</a>
-	</li>
-
-	<li>
-		<a href="../modules/roslua.logging.rosout.html">roslua.logging.rosout</a>
-	</li>
-
-	<li>
-		<a href="../modules/roslua.logging.stdout.html">roslua.logging.stdout</a>
 	</li>
 
 	<li>
@@ -144,23 +137,28 @@
 	</tr>
 
 	<tr>
-	<td class="name" nowrap><a href="#Message:deserialize_value">Message:deserialize_value</a>&nbsp;(buffer, i, field, ftype, fname)</td>
-	<td class="summary">Deserialize single value </td>
+	<td class="name" nowrap><a href="#Message:format_string">Message:format_string</a>&nbsp;(buffer, i, farray, prefix, format)</td>
+	<td class="summary">Generate format string.</td>
 	</tr>
 
 	<tr>
-	<td class="name" nowrap><a href="#Message:generate_value_array">Message:generate_value_array</a>&nbsp;(flat_array)</td>
+	<td class="name" nowrap><a href="#Message:generate_value_array">Message:generate_value_array</a>&nbsp;(flat_array, array)</td>
 	<td class="summary">Generate a value array from the stored values.</td>
 	</tr>
 
 	<tr>
-	<td class="name" nowrap><a href="#Message:new">Message:new</a>&nbsp;(spec)</td>
+	<td class="name" nowrap><a href="#Message:new">Message:new</a>&nbsp;(spec, no_prefill)</td>
 	<td class="summary">Constructor.</td>
 	</tr>
 
 	<tr>
 	<td class="name" nowrap><a href="#Message:print">Message:print</a>&nbsp;(indent)</td>
 	<td class="summary">Print message.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Message:read_values">Message:read_values</a>&nbsp;(values, start)</td>
+	<td class="summary">Read values into values field.</td>
 	</tr>
 
 	<tr>
@@ -220,32 +218,32 @@ Deserialize received message. This will deserialize the message according to the
 
 
 
-<dt><a name="Message:deserialize_value"></a><strong>Message:deserialize_value</strong>&nbsp;(buffer, i, field, ftype, fname)</dt>
+<dt><a name="Message:format_string"></a><strong>Message:format_string</strong>&nbsp;(buffer, i, farray, prefix, format)</dt>
 <dd>
-Deserialize single value
+Generate format string. The format string is based on the base format of the message specification, but takes into account actual array sizes, replicating array parts as necessary.
 
 
 <h3>Parameters</h3>
 <ul>
 	
 	<li>
-	  buffer: 
+	  buffer: incoming buffer to be deserialized
 	</li>
 	
 	<li>
-	  i: 
+	  i: index from where to start reading buffer
 	</li>
 	
 	<li>
-	  field: 
+	  farray: base format array from message spec, if nil the one from internal spec is used (recursion parameter)
 	</li>
 	
 	<li>
-	  ftype: 
+	  prefix: 
 	</li>
 	
 	<li>
-	  fname: 
+	  format: prefix if nil set to little endian and 1 byte alignment (recursion parameter)
 	</li>
 	
 </ul>
@@ -262,7 +260,7 @@ Deserialize single value
 
 
 
-<dt><a name="Message:generate_value_array"></a><strong>Message:generate_value_array</strong>&nbsp;(flat_array)</dt>
+<dt><a name="Message:generate_value_array"></a><strong>Message:generate_value_array</strong>&nbsp;(flat_array, array)</dt>
 <dd>
 Generate a value array from the stored values. This is used for serialization, but also during execution of service calls.
 
@@ -272,6 +270,10 @@ Generate a value array from the stored values. This is used for serialization, b
 	
 	<li>
 	  flat_array: if set to true (the default) will generate a flat array, which means that the resulting value array from complex sub-messages are folded into the array at the place where the field is defined. If set to false the value arrays for the sub-messages are integrated verbatim as array at the appropriate position.
+	</li>
+	
+	<li>
+	  array: 
 	</li>
 	
 </ul>
@@ -291,7 +293,7 @@ positional array of values, output depends on flat_array param, see above.
 
 
 
-<dt><a name="Message:new"></a><strong>Message:new</strong>&nbsp;(spec)</dt>
+<dt><a name="Message:new"></a><strong>Message:new</strong>&nbsp;(spec, no_prefill)</dt>
 <dd>
 Constructor.
 
@@ -301,6 +303,10 @@ Constructor.
 	
 	<li>
 	  spec: message specification
+	</li>
+	
+	<li>
+	  no_prefill: 
 	</li>
 	
 </ul>
@@ -327,6 +333,36 @@ Print message.
 	
 	<li>
 	  indent: string (normally spaces) to put before every line of output
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Message:read_values"></a><strong>Message:read_values</strong>&nbsp;(values, start)</dt>
+<dd>
+Read values into values field. This iterates over the given array and copies the values to the internal values field, instantiating sub-classes as necessary.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  values: array, flat array with all values of the message
+	</li>
+	
+	<li>
+	  start: index from where to start reading the values array
 	</li>
 	
 </ul>
