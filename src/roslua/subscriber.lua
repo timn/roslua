@@ -124,7 +124,9 @@ function Subscriber:update_publishers(publishers)
       end
    end
    for _, uri in ipairs(remove_pubs) do
-      self.publishers[uri].connection:close()
+      if self.publishers[uri].connection then
+	 self.publishers[uri].connection:close()
+      end
       self.publishers[uri] = nil
    end
 end
