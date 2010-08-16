@@ -137,6 +137,11 @@
 	</tr>
 
 	<tr>
+	<td class="name" nowrap><a href="#c_package_loader">c_package_loader</a>&nbsp;(module)</td>
+	<td class="summary">Package loader to find Lua modules written in C in ROS packages.</td>
+	</tr>
+
+	<tr>
 	<td class="name" nowrap><a href="#find_rospack">find_rospack</a>&nbsp;(package)</td>
 	<td class="summary">Get path for a package.</td>
 	</tr>
@@ -177,6 +182,35 @@ Assert availability of rospack. Throws an error if rospack cannot be executed, f
 
 
 
+
+
+
+</dd>
+
+
+
+
+<dt><a name="c_package_loader"></a><strong>c_package_loader</strong>&nbsp;(module)</dt>
+<dd>
+Package loader to find Lua modules written in C in ROS packages. This will use the first part of the module name and assume it to be the name of a ROS package. It will then try to determine the path using rospack and if found try to load the module in the package directory. Additionally it appends the string "_lua" to the package name, thus allowing a module named my_module in the ROS package my_module_lua. This is done to allow to mark Lua ROS packages, but avoid having to have the _lua suffix in module names. The suffixed version takes precedence.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  module: module name as given to require()
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+function of loaded code if module was found, nil otherwise
 
 
 

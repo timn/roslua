@@ -177,7 +177,7 @@
 	</tr>
 
 	<tr>
-	<td class="name" nowrap><a href="#run">run</a>&nbsp;()</td>
+	<td class="name" nowrap><a href="#run">run</a>&nbsp;(loop_frequency, desired)</td>
 	<td class="summary">Spin until program is stopped.</td>
 	</tr>
 
@@ -462,10 +462,23 @@ Remove spinner.
 
 
 
-<dt><a name="run"></a><strong>run</strong>&nbsp;()</dt>
+<dt><a name="run"></a><strong>run</strong>&nbsp;(loop_frequency, desired)</dt>
 <dd>
 Spin until program is stopped. This will spin infinitely until roslua.quit is set to true, e.g. by a interrupt signal after pressing Ctrl-C.
 
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  loop_frequency: 
+	</li>
+	
+	<li>
+	  desired: loop frequency in Hz. If set to anything less or equal to zero will run as fast as possible Warning, may cause high CPU load. Defaults to 25 Hz. You should increase the loop frequency if you need small communication latencies.
+	</li>
+	
+</ul>
 
 
 

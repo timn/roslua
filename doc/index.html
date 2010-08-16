@@ -141,6 +141,7 @@ coming from external Lua modules written in Lua and C
 and unpacking of data of the TCPROS protocol, XML parsing, HTTP web
 server etc.).
 
+
 Notable differences
 -------------------
 There are some differences from client libraries written in and for
@@ -164,6 +165,7 @@ certain programs and node writers should be aware of this. It also
 allows for the simplicity and briefness of the code, since many
 constructs like locking are unnecessary.
 
+
 Requirements
 ------------
 The following software packages are needed on your system in order to
@@ -180,6 +182,7 @@ likely not work.
 - Lua XML-RPC 1.0 (*)		http://www.keplerproject.org/luaxmlrpc/
 - Lua struct lib (i)(*)		http://www.inf.puc-rio.br/~roberto/struct/
 - Lua MD5 1.1.2	 		http://www.keplerproject.org/md5/
+
 
 Additional notes
 ----------------
@@ -203,6 +206,7 @@ Lua struct lib:
   extend functionality (and actually provide functionality promised
   in the documentation).
 
+
 Documentation
 -------------
 All public API functions and modules have been documented. The
@@ -210,21 +214,20 @@ documentation is generated using LuaDoc by calling "make doc" in the
 roslua directory. Pre-generated documentation can be found in the
 doc/ directory (open doc/index.html in a web browser of your choice).
 
+
 Starting roslua
 ---------------
 To start a node written using roslua, you need to set an appropriate
-package path and run the script.
-To setup the package path set the LUA_PATH and LUA_CPATH variable.
-They must include the roslua src and lib directory respectively (see
-example below). If you write or use other Lua-based ROS modules you
-do not need to add them to your package path, as long as the module's
+package path and run the script. To setup the package path set the
+LUA_PATH variable. It must include the roslua src directory (see
+example below). If you write or use other Lua-based ROS modules you do
+not need to add them to your package path, as long as the module's
 directory can be found by roslua (see below about extension modules).
-Example (no spaces before backslash!):
-export LUA_PATH="$HOME/ros/local/roslua/src/?/init.lua;"\
+Likewise C modules are found automatically by roslua.
+Example (no spaces before backslash!).
+ export LUA_PATH="$HOME/ros/local/roslua/src/?/init.lua;"\
 "$HOME/ros/local/roslua/src/?.lua;"\
-"/usr/share/lua/5.1/?/init.lua;/usr/share/lua/5.1/?.lua"
-export LUA_CPATH="$HOME/ros/local/roslua/lib/?.luaso;"\
-"/usr/lib/lua/5.1/?.so"
+"/usr/share/lua/5.1/?/init.lua;/usr/share/lua/5.1/?.lua" export
 
 Note that Lua modules bundled with roslua and written in C have an
 extension of ".luaso" as to avoid confusion of ROS tools which
@@ -235,7 +238,53 @@ See src/examples for example scripts. To run for instance the
 subscriber and publisher examples, which resemble talker and listener
 from the roscpp and rospy tutorials, just call "lua subscriber.lua"
 and "lua publisher.lua" respectively (assuming you have set LUA_PATH
-and LUA_CPATH as adviced above).
+as adviced above).
+
+
+Writing Extension Modules using roslua
+--------------------------------------
+A natural concern is to write Lua modules based on roslua, providing
+extended functionality, for example actionlib_lua to provide actionlib
+facilities from Lua. roslua comes with some utility support to make
+this easier, in particular it adds a module loader that searches for
+Lua modules in the ROS universe without having to extend the LUA_PATH
+and LUA_CPATH environment variables for new modules.
+
+When a module is loaded, and the regular Lua loaders cannot find the
+module, i.e. the module cannot be found by looking at LUA_PATH and
+LUA_CPATH, roslua loaders kick in to look for Lua and C modules. Some
+constraints apply on how these can be named for the automatic process
+to work. These are as follows.
+
+Modules written in plain Lua must reside in a ROS package with the
+name of the Lua package with an optional "_lua" suffix. For example
+the Lua module actionlib is in a ROS package named
+actionlib_lua. Within the ROS package, the files must reside in the
+src/ sub-directory with appropriate path names. In the case of
+actionlib for instance, the main module resides in the file
+actionlib_lua/src/actionlib/init.lua. Modules may have the pattern
+?.lua or ?/init.lua, where ? is replaced by the module name (cf. Lua
+documentation). C modules must reside in the lib subdirectory the ROS
+package, have a suffix of .luaso (instead of .so) and may not have the
+"lib" prefix. To achieve this take the following CMakeLists.txt lines
+as an example:
+set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+set(CMAKE_SHARED_LIBRARY_PREFIX "")
+set(CMAKE_SHARED_LIBRARY_SUFFIX ".luaso")
+rosbuild_add_library(posix src/lua_modules/lposix.c)
+
+With this C module residing in the roslua ROS package it can be used
+in Lua with require("roslua.posix").  Lua C module names are mapped to
+file names like the following: Either it is simply the ROS package
+name, in that case a similarly named Lua C module file is searched in
+the lib sub-directory. Or it is a name separated with a dot, where the
+first part is again the ROS package name with an optional _lua
+suffix. The part after the dot is converted to a filename by replacing
+the dots with underscores and the file must exist in the lib
+subdirectory. The luaopen function within the C file must be suffixed
+by the same converted name. It is recommended of using only one
+sub-level, i.e. only one dot in C module names.
+
 
 Performance comparison
 ----------------------
