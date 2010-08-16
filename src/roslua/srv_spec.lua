@@ -3,13 +3,11 @@
 --  srv_spec.lua - Service specification wrapper
 --
 --  Created: Thu Jul 29 11:04:13 2010 (at Intel Research, Pittsburgh)
+--  License: BSD, cf. LICENSE file of roslua
 --  Copyright  2010  Tim Niemueller [www.niemueller.de]
 --             2010  Carnegie Mellon University
 --             2010  Intel Research Pittsburgh
---
 ----------------------------------------------------------------------------
-
--- Licensed under BSD license
 
 --- Service specification.
 -- This module contains the SrvSpec class to read and represent ROS service

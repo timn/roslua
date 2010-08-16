@@ -3,13 +3,11 @@
 --  time.lua - time related classes and functions
 --
 --  Created: Mon Aug 09 14:11:59 2010 (at Intel Research, Pittsburgh)
+--  License: BSD, cf. LICENSE file of roslua
 --  Copyright  2010  Tim Niemueller [www.niemueller.de]
 --             2010  Carnegie Mellon University
 --             2010  Intel Research Pittsburgh
---
 ----------------------------------------------------------------------------
-
--- Licensed under BSD license
 
 --- Time utility class for roslua.
 -- This module provides the Time class. It uses the local clock or the

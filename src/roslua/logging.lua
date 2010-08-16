@@ -3,13 +3,11 @@
 --  logging.lua - roslua logging facilities
 --
 --  Created: Tue Aug 10 09:46:10 2010 (at Intel Research, Pittsburgh)
+--  License: BSD, cf. LICENSE file of roslua
 --  Copyright  2010  Tim Niemueller [www.niemueller.de]
 --             2010  Carnegie Mellon University
 --             2010  Intel Research Pittsburgh
---
 ----------------------------------------------------------------------------
-
--- Licensed under BSD license
 
 --- Logging facilities for roslua.
 -- This module provides the framework for logging messages. Multiple loggers

@@ -3,13 +3,11 @@
 --  msg_spec.lua - Message specification wrapper
 --
 --  Created: Mon Jul 26 16:59:59 2010 (at Intel Research, Pittsburgh)
+--  License: BSD, cf. LICENSE file of roslua
 --  Copyright  2010  Tim Niemueller [www.niemueller.de]
 --             2010  Carnegie Mellon University
 --             2010  Intel Research Pittsburgh
---
 ----------------------------------------------------------------------------
-
--- Licensed under BSD license
 
 --- Message specification.
 -- This module contains the MsgSpec class to read and represent ROS message

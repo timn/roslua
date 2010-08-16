@@ -3,13 +3,11 @@
 --  param_proxy.lua - Parameter server XML-RPC proxy
 --
 --  Created: Thu Jul 22 14:37:22 2010 (at Intel Research, Pittsburgh)
+--  License: BSD, cf. LICENSE file of roslua
 --  Copyright  2010  Tim Niemueller [www.niemueller.de]
 --             2010  Carnegie Mellon University
 --             2010  Intel Research Pittsburgh
---
 ----------------------------------------------------------------------------
-
--- Licensed under BSD license
 
 --- Parameter XML-RPC API proxy.
 -- This module contains the ParamProxy class to call methods provided via

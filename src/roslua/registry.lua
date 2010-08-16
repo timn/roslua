@@ -3,13 +3,11 @@
 --  registry.lua - Registry for topic/service registration
 --
 --  Created: Fri Jul 30 14:52:10 2010 (at Intel Research, Pittsburgh)
+--  License: BSD, cf. LICENSE file of roslua
 --  Copyright  2010  Tim Niemueller [www.niemueller.de]
 --             2010  Carnegie Mellon University
 --             2010  Intel Research Pittsburgh
---
 ----------------------------------------------------------------------------
-
--- Licensed under BSD license
 
 --- Registry housekeeping.
 -- This module contains functions used for housekeeping of subscriptions,

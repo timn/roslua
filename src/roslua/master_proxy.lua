@@ -3,13 +3,11 @@
 --  master_proxy.lua - Master XML-RPC proxy
 --
 --  Created: Thu Jul 22 11:31:05 2010 (at Intel Research, Pittsburgh)
+--  License: BSD, cf. LICENSE file of roslua
 --  Copyright  2010  Tim Niemueller [www.niemueller.de]
 --             2010  Carnegie Mellon University
 --             2010  Intel Research Pittsburgh
---
 ----------------------------------------------------------------------------
-
--- Licensed under BSD license
 
 --- Master XML-RPC API proxy.
 -- This module contains the MasterProxy class to call methods provided via

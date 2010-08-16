@@ -3,13 +3,11 @@
 --  publisher.lua - Topic publisher
 --
 --  Created: Mon Jul 27 17:04:24 2010 (at Intel Research, Pittsburgh)
+--  License: BSD, cf. LICENSE file of roslua
 --  Copyright  2010  Tim Niemueller [www.niemueller.de]
 --             2010  Carnegie Mellon University
 --             2010  Intel Research Pittsburgh
---
 ----------------------------------------------------------------------------
-
--- Licensed under BSD license
 
 --- Topic publisher.
 -- This module contains the Publisher class to publish to a ROS topic. The

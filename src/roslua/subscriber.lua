@@ -3,13 +3,11 @@
 --  subscriber.lua - Topic subscriber
 --
 --  Created: Mon Jul 27 14:11:07 2010 (at Intel Research, Pittsburgh)
+--  License: BSD, cf. LICENSE file of roslua
 --  Copyright  2010  Tim Niemueller [www.niemueller.de]
 --             2010  Carnegie Mellon University
 --             2010  Intel Research Pittsburgh
---
 ----------------------------------------------------------------------------
-
--- Licensed under BSD license
 
 --- Topic subscriber.
 -- This module contains the Subscriber class to subscribe to a ROS topic. The

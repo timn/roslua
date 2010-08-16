@@ -3,13 +3,11 @@
 --  service_client.lua - Service client
 --
 --  Created: Fri Jul 30 10:34:47 2010 (at Intel Research, Pittsburgh)
+--  License: BSD, cf. LICENSE file of roslua
 --  Copyright  2010  Tim Niemueller [www.niemueller.de]
 --             2010  Carnegie Mellon University
 --             2010  Intel Research Pittsburgh
---
 ----------------------------------------------------------------------------
-
--- Licensed under BSD license
 
 --- Service client.
 -- This module contains the ServiceClient class to access services provided

@@ -3,13 +3,11 @@
 --  message.lua - Message base class
 --
 --  Created: Mon Jul 26 19:50:16 2010 (at Intel Research, Pittsburgh)
+--  License: BSD, cf. LICENSE file of roslua
 --  Copyright  2010  Tim Niemueller [www.niemueller.de]
 --             2010  Carnegie Mellon University
 --             2010  Intel Research Pittsburgh
---
 ----------------------------------------------------------------------------
-
--- Licensed under BSD license
 
 --- ROS message representation.
 -- This class incorporates a ROS message that can be sent and received over

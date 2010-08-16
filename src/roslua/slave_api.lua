@@ -3,13 +3,11 @@
 --  slave_api.lua - Slave XML-RPC API
 --
 --  Created: Thu Jul 22 19:06:06 2010 (at Intel Research, Pittsburgh)
+--  License: BSD, cf. LICENSE file of roslua
 --  Copyright  2010  Tim Niemueller [www.niemueller.de]
 --             2010  Carnegie Mellon University
 --             2010  Intel Research Pittsburgh
---
 ----------------------------------------------------------------------------
-
--- Licensed under BSD license
 
 --- Slave API implementation.
 -- This module provides the slave API to be called by other nodes. It uses

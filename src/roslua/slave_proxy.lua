@@ -3,13 +3,11 @@
 --  slave_proxy.lua - Slave XML-RPC proxy
 --
 --  Created: Mon Jul 26 11:58:27 2010 (at Intel Research, Pittsburgh)
+--  License: BSD, cf. LICENSE file of roslua
 --  Copyright  2010  Tim Niemueller [www.niemueller.de]
 --             2010  Carnegie Mellon University
 --             2010  Intel Research Pittsburgh
---
 ----------------------------------------------------------------------------
-
--- Licensed under BSD license
 
 --- Slave XML-RPC API proxy.
 -- This module contains the SlaveProxy class to call methods provided via
