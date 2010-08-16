@@ -43,6 +43,7 @@ function wsapi_handler(wsapi_env)
   local result = { pcall(func, unpack(arg_table or {})) }
   local ok = result[1]
   if not ok then
+     print_error("Slave API call '%s' failed: %s", method, result[2])
      result = { code = 3, message = result[2] }
   else
      table.remove(result, 1)
