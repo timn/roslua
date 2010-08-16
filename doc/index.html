@@ -231,13 +231,17 @@ extension of ".luaso" as to avoid confusion of ROS tools which
 otherwise would crash.
 
 Once the paths are set you can simply call Lua to run your script.
-See src/examples for example scripts.
+See src/examples for example scripts. To run for instance the
+subscriber and publisher examples, which resemble talker and listener
+from the roscpp and rospy tutorials, just call "lua subscriber.lua"
+and "lua publisher.lua" respectively (assuming you have set LUA_PATH
+and LUA_CPATH as adviced above).
 
 Performance comparison
 ----------------------
 Some simple performance comparisons have been made using
 actionlib_lua and actionlib_benchmark modules (to be released
-separately.
+separately).
 
 # ./cpp_roundtrip_client 100
 SEND   Average: 0.000400    Deviation: 0.000035
@@ -293,7 +297,8 @@ unpacking the struct often, and the GoalStatusArray message being
 particularly bad for performance because it includes strings, and an
 array of another message type, requiring conditional deserialization.
 Results have been produced on an Intel Xeon 3.6 GHz machine with 2 GB
-of RAM against a C++ action server.
+of RAM against a C++ action server (performance against Python server
+is much worse, Lua server not yet written).
 </pre>
 
 
