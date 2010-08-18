@@ -24,6 +24,10 @@ require("roslua.msg_spec")
 
 TcpRosConnection = { payload = nil, received = false, max_receives_per_spin = 10 }
 
+-- Timeouts are in seconds
+CLIENT_TIMEOUT  = 5
+SERVER_TIMEOUT  = 0
+
 --- Constructor.
 -- @param socket optionally a socket to use for communication
 function TcpRosConnection:new(socket)
@@ -31,8 +35,9 @@ function TcpRosConnection:new(socket)
    setmetatable(o, self)
    self.__index = self
 
-   o.socket = socket
+   o.socket    = socket
    o.msg_stats = {total = 0, received = 0, sent = 0}
+   o.is_client = false
 
    return o
 end
@@ -43,6 +48,8 @@ end
 function TcpRosConnection:connect(host, port)
    assert(not self.socket, "Socket has already been created")
    self.socket = assert(socket.connect(host, port))
+   self.socket:settimeout(CLIENT_TIMEOUT)
+   self.is_client = true
 end
 
 --- Close connection.
@@ -61,7 +68,7 @@ end
 function TcpRosConnection:bind()
    assert(not self.socket, "Socket has already been created")
    self.socket = assert(socket.bind("*", 0))
-   self.socket:settimeout(0)
+   self.socket:settimeout(SERVER_TIMEOUT)
 end
 
 --- Accept new connections.
@@ -106,10 +113,11 @@ end
 function TcpRosConnection:receive_header()
    self.header = {}
 
-   local rd = self.socket:receive(4)
+   local rd = assert(self.socket:receive(4))
    local packet_size = struct.unpack("<!1i4", rd)
 
-   local packet = self.socket:receive(packet_size)
+   local packet = assert(self.socket:receive(packet_size))
+
    local i = 1
 
    while i <= packet_size do
