@@ -25,8 +25,10 @@ require("wsapi.request")
 require("xmlrpc")
 require("posix")
 require("socket")
+require("socket.http")
 
 __DEBUG = false
+XMLRPC_CONNECTION_TIMEOUT = 4
 
 --- XML-RPC WSAPI handler
 -- @param wsapi_env WSAPI environment
@@ -312,6 +314,7 @@ local config = { server = {host = "*", port = 0}, defaultHost = { rules = rules}
 function init()
    xmlrpc.srvMethods(xmlrpc_exports)
    xavante.HTTP(config)
+   socket.http.TIMEOUT = XMLRPC_CONNECTION_TIMEOUT
 end
 
 --- Get slave URI.
