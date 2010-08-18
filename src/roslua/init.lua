@@ -82,6 +82,7 @@ services      = roslua.registry.services
 
 local slave_proxies = {}
 local spinners = {}
+local finalizers = {}
 
 --- Query this flag in your main loop and exit the application when it is set to
 -- true. We default to true, it is set to false in init_node(). This way we ensure
@@ -138,6 +139,8 @@ function init_node(args)
       end
    end
 
+   math.randomseed(roslua.Time.now():to_sec())
+
    quit = false;
    if not args.no_signal_handler then
       signal.signal(signal.SIGINT, roslua.exit)
@@ -170,6 +173,30 @@ function remove_spinner(spinner)
    end
 end
 
+--- Add a finalizer.
+-- The finalizer will be called when roslua.finalize() is executed.
+-- @param finalizer function which is called without arguments on finalization
+function add_finalizer(finalizer)
+   assert(type(finalizer) == "function", "Finalizer must be a function")
+   for _, f in ipairs(finalizers) do
+      if f == finalizer then
+	 error("Finalizer has already been registered", 0)
+      end
+   end
+   table.insert(finalizers, finalizer);
+end
+
+--- Remove finalizer.
+-- @param finalizer finalizer to remove
+function remove_finalizer(finalizer)
+   for i, s in ipairs(finalizer) do
+      if f == finalizer then
+	 table.remove(finalizer, i)
+	 break;
+      end
+   end
+end
+
 --- Finalize this node.
 -- Call this function when existing the program to allow for proper unregistering
 -- of topic and services and to perform other cleanup tasks.
@@ -186,6 +213,13 @@ function finalize()
    for service,s in pairs(roslua.services) do
       s.provider:finalize()
       roslua.registry.unregister_service(service, s.type, s.provider)
+   end
+   local fcopy = {}
+   for i, f in ipairs(finalizers) do
+      fcopy[i] = f
+   end
+   for _, f in ipairs(fcopy) do
+      f()
    end
 end
 
@@ -286,6 +320,7 @@ function spin()
       s.provider:spin()
    end
    --tracked_times.providers.endtime = roslua.Time.now()
+
 
    --*** Spin all registered spinners
    -- work on a copy of the list as the list might change while we run the
