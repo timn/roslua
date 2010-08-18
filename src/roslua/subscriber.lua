@@ -25,6 +25,8 @@ require("roslua")
 require("roslua.msg_spec")
 require("roslua.tcpros")
 
+CONNECTION_MAX_TRIES = 10
+
 Subscriber = {}
 
 --- Constructor.
@@ -106,13 +108,15 @@ end
 -- will (immediately) disconnect from any publishers that are no longer available.
 -- @param publishers an array of currently available and slave URIs that were
 -- registered at the core
-function Subscriber:update_publishers(publishers)
+-- @param connect_now if set to true will immediately try to connect to unconnected
+-- publishers instead of only marking enqueuing a try for the next spin
+function Subscriber:update_publishers(publishers, connect_now)
    self.connect_on_spin = false
    local pub_rev = {}
    for _, uri in ipairs(publishers) do
       pub_rev[uri] = true
       if not self.publishers[uri] then
-	 self.publishers[uri] = { uri = uri }
+	 self.publishers[uri] = { uri = uri, num_tries = 0 }
 	 self.connect_on_spin = true
       end
    end
@@ -128,6 +132,9 @@ function Subscriber:update_publishers(publishers)
 	 self.publishers[uri].connection:close()
       end
       self.publishers[uri] = nil
+   end
+   if connect_now then
+      self:connect()
    end
 end
 
@@ -151,26 +158,55 @@ end
 -- established.
 function Subscriber:connect()
    for uri, p in pairs(self.publishers) do
+      p.num_tries = p.num_tries + 1
       local slave = roslua.get_slave_proxy(uri)
 
       if not p.connection then
-	 local proto = slave:requestTopic(self.topic)
-	 if proto then
+	 --print_debug("Subscriber[%s]: Request topic", self.topic)
+	 local ok, proto = pcall(slave.requestTopic, slave, self.topic)
+	 if ok and proto then
 	    assert(proto[1] == "TCPROS", "TCPROS not supported by remote")
 
+	    --print_debug("Subscriber[%s]: Connect", self.topic)
 	    local c = roslua.tcpros.TcpRosPubSubConnection:new()
 	    local ok, err = pcall(c.connect, c, proto[2], proto[3])
 	    if ok then
+	       --print_debug("Subscriber[%s]: Send header", self.topic)
 	       c:send_header{callerid=roslua.node_name,
 			     topic=self.topic,
 			     type=self.type,
 			     md5sum=self.msgspec:md5()}
-	       c:receive_header()
-
-	       p.connection = c
+	       local ok, err = pcall(c.receive_header, c)
+	       if not ok then
+		  print_warn("Subscriber[%s] -> %s:%d: Failed to received header (%s)", self.topic,
+			     proto[2], proto[3], err)
+	       else
+		  --print_debug("Subscriber[%s]: Received header", self.topic)
+		  p.connection = c
+	       end
+	    else
+	       -- Connection failed, retry in next spin
+	       print_warn("Subscriber[%s]: connection failed (%s)", self.topic, err)
+	       self.connect_on_spin = true
 	    end
+	 else
+	    -- Connection parameter negotiation failed, retry in next spin
+	    --print_warn("Subscriber[%s]: parameter negotiation failed", self.topic)
+	    self.connect_on_spin = true
 	 end
       end
+   end
+
+   local remove_uris = {}
+   for uri, p in pairs(self.publishers) do
+      if not p.connection and p.num_tries >= CONNECTION_MAX_TRIES then
+	 print_warn("Subscriber[%s]: publisher %s connection failed %d times, dropping publisher",
+		    self.topic, uri, p.num_tries)
+	 table.insert(remove_uris, uri)
+      end
+   end
+   for _, uri in ipairs(remove_uris) do
+      self.publishers[uri] = nil
    end
 end
 
@@ -178,8 +214,8 @@ end
 -- Connections which are found dead are removed.
 function Subscriber:spin()
    if self.connect_on_spin then
-      self:connect()
       self.connect_on_spin = false
+      self:connect()
    end
 
    for uri, p in pairs(self.publishers) do

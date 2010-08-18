@@ -38,7 +38,7 @@ function register_subscriber(topic, type, subscriber)
    if not ok then
       error("Cannot connect to ROS master: " .. pubs_err)
    end
-   subscriber:update_publishers(pubs_err)
+   subscriber:update_publishers(pubs_err, true)
 end
 
 --- Register publisher.
