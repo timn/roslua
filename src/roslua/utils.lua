@@ -44,8 +44,8 @@ function find_rospack(package)
       p:close()
    end
 
-   assert(rospack_path_cache[package], "Package path could not be found")
-   assert(rospack_path_cache[package] ~= "", "Package path could not be found")
+   assert(rospack_path_cache[package], "Package path could not be found for " .. package)
+   assert(rospack_path_cache[package] ~= "", "Package path could not be found for " .. package)
    return rospack_path_cache[package]
 end
 
