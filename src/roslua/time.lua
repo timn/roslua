@@ -157,8 +157,14 @@ end
 -- @return new time instance with the sum of t1 and t2
 function Time.__add(t1, t2)
    local t = Time:new()
-   t.sec  = t1.sec + t2.sec
-   t.nsec = t1.nsec + t2.nsec
+   if type(t2) == "number" then
+      local n = math.floor(t2)
+      t.sec  = t1.sec  + n
+      t.nsec = t1.nsec + math.floor((t2 - n) * 1000000000)
+   else
+      t.sec  = t1.sec + t2.sec
+      t.nsec = t1.nsec + t2.nsec
+   end
    if t.nsec > 1000000000 then
       local n = math.floor(t.nsec / 1000000000)
       t.sec  = t.sec  + n
@@ -320,8 +326,14 @@ end
 -- @return new duration instance with the sum of d1 and d2
 function Duration.__add(d1, d2)
    local d = Duration:new()
-   d.sec  = d1.sec + d2.sec
-   d.nsec = d1.nsec + d2.nsec
+   if type(t2) == "number" then
+      local n = math.floor(t2)
+      d.sec  = d1.sec + n
+      d.nsec = d1.nsec + math.floor((t2 - n) * 1000000000)
+   else
+      d.sec  = d1.sec + d2.sec
+      d.nsec = d1.nsec + d2.nsec
+   end
    if d.nsec > 1000000000 then
       local n = math.floor(d.nsec / 1000000000)
       d.sec  = d.sec  + n
