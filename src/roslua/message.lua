@@ -122,10 +122,21 @@ function Message:format_string(buffer, i, farray, prefix)
 	 local num
 	 num, i = struct.unpack("I4", buffer, i)
 	 rv = rv .. "I4"
-	 if num > 0 then
-	    local tmp, newi = self:format_string(buffer, i, f, "")
-	    local offset = newi
-	    i = i + (offset * num)
+	 local tmp
+	 if #f == 1 and type(f[1]) == "string" and not f[1]:find("c") then
+	    -- we have an array which only has one constant length pattern string
+	    local format = f[1]
+	    for n=2, num do
+	       format = format .. f[1]
+	    end
+	    local s = struct.size(f[1])
+	    i = i + (s * num)
+	    rv = rv .. format
+	 else
+	    for n=1,num do
+	       tmp, i = self:format_string(buffer, i, f, "")
+	       rv = rv .. tmp
+	    end
 	 end
       end
    end
@@ -142,7 +153,7 @@ function Message:read_values(values, start)
    for _, f in ipairs(self.spec.fields) do
       if f.is_array then
 	 local num = values[fi]
-	 fi = fi + 1
+ 	 fi = fi + 1
 	 local array = {}
 	 self.values[f.name] = array
 	 if f.is_builtin then

@@ -215,13 +215,15 @@ function MsgSpec:generate_base_format(prefix)
    for _, f in ipairs(self.fields) do
       local fname = f.name
       local ftype = f.type
-      local is_array   = is_array_type(ftype)
-      local is_builtin = is_builtin_type(ftype)
+      local is_array   = f.is_array
+      local is_builtin = f.is_builtin
 
       if is_array then
 	 format = format .. "I4("
-	 table.insert(farray, curfor)
-	 curfor = ""
+	 if curfor ~= "" then
+	    table.insert(farray, curfor)
+	    curfor = ""
+	 end
 	 if is_builtin then
 	    format = format .. roslua.message.Message.builtin_formats[f.base_type]
 	    table.insert(farray, {roslua.message.Message.builtin_formats[f.base_type]})
@@ -236,16 +238,22 @@ function MsgSpec:generate_base_format(prefix)
 	    format = format .. roslua.message.Message.builtin_formats[ftype]
 	    curfor = curfor .. roslua.message.Message.builtin_formats[ftype]
 	 else
-	    local subformat = f.spec:generate_base_format("")
+	    local subformat, subfarray = f.spec:generate_base_format("")
 	    format = format .. subformat
-	    curfor = curfor .. subformat
+	    if curfor ~= "" then
+	       table.insert(farray, curfor)
+	       curfor = ""
+	    end
+	    for _, sa in ipairs(subfarray) do
+	       table.insert(farray, sa)
+	    end
 	 end
       end
    end
    if curfor ~= "" then
       table.insert(farray, curfor)
    end
-
+   
    return format, farray
 end
 
