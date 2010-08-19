@@ -94,9 +94,46 @@ Message.builtin_formats = {
 -- @param i Index from where to start parsing in the buffer, optional argument
 -- that defaults to 1
 function Message:deserialize(buffer)
-   local format = self:format_string(buffer, 1)
-   local values = {struct.unpack(format, buffer)}
+   local format = self:format_string(buffer, 1, self.farray, "")
+   local values = {}
+   local l = 0
+   local i = 1
+   for s in self:split_format(format) do
+      l = l + #s
+      local tmpval = {struct.unpack("<!1" .. s, buffer, i)}
+      i = tmpval[#tmpval]
+      table.remove(tmpval)
+      for _, v in ipairs(tmpval) do
+	 table.insert(values, v)
+      end
+   end
    self:read_values(values)
+end
+
+--- Format splitting iterator.
+-- Splits the struct format after 200 characters (202 if a string definition
+-- would be split otherwise).
+-- @param format format to split
+-- @return iterator function
+function Message:split_format(format)
+   local lenformat = #format
+   local l = 1
+   return function()
+	     if l < lenformat then
+		local lread = 200
+		if lenformat - l < lread then
+		   lread = lenformat - l + 1
+		end
+		local f = format:sub(l, l+lread-1)
+		l = l + lread
+
+		if format:sub(l, l+1) == "c0" then
+		   f = f .. format:sub(l, l+1)
+		   l = l + 2
+		end
+		return f
+	     end
+	  end
 end
 
 
