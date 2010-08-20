@@ -91,6 +91,7 @@ function package_loader(module)
 	    local file = io.open(filename, "rb")
 	    if file then
 	       -- Compile and return the module
+	       if _G.add_watchfile then _G.add_watchfile(filename) end
 	       return assert(loadstring(assert(file:read("*a")), filename))
 	    end
 	    errmsg = errmsg .. string.format("\n\tno file %s (ROS Lua loader)", filename)
@@ -139,6 +140,7 @@ function c_package_loader(module)
 	    if file then
 	       file:close()
 	       -- Load and return the module loader
+	       if _G.add_watchfile then _G.add_watchfile(pathinfo[1]) end
 	       local loader, msg = package.loadlib(pathinfo[1], "luaopen_"..pathinfo[2])
 	       if not loader then
 		  error("error loading module '" .. module .. "' from file '".. pathinfo[1] .."':\n\t" .. msg, 3)
