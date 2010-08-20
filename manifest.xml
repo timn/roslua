@@ -8,6 +8,7 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/roslua</url>
   <depend package="roslang"/>
+  <depend package="roslib"/>
   <rosdep name="lua" />
   <rosdep name="lua-md5" />
   <rosdep name="lua-posix" />

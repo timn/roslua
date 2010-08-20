@@ -72,9 +72,9 @@ Additional notes
 ----------------
 Xavante:
   Needs a small patch to allow for using a ephemeral port.
-  git clone git@github.com:timn/xavante.git
+  git clone git@github.com:keplerproject/xavante.git
   Use this version, or use src/xavante/httpd.lua to replace the one on
-  your system.
+  your system. The patch has been merged upstream.
 Lua POSIX:
   A patched version currently comes with roslua. Patches to extend
   the functionality have been accepted upstream. Once the new version
