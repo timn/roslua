@@ -63,6 +63,7 @@ end
 
 -- (internal) table of default values for built-in types
 Message.default_values = {
+   bool     = 0,
    int8     = 0,       uint8   = 0,
    int16    = 0,       uint16  = 0,
    int32    = 0,       uint32  = 0,
@@ -75,6 +76,7 @@ Message.default_values = {
 
 -- (internal) table of formats for built-in types
 Message.builtin_formats = {
+   bool     = "I1",
    int8     = "i1",    uint8   = "I1",
    int16    = "i2",    uint16  = "I2",
    int32    = "i4",    uint32  = "I4",
