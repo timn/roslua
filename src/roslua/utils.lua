@@ -75,7 +75,7 @@ function package_loader(module)
    local package = string.match(module, "^[^%.]+")
    if not package then return end
 
-   local try_paths = { "%s/src/%s.lua", "%s/src/%s/init.lua" }
+   local try_paths = { "%s/src/%s.lua", "%s/src/%s/init.lua", "%s/src/lua/%s.lua", "%s/src/lua/%s/init.lua" }
    local try_packages = { package .. "_lua", package }
    local errmsg = ""
 
