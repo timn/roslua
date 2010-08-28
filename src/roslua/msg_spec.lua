@@ -160,7 +160,7 @@ function MsgSpec:load_from_iterator(iterator)
       line = line:match("(.-)%s+$") or line -- strip trailing whitespace
 
       if line ~= "" then -- else comment or empty
-	 local ftype, fname = string.match(line, "^([%w_/%[%]]+) ([%w_%[%]]+)$")
+	 local ftype, fname = string.match(line, "^([%w_/%[%]]+)[%s]+([%w_%[%]]+)$")
 	 if ftype and fname then
 	    if ftype == "Header" then ftype = "roslib/Header" end
 	    ftype = self:resolve_type(ftype)
@@ -177,7 +177,7 @@ function MsgSpec:load_from_iterator(iterator)
 	    table.insert(self.fields, typeinfo)
 	    field_i = field_i + 1
 	 else -- check for constant
-	    local ctype, cname, cvalue = line:match("^([%w_]+) ([%w_]+)[%s]*=[%s]*([-%w]+)$")
+	    local ctype, cname, cvalue = line:match("^([%w_]+)[%s]+([%w_]+)[%s]*=[%s]*([-%w]+)$")
 	    if ctype and cname and cvalue then
 	       local nv = tonumber(cvalue)
 	       if nv ~= nil then cvalue = nv end
