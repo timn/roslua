@@ -203,6 +203,14 @@ function Message:read_values(values, start)
 		  array[i] = class:new(values[fi], values[fi+1])
 		  fi = fi + 2
 	       end
+	    elseif f.base_type == "bool" then
+	       for i = 1, num do
+		  if values[fi] == 1 then
+		     array[i] = true
+		  else
+		     array[i] = false
+		  end
+	       end
 	    else
 	       for i = 1, num do
 		  array[i] = values[fi]
@@ -223,6 +231,13 @@ function Message:read_values(values, start)
 	    elseif f.base_type == "duration" then
 	       self.values[f.name] = roslua.Duration:new(values[fi], values[fi+1])
 	       fi = fi + 2
+	    elseif f.base_type == "bool" then
+	       if values[fi] == 1 then
+		  self.values[f.name] = true
+	       else
+		  self.values[f.name] = false
+	       end
+	       fi = fi + 1
 	    else
 	       self.values[f.name] = values[fi]
 	       fi = fi + 1
@@ -322,6 +337,10 @@ function Message:generate_value_array(flat_array, array)
 	    elseif ftype == "string" then
 	       table.insert(rv, #v)
 	       table.insert(rv, v)
+	    elseif ftype == "bool" then
+	       local bv = 0
+	       if v then bv = 1 end
+	       table.insert(rv, bv)
 	    else
 	       table.insert(rv, v)
 	    end
@@ -340,6 +359,10 @@ function Message:generate_value_array(flat_array, array)
 	 elseif ftype == "string" then
 	    table.insert(rv, #self.values[fname])
 	    table.insert(rv, self.values[fname])
+	 elseif ftype == "bool" then
+	    local bv = 0
+	    if self.values[fname] then bv = 1 end
+	    table.insert(rv, bv)
 	 else
 	    table.insert(rv, self.values[fname])
 	 end
