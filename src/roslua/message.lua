@@ -401,20 +401,16 @@ end
 function Message:serialize()
    local rv = ""
 
-   -- pack values into array in proper order
-   for _, f in ipairs(self.spec.fields) do
+   -- generate format string
+   local format, arr = self:generate_value_array(true)
 
-      -- generate format string
-      local format, arr = self:generate_value_array(true)
+   format = "<!1" .. format
 
-      format = "<!1" .. format
+   -- pack it!
+   local tmp = struct.pack(format, unpack(arr))
+   rv = struct.pack("<!1I4c0", #tmp, tmp)
 
-      -- pack it!
-      local tmp = struct.pack(format, unpack(arr))
-      rv = struct.pack("<!1I4c0", #tmp, tmp)
-
-      return rv, format, arr
-   end
+   return rv, format, arr
 end
 
 
