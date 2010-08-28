@@ -112,9 +112,9 @@ function Service:send_response(connection, msg_or_vals)
    if getmetatable(msg_or_vals) == roslua.Message then
       m = message
    else
-      -- value array, pack it first
+      -- value array or nil, pack it first
       m = self.srvspec.respspec:instantiate()
-      m:set_from_array(msg_or_vals)
+      if msg_or_vals then m:set_from_array(msg_or_vals) end
    end
    local s = struct.pack("<!1I1", 1)
 
