@@ -349,18 +349,20 @@ static int interrupted (lua_State *L)
 
 static int library_gc (lua_State *L)
 {
-  lua_getfield(L, LUA_REGISTRYINDEX, LUA_SIGNAL_NAME);
-  lua_pushnil(L);
-  while (lua_next(L, -2))
-  {
-    if (lua_isnumber(L, -2)) /* <signal, function> */
-      signal((int) lua_tointeger(L, -2), SIG_DFL);
-    lua_pop(L, 1); /* value */
+  if (ML == L) {
+    lua_getfield(L, LUA_REGISTRYINDEX, LUA_SIGNAL_NAME);
+    lua_pushnil(L);
+    while (lua_next(L, -2))
+    {
+      if (lua_isnumber(L, -2)) /* <signal, function> */
+	signal((int) lua_tointeger(L, -2), SIG_DFL);
+      lua_pop(L, 1); /* value */
+    }
+    signal_stack = NULL;
+    ML = NULL;
+    old_hook.hook = NULL;
+    signal_stack_top = 0;
   }
-  signal_stack = NULL;
-  ML = NULL;
-  old_hook.hook = NULL;
-  signal_stack_top = 0;
   return 0;
 }
 
