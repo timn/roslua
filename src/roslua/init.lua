@@ -22,8 +22,8 @@ local utils = require("roslua.utils")
 
 -- Add our custom loader, we do this outside of init to avoid having to call
 -- init before loading required modules
-table.insert(package.loaders, 4, utils.package_loader)
-table.insert(package.loaders, 5, utils.c_package_loader)
+table.insert(package.loaders, 2, utils.package_loader)
+table.insert(package.loaders, 4, utils.c_package_loader)
 
 require("roslua.master_proxy")
 require("roslua.param_proxy")
