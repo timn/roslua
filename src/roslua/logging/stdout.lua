@@ -28,6 +28,12 @@ COLOR_CYAN     = "\27[0;36m"
 COLOR_PURPLE   = "\27[0;35m"
 COLOR_NONE     = "\27[0;39m"
 
+local overhang = {}
+overhang[roslua.logging.DEBUG]= ""
+overhang[roslua.logging.INFO] = " "
+overhang[roslua.logging.WARN] = " "
+overhang[roslua.logging.ERROR]= ""
+
 --- Log message to stdout.
 -- @param level log level
 -- @param time timestamp of message
@@ -45,8 +51,8 @@ function log_stdout(level, time, msg)
    end
    if color ~= "" then color_none = COLOR_NONE end
 
-   io.write(string.format("%s[%s] %s %s%s\n", color, roslua.logging.log_level_strings[level],
-		       tostring(time), msg, color_none))
+   io.write(string.format("%s[%s]%s %s %s%s\n", color, roslua.logging.log_level_strings[level],
+			  overhang[level], tostring(time), msg, color_none))
 end
 
 --- Get logger.

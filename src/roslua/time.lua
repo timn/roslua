@@ -221,10 +221,10 @@ end
 -- @return string representing this time
 function Time.__tostring(t)
    if t.sec < 1000000000 then
-      return tostring(t.sec) .. "." .. tostring(t.nsec)
+      return string.format("%9d.%-9d", t.sec, t.nsec)
    else
       local tm = posix.localtime(t.sec)
-      return posix.strftime("%H:%M:%S", tm) .. "." ..tostring(t.nsec)
+      return string.format("%s.%-9d", posix.strftime("%H:%M:%S", tm), t.nsec)
    end
 end
 
@@ -234,7 +234,7 @@ end
 function Time:format(format)
    local format = format or "%H:%M:%S"
    local tm = posix.localtime(t.sec)
-   return posix.strftime(format, tm) .. "." ..tostring(t.nsec)
+   return string.format("%s.%-9d", posix.strftime(format, tm), t.nsec)
 end
 
 
