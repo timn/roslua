@@ -92,7 +92,12 @@ function package_loader(module)
 	    if file then
 	       -- Compile and return the module
 	       if _G.add_watchfile then _G.add_watchfile(filename) end
-	       return assert(loadstring(assert(file:read("*a")), filename))
+	       local chunk, errmsg = loadstring(assert(file:read("*a")), filename)
+	       if chunk then
+		  return chunk
+	       else
+		  error("Failed loading " .. filename .. ": " .. errmsg)
+	       end
 	    end
 	    errmsg = errmsg .. string.format("\n\tno file %s (ROS Lua loader)", filename)
 	 end
