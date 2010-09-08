@@ -51,6 +51,7 @@ function Subscriber:new(topic, type)
 
    o.publishers = {}
    o.listeners  = {}
+   o.messages   = {}
 
    return o
 end
@@ -87,8 +88,8 @@ function Subscriber:remove_listener(listener)
    self.listeners[listeners] = nil
 end
 
-function Subscriber:dispatch(messages)
-   for _, m in ipairs(messages) do
+function Subscriber:dispatch()
+   for _, m in ipairs(self.messages) do
       for listener, _ in pairs(self.listeners) do
 	 local t = type(listener)
 	 if t == "table" then
@@ -154,6 +155,7 @@ function Subscriber:get_stats()
    return {self.topic, conns}
 end
 
+
 --- Connect to all available publishers to which no connection has yet been
 -- established.
 function Subscriber:connect()
@@ -210,6 +212,7 @@ function Subscriber:connect()
    end
 end
 
+
 --- Spin all connections to subscribers and dispatch incoming messages.
 -- Connections which are found dead are removed.
 function Subscriber:spin()
@@ -218,6 +221,7 @@ function Subscriber:spin()
       self:connect()
    end
 
+   self.messages = {}
    for uri, p in pairs(self.publishers) do
       if p.connection then
 	 local ok, err = pcall(p.connection.spin, p.connection)
@@ -231,8 +235,11 @@ function Subscriber:spin()
 	       error(err)
 	    end
 	 elseif p.connection:data_received() then
-	    self:dispatch(p.connection.messages)
+	    for _, m in ipairs(p.connection.messages) do
+	       table.insert(self.messages, m)
+	    end
 	 end
       end
    end
+   self:dispatch()
 end
