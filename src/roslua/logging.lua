@@ -35,6 +35,10 @@ log_level_strings[FATAL] = "FATAL"
 local log_level = DEBUG
 local loggers = {}
 
+require("roslua.logging.stdout")
+local stdout_logger = roslua.logging.stdout.get_logger()
+loggers[stdout_logger] = stdout_logger
+
 --- Add a logger.
 -- @param logger logger to add, must be a function that accepts three arguments,
 -- the log level (number), the time (Time instance), and the message (string)
@@ -47,6 +51,12 @@ end
 -- @param logger logger to remove
 function remove_logger(logger)
    loggers[logger] = nil
+end
+
+--- Remove the stdout logger which is added by default.
+function remove_stdout_logger()
+   remove_logger(stdout_logger)
+   stdout_logger = nil
 end
 
 --- Set the log level
@@ -62,13 +72,13 @@ end
 -- print_debug, print_info, print_warn, print_error, and print_fatal.
 -- @param export_to module or table to export to
 function register_print_funcs(export_to)
-   export_to.print = print
-   export_to.printf = printf
-   export_to.print_debug = print_debug
-   export_to.print_info = print_info
-   export_to.print_warn = print_warn
-   export_to.print_error = print_error
-   export_to.print_fatal = print_fatal
+   export_to.print       = _M.print
+   export_to.printf      = _M.printf
+   export_to.print_debug = _M.print_debug
+   export_to.print_info  = _M.print_info
+   export_to.print_warn  = _M.print_warn
+   export_to.print_error = _M.print_error
+   export_to.print_fatal = _M.print_fatal
 end
 
 local function dispatch(level, msg)
@@ -85,7 +95,7 @@ end
 -- to loggers. Will be posted with INFO log level.
 -- @param ... variable number of string arguments
 function print(...)
-   return dispatch(INFO, table.concat({...}, ", "))
+   return dispatch(INFO, table.concat({...}, "\t"))
 end
 
 --- Print formatted.

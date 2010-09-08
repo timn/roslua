@@ -40,7 +40,6 @@ require("roslua.service_client")
 require("roslua.registry")
 require("roslua.time")
 require("roslua.logging")
-require("roslua.logging.stdout")
 require("roslua.logging.rosout")
 
 local signal = require("roslua.signal")
@@ -127,7 +126,6 @@ function init_node(args)
    roslua.slave_uri = roslua.slave_api.slave_uri()
 
    roslua.logging.register_print_funcs(_G)
-   roslua.logging.add_logger(roslua.logging.stdout.get_logger())
    if not args.no_rosout then
       roslua.logging.add_logger(roslua.logging.rosout.get_logger())
    end
