@@ -73,9 +73,11 @@ end
 -- @return function of loaded code if module was found, nil otherwise
 function package_loader(module)
    local package = string.match(module, "^[^%.]+")
-   if not package then return end
+   local modname = string.match(module, "[^%.]+$")
+   if not package or not modname then return end
 
-   local try_paths = { "%s/src/%s.lua", "%s/src/%s/init.lua", "%s/src/lua/%s.lua", "%s/src/lua/%s/init.lua" }
+   local try_paths = { "%s/src/%s.lua", "%s/src/%s/%s.lua", "%s/src/%s/init.lua",
+		       "%s/src/lua/%s.lua", "%s/src/lua/%s/%s.lua", "%s/src/lua/%s/init.lua" }
    local try_packages = { package .. "_lua", package }
    local errmsg = ""
 
@@ -87,7 +89,7 @@ function package_loader(module)
 
 	 for _, tp in ipairs(try_paths) do
 	    local modulepath = string.gsub(module, "%.", "/")
-	    local filename = string.format(tp, packpath, modulepath)
+	    local filename = string.format(tp, packpath, modulepath, modname)
 	    local file = io.open(filename, "rb")
 	    if file then
 	       -- Compile and return the module
