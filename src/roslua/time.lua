@@ -221,10 +221,10 @@ end
 -- @return string representing this time
 function Time.__tostring(t)
    if t.sec < 1000000000 then
-      return string.format("%9d.%-9d", t.sec, t.nsec)
+      return string.format("%9d.%09d", t.sec, t.nsec)
    else
       local tm = posix.localtime(t.sec)
-      return string.format("%s.%-9d", posix.strftime("%H:%M:%S", tm), t.nsec)
+      return string.format("%s.%09d", posix.strftime("%H:%M:%S", tm), t.nsec)
    end
 end
 
@@ -389,5 +389,5 @@ end
 -- @param t duration to convert
 -- @return string representing this duration
 function Duration.__tostring(t)
-   return tostring(t.sec) .. "." .. tostring(t.nsec)
+   return string.format("%d.%09d", t.sec, t.nsec)
 end
