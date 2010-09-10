@@ -52,6 +52,7 @@ function Subscriber:new(topic, type)
    o.publishers = {}
    o.listeners  = {}
    o.messages   = {}
+   o.latching   = o.latching or false
 
    return o
 end
@@ -213,6 +214,13 @@ function Subscriber:connect()
 end
 
 
+--- Reset messages.
+-- You can use this for a latching subscriber to erase the messages at a
+-- certain point manually.
+function Subscriber:reset_messages()
+   self.messages = {}
+end
+
 --- Spin all connections to subscribers and dispatch incoming messages.
 -- Connections which are found dead are removed.
 function Subscriber:spin()
@@ -221,7 +229,11 @@ function Subscriber:spin()
       self:connect()
    end
 
-   self.messages = {}
+   local erased = false
+   if not self.latching then
+      self.messages = {}
+      erased = true
+   end
    for uri, p in pairs(self.publishers) do
       if p.connection then
 	 local ok, err = pcall(p.connection.spin, p.connection)
@@ -235,6 +247,10 @@ function Subscriber:spin()
 	       error(err)
 	    end
 	 elseif p.connection:data_received() then
+	    if self.latching and not erased then
+	       self.messages = {}
+	       erased = true
+	    end
 	    for _, m in ipairs(p.connection.messages) do
 	       table.insert(self.messages, m)
 	    end

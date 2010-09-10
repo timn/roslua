@@ -36,6 +36,7 @@ function Publisher:new(topic, type)
    self.__index = self
 
    o.topic       = topic
+   o.latching    = o.latching or false
    if roslua.msg_spec.is_msgspec(type) then
       o.type    = type.type
       o.msgspec = type
@@ -94,8 +95,18 @@ function Publisher:accept_connections()
 		    md5sum=self.msgspec:md5()}
       c:receive_header()
 
-      --print("Accepted connection from " .. c.header.callerid)
+      if self.latched and self.latched_message then
+	 local ok, error = pcall(c.send, c, self.latched_message.serialized)
+	 if not ok then
+	    local ip, port = c:get_ip_port()
+	    print_warn("Publisher[%s::%s]: failed sending to %s:%s for latched message (%s)",
+		       self.type, self.name, ip, port, error)
+	    self.subscribers[uri].connection:close() 
+	    self.subscribers[uri] = nil
+	 end
+      end
 
+      --print("Accepted connection from " .. c.header.callerid)
       self.subscribers[c.header.callerid] = {uri=c.header.callerid, connection=c}
    end
 end
@@ -126,6 +137,9 @@ function Publisher:publish(message)
 	--  .. " (topic " .. self.topic .. ", " .. self.type .. " vs. " .. message.spec.type)
 
    local sm = message:serialize()
+   if self.latching  then
+      self.latched_message = {message=message, serialized=sm}
+   end
    local uri, s
    for uri, s in pairs(self.subscribers) do
       local ok, error = pcall(s.connection.send, s.connection, sm)
