@@ -424,11 +424,11 @@ function Message:set_from_array(arr)
    for _, f in ipairs(self.spec.fields) do
       local ftype, fname = f.type, f.name
       if roslua.msg_spec.is_builtin_type(ftype) then
-	 self.values[fname] = arr[i]
+	 self.values[fname] = arr[f.name] or arr[i]
       else
 	 local ms = roslua.get_msgspec(ftype)
 	 local m = ms:instantiate(false)
-	 m:set_from_array(arr[i])
+	 m:set_from_array(arr[f.name] or arr[i])
 	 self.values[fname] = m
       end
       i = i + 1
