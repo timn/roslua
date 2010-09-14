@@ -110,12 +110,121 @@ function ServiceClient:connect()
    self.connection:receive_header()
 end
 
+--- Initiate service execution.
+-- This starts the execution of the service in a way it can be handled
+-- concurrently. The request will be sent, afterwards the concexec_finished(),
+-- concexec_result(), and concexec_wait() methods can be used.
+-- @param args argument array
+function ServiceClient:concexec_start(args)
+   assert(not self.running, "A service call for "..self.service.." ("..self.type..") is already being executed")
+   self.running = true
+   self.concurrent = true
+   self.finished = false
+
+   local ok = true
+   if not self.connection then
+      ok = pcall(self.connect, self)
+      if not ok then
+	 self.concexec_error = "Connection failed"
+      end
+   end
+
+   if ok then
+      local m = self.srvspec.reqspec:instantiate()
+      m:set_from_array(args)
+      ok = pcall(self.connection.send, self.connection, m)
+      if not ok then
+	 self.concexec_error = "Sending message failed"
+      end
+   end
+
+   self._concexec_failed = not ok
+end
+
+--- Wait for the execution to finish.
+function ServiceClient:concexec_wait()
+   assert(self.running, "Service "..self.service.." ("..self.type..") is not being executed")
+   assert(self.concurrent, "Service "..self.service.." ("..self.type..") is not executed concurrently")
+   assert(not self._concexec_failed, "Service "..self.service.." ("..self.type..") has failed")
+
+   self.connection:wait_for_message()   
+end
+
+
+--- Check if execution is finished successfully.
+-- Precondition is that the service is being concurrently executed.
+-- @return true if the execution is finished and a result has been received, false otherwise
+function ServiceClient:concexec_succeeded()
+   assert(self.running, "Service "..self.service.." ("..self.type..") is not being executed")
+   assert(self.concurrent, "Service "..self.service.." ("..self.type..") is not executed concurrently")
+
+   if not self.finished then
+      if self.connection:data_available() then
+	 self.finished = true
+	 pcall(self.connection.receive, self.connection)
+      end
+   end
+   return self.finished
+end
+
+--- Check if execution has failed.
+-- Precondition is that the service is being concurrently executed.
+-- @return true if the execution is finished and a result has been received, false otherwise
+function ServiceClient:concexec_failed()
+   assert(self.running, "Service "..self.service.." ("..self.type..") is not being executed")
+   assert(self.concurrent, "Service "..self.service.." ("..self.type..") is not executed concurrently")
+
+   return self._concexec_failed == true
+end
+
+--- Check if execution has failed or succeeded
+-- @return true if the execution is finished, false otherwise
+function ServiceClient:concexec_finished()
+   return self:concexec_succeeded() or self:concexec_failed()
+end
+
+--- Get execution result.
+-- Precondition is that the service is being concurrently executed and has finished.
+-- @return service return value
+function ServiceClient:concexec_result()
+   assert(self.running, "Service "..self.service.." ("..self.type..") is not being executed")
+   assert(self.concurrent, "Service "..self.service.." ("..self.type..") is not executed concurrently")
+   assert(self:concexec_succeeded(), "Service "..self.service.." ("..self.type..") is not finished")
+
+   if self.connection.message then
+      local _, rv = self.connection.message:generate_value_array(false)
+      if #rv == 1 then
+	 rv = rv[1]
+      end
+   end
+
+   self.running = false
+   if not self.persistent then
+      self.connection:close()
+      self.connection = nil
+   end
+end
+
+--- Abort the execution.
+-- Note that this does not actually stop the execution on the server side, rather
+-- we just close the connection as to not receive the result. The connection will
+-- be closed even if it is marked persistent. It will be reopened on the next call.
+function ServiceClient:concexec_abort()
+   self.running = false
+   self.connection:close()
+   self.connection = nil
+end
+
 --- Execute service.
 -- This method is set as __call entry in the meta table. See the module documentation
 -- on the passed arguments. The method will return only after it has received a reply
 -- from the service provider!
 -- @param args argument array
 function ServiceClient:execute(args)
+   assert(not self.running, "A service call for "..self.service.." ("..self.type..") is already being executed")
+   self.running = true
+   self.concurrent = false
+
    if not self.connection then
       self:connect()
    end
@@ -135,5 +244,6 @@ function ServiceClient:execute(args)
       self.connection = nil
    end
 
+   self.running = false
    return rv
 end
