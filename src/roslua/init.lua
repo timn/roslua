@@ -199,6 +199,8 @@ end
 -- Call this function when existing the program to allow for proper unregistering
 -- of topic and services and to perform other cleanup tasks.
 function finalize()
+   printf("ROS node %s is finalizing", roslua.node_name)
+
    -- shutdown all connections
    for topic,s in pairs(roslua.subscribers) do
       s.subscriber:finalize()
