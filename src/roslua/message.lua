@@ -97,6 +97,7 @@ Message.builtin_formats = {
 -- that defaults to 1
 function Message:deserialize(buffer)
    local format = self:format_string(buffer, 1, self.farray, "")
+
    local values = {}
    local l = 0
    local i = 1
@@ -164,8 +165,8 @@ function Message:format_string(buffer, i, farray, prefix)
 	 local tmp
 	 if #f == 1 and type(f[1]) == "string" and not f[1]:find("c") then
 	    -- we have an array which only has one constant length pattern string
-	    local format = f[1]
-	    for n=2, num do
+	    local format = ""
+	    for n=1, num do
 	       format = format .. f[1]
 	    end
 	    local s = struct.size(f[1])
