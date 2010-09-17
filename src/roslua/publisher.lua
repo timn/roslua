@@ -89,25 +89,32 @@ end
 function Publisher:accept_connections()
    local conns = self.server:accept()
    for _, c in ipairs(conns) do
+      local md5sum = self.msgspec:md5()
+
       c:send_header{callerid=roslua.node_name,
 		    topic=self.topic,
 		    type=self.type,
-		    md5sum=self.msgspec:md5()}
+		    md5sum=md5sum}
       c:receive_header()
 
-      if self.latched and self.latched_message then
-	 local ok, error = pcall(c.send, c, self.latched_message.serialized)
-	 if not ok then
-	    local ip, port = c:get_ip_port()
-	    print_warn("Publisher[%s::%s]: failed sending to %s:%s for latched message (%s)",
-		       self.type, self.name, ip, port, error)
-	    self.subscribers[uri].connection:close() 
-	    self.subscribers[uri] = nil
+      if c.header.md5sum ~= md5sum then
+	 print_warn("Publisher[%s::%s]: received non-matching MD5 (here: %s there: %s) sum from %s, "..
+		    "disconnecting and ignoring", self.topic, self.type, md5sum, c.header.md5sum, c.header.callerid)
+	 c:close()
+      else
+	 if self.latched and self.latched_message then
+	    local ok, error = pcall(c.send, c, self.latched_message.serialized)
+	    if not ok then
+	       local ip, port = c:get_ip_port()
+	       print_warn("Publisher[%s::%s]: failed sending to %s:%s for latched message (%s)",
+			  self.type, self.name, ip, port, error)
+	       self.subscribers[uri].connection:close() 
+	       self.subscribers[uri] = nil
+	    end
 	 end
+	 --print("Accepted connection from " .. c.header.callerid)
+	 self.subscribers[c.header.callerid] = {uri=c.header.callerid, connection=c}
       end
-
-      --print("Accepted connection from " .. c.header.callerid)
-      self.subscribers[c.header.callerid] = {uri=c.header.callerid, connection=c}
    end
 end
 

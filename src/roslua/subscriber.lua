@@ -175,17 +175,26 @@ function Subscriber:connect()
 	    local ok, err = pcall(c.connect, c, proto[2], proto[3])
 	    if ok then
 	       --print_debug("Subscriber[%s]: Send header", self.topic)
+	       local md5sum = self.msgspec:md5()
 	       c:send_header{callerid=roslua.node_name,
 			     topic=self.topic,
 			     type=self.type,
-			     md5sum=self.msgspec:md5()}
+			     md5sum=md5sum}
 	       local ok, err = pcall(c.receive_header, c)
 	       if not ok then
 		  print_warn("Subscriber[%s] -> %s:%d: Failed to received header (%s)", self.topic,
 			     proto[2], proto[3], err)
 	       else
 		  --print_debug("Subscriber[%s]: Received header", self.topic)
-		  p.connection = c
+		  if c.header.md5sum ~= md5sum then
+		     print_warn("Subscriber[%s]: received non-matching MD5 (here: %s there: %s) sum from %s, "..
+				"disconnecting and ignoring",
+			        self.topic, md5sum, c.header.md5sum, c.header.callerid)
+		     c:close()
+		     p.num_tries = CONNECTION_MAX_TRIES
+		  else
+		     p.connection = c
+		  end
 	       end
 	    else
 	       -- Connection failed, retry in next spin
@@ -244,7 +253,7 @@ function Subscriber:spin()
 	       p.connection = nil
 	       -- we do not try to reconnect, we rely on proper publisher updates
 	    else
-	       error(err)
+	       error("Subscriber["..self.topic.."]: receiving failed. "..err)
 	    end
 	 elseif p.connection:data_received() then
 	    if self.latching and not erased then
