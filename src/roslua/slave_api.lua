@@ -292,9 +292,9 @@ function xmlrpc_exports.requestTopic(caller_id, topic, protocols)
 			   roslua.publishers[topic].publisher.port}
 	 local xprotodef = xmlrpc.newTypedValue(protodef, xmlrpc.newArray())
 	 if __DEBUG then
-	    print("Found suitable protocol combination, proto TCPROS, host "
-	       .. socket.dns.gethostname() .. " port " ..
-	    roslua.publishers[topic].publisher.port)
+	    print_debug("Negotiated TCPROS for topic %s with caller %s: %s:%d",
+			topic, caller_id, socket.dns.gethostname(),
+			roslua.publishers[topic].publisher.port)
 	 end
 	 return rosreply_encaps(ROS_CODE_SUCCESS, "", xprotodef)
       end
