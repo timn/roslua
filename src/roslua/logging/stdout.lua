@@ -21,7 +21,7 @@ module("roslua.logging.stdout", package.seeall)
 
 require("roslua.logging")
 
-COLOR_DARKGRAY = "\27[1;30m"
+COLOR_GRAY     = "\27[0;37m"
 COLOR_RED      = "\27[0;31m"
 COLOR_BROWN    = "\27[0;33m"
 COLOR_CYAN     = "\27[0;36m"
@@ -41,7 +41,7 @@ overhang[roslua.logging.ERROR]= ""
 function log_stdout(level, time, msg)
    local color, color_none = "", ""
    if level == roslua.logging.DEBUG then
-      color = COLOR_DARKGRAY
+      color = COLOR_GRAY
    elseif level == roslua.logging.WARN then
       color = COLOR_BROWN
    elseif level == roslua.logging.ERROR then
