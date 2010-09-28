@@ -229,6 +229,13 @@ function TcpRosPubSubConnection:new(socket)
    return o
 end
 
+function TcpRosPubSubConnection:send_header(fields)
+   assert(fields.type, "You must specify a type name")
+   TcpRosConnection.send_header(self, fields)
+  
+   self.msgspec = roslua.msg_spec.get_msgspec(fields.type)
+end
+
 --- Receive data from the network.
 -- Upon return contains the new messages in the messages array field.
 function TcpRosPubSubConnection:receive()
@@ -246,8 +253,7 @@ end
 function TcpRosPubSubConnection:receive_header()
    TcpRosConnection.receive_header(self)
 
-   assert(self.header.type, "Opposite site did not set type")
-   self.msgspec = roslua.msg_spec.get_msgspec(self.header.type)
+   assert(self.header.type == "*" or self.header.type == self.msgspec.type, "Opposite site did not set proper type")
 
    return self.header
 end
