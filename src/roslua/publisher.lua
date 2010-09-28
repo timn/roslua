@@ -99,7 +99,7 @@ function Publisher:accept_connections()
       if not ok then
 	 print_warn("Publisher[%s::%s]: accepting connection failed: %s", self.topic, self.type, error)
 	 c:close()
-      elseif c.header.md5sum ~= md5sum then
+      elseif c.header.md5sum ~= "*" and c.header.md5sum ~= md5sum then
 	 print_warn("Publisher[%s::%s]: received non-matching MD5 (here: %s there: %s) sum from %s, "..
 		    "disconnecting and ignoring", self.topic, self.type, md5sum, c.header.md5sum, c.header.callerid)
 	 c:close()
