@@ -95,9 +95,11 @@ function Publisher:accept_connections()
 		    topic=self.topic,
 		    type=self.type,
 		    md5sum=md5sum}
-      c:receive_header()
-
-      if c.header.md5sum ~= md5sum then
+      local ok, error = pcall(c.receive_header, c)
+      if not ok then
+	 print_warn("Publisher[%s::%s]: accepting connection failed: %s", self.topic, self.type, error)
+	 c:close()
+      elseif c.header.md5sum ~= md5sum then
 	 print_warn("Publisher[%s::%s]: received non-matching MD5 (here: %s there: %s) sum from %s, "..
 		    "disconnecting and ignoring", self.topic, self.type, md5sum, c.header.md5sum, c.header.callerid)
 	 c:close()
