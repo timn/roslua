@@ -321,6 +321,7 @@ end
 -- @return URI for this slave
 function slave_uri()
    local port = xavante.httpd.get_ports()[1]
+   assert(port ~= 0, "Xavante patch for ephemeral port not applied, cf. README")
    return "http://" .. socket.dns.gethostname() .. ":" .. port
 end
 
