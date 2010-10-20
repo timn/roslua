@@ -25,9 +25,9 @@ local utils = require("roslua.utils")
 table.insert(package.loaders, 2, utils.package_loader)
 table.insert(package.loaders, 4, utils.c_package_loader)
 
+require("roslua.slave_api")
 require("roslua.master_proxy")
 require("roslua.param_proxy")
-require("roslua.slave_api")
 require("roslua.slave_proxy")
 
 require("roslua.msg_spec")
