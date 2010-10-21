@@ -23,8 +23,8 @@ module("roslua.master_proxy", package.seeall)
 require("roslua")
 require("xmlrpc")
 require("xmlrpc.http")
-assert(xmlrpc._VERSION_MAJOR > 1 or xmlrpc._VERSION_MAJOR == 1 and xmlrpc._VERSION_MINOR >= 2,
-       "You must use versoin 1.2 or newer of lua-xmlrpc")
+assert(xmlrpc._VERSION_MAJOR and (xmlrpc._VERSION_MAJOR > 1 or xmlrpc._VERSION_MAJOR == 1 and xmlrpc._VERSION_MINOR >= 2),
+       "You must use version 1.2 or newer of lua-xmlrpc")
 
 __DEBUG = false
 
