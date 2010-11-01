@@ -1,0 +1,460 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="luadoc.css" type="text/css" />
+	<!--meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/-->
+</head>
+
+<body>
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b>roslua: ROS client library for Lua</b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+<div id="main">
+
+<div id="navigation">
+
+
+<h1>roslua</h1>
+
+<ul>
+	
+	<li><strong>Index</strong></li>
+	
+</ul>
+
+
+<!-- Module list -->
+
+<h1>Modules</h1>
+<ul>
+
+	<li>
+		<a href="modules/roslua.html">roslua</a>
+	</li>
+
+	<li>
+		<a href="modules/roslua.logging.html">roslua.logging</a>
+	</li>
+
+	<li>
+		<a href="modules/roslua.master_proxy.html">roslua.master_proxy</a>
+	</li>
+
+	<li>
+		<a href="modules/roslua.message.html">roslua.message</a>
+	</li>
+
+	<li>
+		<a href="modules/roslua.msg_spec.html">roslua.msg_spec</a>
+	</li>
+
+	<li>
+		<a href="modules/roslua.param_proxy.html">roslua.param_proxy</a>
+	</li>
+
+	<li>
+		<a href="modules/roslua.publisher.html">roslua.publisher</a>
+	</li>
+
+	<li>
+		<a href="modules/roslua.registry.html">roslua.registry</a>
+	</li>
+
+	<li>
+		<a href="modules/roslua.service.html">roslua.service</a>
+	</li>
+
+	<li>
+		<a href="modules/roslua.service_client.html">roslua.service_client</a>
+	</li>
+
+	<li>
+		<a href="modules/roslua.slave_api.html">roslua.slave_api</a>
+	</li>
+
+	<li>
+		<a href="modules/roslua.slave_proxy.html">roslua.slave_proxy</a>
+	</li>
+
+	<li>
+		<a href="modules/roslua.srv_spec.html">roslua.srv_spec</a>
+	</li>
+
+	<li>
+		<a href="modules/roslua.subscriber.html">roslua.subscriber</a>
+	</li>
+
+	<li>
+		<a href="modules/roslua.tcpros.html">roslua.tcpros</a>
+	</li>
+
+	<li>
+		<a href="modules/roslua.time.html">roslua.time</a>
+	</li>
+
+	<li>
+		<a href="modules/roslua.utils.html">roslua.utils</a>
+	</li>
+
+</ul>
+
+
+
+<!-- File list -->
+
+
+
+
+
+
+</div> <!-- id="navigation" -->
+
+<div id="content">
+<h2>README</h2>
+<!-- README --><pre>
+
+roslua: ROS client library for Lua
+==================================
+
+This module constitutes a client library which allows to write ROS
+nodes in the Lua programming language. It allows to publish and
+subscribe to topics, to provide and use services, interact with ROS
+masters, slaves and param servers, and provides general utilities for
+time and duration handling, and logging.
+
+It does most likely not contain all the features roscpp and rospy can
+offer. It does /not/ aim to replace any of these, rather it provides
+an option for situations where Lua might be more suitable or more
+desirable, e.g. on constrained systems or for behavior description and
+programming.
+
+The implementation is written purely in Lua, with some functionality
+coming from external Lua modules written in Lua and C
+(close-to-operating-system functionality like network transmissions
+and unpacking of data of the TCPROS protocol, XML parsing, HTTP web
+server etc.).
+
+
+Notable differences
+-------------------
+There are some differences from client libraries written in and for
+other languages that are noteworthy.
+
+No offline code generation is necessary for message and service
+description files, i.e. the message and service code generation steps
+of the build system will not produce any output for Lua. roslua
+directly reads the definition files at run-time and creates the
+appropriate representations at run-time. Since these specifications
+are read only once on startup when the topics or services are
+registered, the overhead is negligible and only occurs during
+initialization of the node.
+
+Lua is inherently single-threaded. There is only so-called cooperative
+multi-threading in the form of coroutines, which is not used for this
+implementation. The most notable drawback is that long message
+processing steps influence the whole program, including processing
+incoming messages and XML-RPC requests. This can pose a problem to
+certain programs and node writers should be aware of this. It also
+allows for the simplicity and briefness of the code, since many
+constructs like locking are unnecessary.
+
+
+Requirements
+------------
+The following software packages are needed on your system in order to
+use roslua. Requirements marked with (*) have specific information
+further down below, modules marked with (i) are included in the roslua
+module. Versions only denote tested minimum version, since several
+patches have been contributed upstream, earlier version will most
+likely not work.
+
+- Lua 5.1			http://www.lua.org
+- Lua POSIX 5.1.7 (i)(*)	http://luaforge.net/projects/luaposix/
+- Xavante 2.2.0	(*)		http://keplerproject.github.com/xavante/
+- WSAPI 1.3.4			http://keplerproject.github.com/wsapi/
+- Lua XML-RPC 1.0 (*)		http://www.keplerproject.org/luaxmlrpc/
+- Lua struct lib (i)(*)		http://www.inf.puc-rio.br/~roberto/struct/
+- Lua MD5 1.1.2	 		http://www.keplerproject.org/md5/
+
+
+Additional notes
+----------------
+Xavante:
+  Needs a small patch to allow for using a ephemeral port.
+  git clone git@github.com:timn/xavante.git
+  Use this version, or use src/xavante/httpd.lua to replace the one on
+  your system.
+Lua POSIX:
+  A patched version currently comes with roslua. Patches to extend
+  the functionality have been accepted upstream. Once the new version
+  arrives downstream in the distros the module will be removed.
+Lua XML-RPC:
+  A patch is available in the patches/ directory. On Ubuntu 10.04
+  (and probably earlier versions) simply replace
+  /usr/share/lua/5.1/xmlrpc/xmlrpc.lua with the version that comes
+  with roslua.
+Lua struct lib:
+  The library is usually not available as a distribution package,
+  therefore it has been bundled with roslua. It has been patched to
+  extend functionality (and actually provide functionality promised
+  in the documentation).
+
+
+Documentation
+-------------
+All public API functions and modules have been documented. The
+documentation is generated using LuaDoc by calling "make doc" in the
+roslua directory. Pre-generated documentation can be found in the
+doc/ directory (open doc/index.html in a web browser of your choice).
+
+
+Starting roslua
+---------------
+To start a node written using roslua, you need to set an appropriate
+package path and run the script. To setup the package path set the
+LUA_PATH variable. It must include the roslua src directory (see
+example below). If you write or use other Lua-based ROS modules you do
+not need to add them to your package path, as long as the module's
+directory can be found by roslua (see below about extension modules).
+Likewise C modules are found automatically by roslua.
+Example (no spaces before backslash!).
+ export LUA_PATH="$HOME/ros/local/roslua/src/?/init.lua;"\
+"$HOME/ros/local/roslua/src/?.lua;"\
+"/usr/share/lua/5.1/?/init.lua;/usr/share/lua/5.1/?.lua" export
+
+Note that Lua modules bundled with roslua and written in C have an
+extension of ".luaso" as to avoid confusion of ROS tools which
+otherwise would crash.
+
+Once the paths are set you can simply call Lua to run your script.
+See src/examples for example scripts. To run for instance the
+subscriber and publisher examples, which resemble talker and listener
+from the roscpp and rospy tutorials, just call "lua subscriber.lua"
+and "lua publisher.lua" respectively (assuming you have set LUA_PATH
+as adviced above).
+
+
+Writing Extension Modules using roslua
+--------------------------------------
+A natural concern is to write Lua modules based on roslua, providing
+extended functionality, for example actionlib_lua to provide actionlib
+facilities from Lua. roslua comes with some utility support to make
+this easier, in particular it adds a module loader that searches for
+Lua modules in the ROS universe without having to extend the LUA_PATH
+and LUA_CPATH environment variables for new modules.
+
+When a module is loaded, and the regular Lua loaders cannot find the
+module, i.e. the module cannot be found by looking at LUA_PATH and
+LUA_CPATH, roslua loaders kick in to look for Lua and C modules. Some
+constraints apply on how these can be named for the automatic process
+to work. These are as follows.
+
+Modules written in plain Lua must reside in a ROS package with the
+name of the Lua package with an optional "_lua" suffix. For example
+the Lua module actionlib is in a ROS package named
+actionlib_lua. Within the ROS package, the files must reside in the
+src/ sub-directory with appropriate path names. In the case of
+actionlib for instance, the main module resides in the file
+actionlib_lua/src/actionlib/init.lua. Modules may have the pattern
+?.lua or ?/init.lua, where ? is replaced by the module name (cf. Lua
+documentation). C modules must reside in the lib subdirectory the ROS
+package, have a suffix of .luaso (instead of .so) and may not have the
+"lib" prefix. To achieve this take the following CMakeLists.txt lines
+as an example:
+set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+set(CMAKE_SHARED_LIBRARY_PREFIX "")
+set(CMAKE_SHARED_LIBRARY_SUFFIX ".luaso")
+rosbuild_add_library(posix src/lua_modules/lposix.c)
+
+With this C module residing in the roslua ROS package it can be used
+in Lua with require("roslua.posix").  Lua C module names are mapped to
+file names like the following: Either it is simply the ROS package
+name, in that case a similarly named Lua C module file is searched in
+the lib sub-directory. Or it is a name separated with a dot, where the
+first part is again the ROS package name with an optional _lua
+suffix. The part after the dot is converted to a filename by replacing
+the dots with underscores and the file must exist in the lib
+subdirectory. The luaopen function within the C file must be suffixed
+by the same converted name. It is recommended of using only one
+sub-level, i.e. only one dot in C module names.
+
+
+Performance comparison
+----------------------
+Some simple performance comparisons have been made using
+actionlib_lua and actionlib_benchmark modules (to be released
+separately).
+
+# ./cpp_roundtrip_client 100
+SEND   Average: 0.000400    Deviation: 0.000035
+RECV   Average: 0.000311    Deviation: 0.000094
+TOTAL  Average: 0.000711    Deviation: 0.000099
+
+# ./python_roundtrip_client 100
+SEND   Average: 0.000589    Deviation: 0.000043
+RECV   Average: 0.002129    Deviation: 0.000661
+TOTAL  Average: 0.002718    Deviation: 0.000661
+
+# ./lua_roundtrip_client 100
+SEND   Average: 0.000447    Deviation: 0.000116
+RECV   Average: 0.002326    Deviation: 0.001108
+TOTAL  Average: 0.002774    Deviation: 0.001152
+
+
+# ./cpp_roundtrip_client 1000
+SEND   Average: 0.000393    Deviation: 0.000036
+RECV   Average: 0.000269    Deviation: 0.000025
+TOTAL  Average: 0.000662    Deviation: 0.000054
+
+# ./python_roundtrip_client 1000
+SEND   Average: 0.000653    Deviation: 0.000041
+RECV   Average: 0.002178    Deviation: 0.000927
+TOTAL  Average: 0.002831    Deviation: 0.000934
+
+# ./lua_roundtrip_client 1000
+SEND   Average: 0.000517    Deviation: 0.000090
+RECV   Average: 0.003955    Deviation: 0.001797
+TOTAL  Average: 0.004471    Deviation: 0.001814
+
+The roundtrip client issues a goal with a timestamp initialized on
+sending. The server will set a timestamp in the result message and
+immediately send the result as soon as possible. The client can then
+compare the start time, the time it was received by the server and the
+time it was received by itself to get information about the time spans
+for sending to the server, receiving from the server, and the total
+time. The performance data shown above is for sending 100 goals with a
+50ms offset between goals. Since the goal server accumulates goal
+status information in the actionlib_msgs/GoalStatusArray message over
+time the time to process these messages increases linearly over time
+until saturation is reached (goals expire at the rate they are sent
+after the initial timeout has been reached).  For the given scenario
+of 100 concurrent goals (which we consider to be more than required at
+the moment, given that actions are usually used for macroscopic
+events), the Lua implementation reaches about the average performance
+of the Python implementation. As the larger deviation shows, the
+message processing time increases with an increased number of
+concurrent goals. At 1000 goals it peaks at about 4.5 ms (C++ 0.7 ms,
+Python 2.8 ms). This is due to crossing the C/Lua boundary for
+unpacking the struct often, and the GoalStatusArray message being
+particularly bad for performance because it includes strings, and an
+array of another message type, requiring conditional deserialization.
+Results have been produced on an Intel Xeon 3.6 GHz machine with 2 GB
+of RAM against a C++ action server (performance against Python server
+is much worse, Lua server not yet written).
+</pre>
+
+
+<h2>Modules</h2>
+<table class="module_list">
+<!--<tr><td colspan="2">Modules</td></tr>-->
+
+	<tr>
+		<td class="name"><a href="modules/roslua.html">roslua</a></td>
+		<td class="summary">ROS language binding for Lua.</td>
+	</tr>
+
+	<tr>
+		<td class="name"><a href="modules/roslua.logging.html">roslua.logging</a></td>
+		<td class="summary">Logging facilities for roslua.</td>
+	</tr>
+
+	<tr>
+		<td class="name"><a href="modules/roslua.master_proxy.html">roslua.master_proxy</a></td>
+		<td class="summary">Master XML-RPC API proxy.</td>
+	</tr>
+
+	<tr>
+		<td class="name"><a href="modules/roslua.message.html">roslua.message</a></td>
+		<td class="summary">ROS message representation.</td>
+	</tr>
+
+	<tr>
+		<td class="name"><a href="modules/roslua.msg_spec.html">roslua.msg_spec</a></td>
+		<td class="summary">Message specification.</td>
+	</tr>
+
+	<tr>
+		<td class="name"><a href="modules/roslua.param_proxy.html">roslua.param_proxy</a></td>
+		<td class="summary">Parameter XML-RPC API proxy.</td>
+	</tr>
+
+	<tr>
+		<td class="name"><a href="modules/roslua.publisher.html">roslua.publisher</a></td>
+		<td class="summary">Topic publisher.</td>
+	</tr>
+
+	<tr>
+		<td class="name"><a href="modules/roslua.registry.html">roslua.registry</a></td>
+		<td class="summary">Registry housekeeping.</td>
+	</tr>
+
+	<tr>
+		<td class="name"><a href="modules/roslua.service.html">roslua.service</a></td>
+		<td class="summary">Service provider.</td>
+	</tr>
+
+	<tr>
+		<td class="name"><a href="modules/roslua.service_client.html">roslua.service_client</a></td>
+		<td class="summary">Service client.</td>
+	</tr>
+
+	<tr>
+		<td class="name"><a href="modules/roslua.slave_api.html">roslua.slave_api</a></td>
+		<td class="summary">Slave API implementation.</td>
+	</tr>
+
+	<tr>
+		<td class="name"><a href="modules/roslua.slave_proxy.html">roslua.slave_proxy</a></td>
+		<td class="summary">Slave XML-RPC API proxy.</td>
+	</tr>
+
+	<tr>
+		<td class="name"><a href="modules/roslua.srv_spec.html">roslua.srv_spec</a></td>
+		<td class="summary">Service specification.</td>
+	</tr>
+
+	<tr>
+		<td class="name"><a href="modules/roslua.subscriber.html">roslua.subscriber</a></td>
+		<td class="summary">Topic subscriber.</td>
+	</tr>
+
+	<tr>
+		<td class="name"><a href="modules/roslua.tcpros.html">roslua.tcpros</a></td>
+		<td class="summary">TCPROS communication implementation.</td>
+	</tr>
+
+	<tr>
+		<td class="name"><a href="modules/roslua.time.html">roslua.time</a></td>
+		<td class="summary">Time utility class for roslua.</td>
+	</tr>
+
+	<tr>
+		<td class="name"><a href="modules/roslua.utils.html">roslua.utils</a></td>
+		<td class="summary">General roslua utilities.</td>
+	</tr>
+
+</table>
+
+
+
+
+
+
+</div> <!-- id="content" -->
+
+</div> <!-- id="main" -->
+
+<!--<div id="about">
+	<p><a href="http://validator.w3.org/check?uri=referer"><img src="http://www.w3.org/Icons/valid-xhtml10" alt="Valid XHTML 1.0!" height="31" width="88" /></a></p>
+</div>--> <!-- id="about" -->
+
+</div> <!-- id="container" -->	
+</body>
+</html>

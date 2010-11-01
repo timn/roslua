@@ -1,0 +1,559 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../luadoc.css" type="text/css" />
+	<!--meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/-->
+</head>
+
+<body>
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b>roslua: ROS client library for Lua</b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+<div id="main">
+
+<div id="navigation">
+
+
+<h1>roslua</h1>
+
+<ul>
+	
+	<li><a href="../index.html">Index</a></li>
+	
+</ul>
+
+
+<!-- Module list -->
+
+<h1>Modules</h1>
+<ul>
+
+	<li>
+		<a href="../modules/roslua.html">roslua</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.logging.html">roslua.logging</a>
+	</li>
+
+	<li><strong>roslua.master_proxy</strong></li>
+	
+	<li>
+		<a href="../modules/roslua.message.html">roslua.message</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.msg_spec.html">roslua.msg_spec</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.param_proxy.html">roslua.param_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.publisher.html">roslua.publisher</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.registry.html">roslua.registry</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.service.html">roslua.service</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.service_client.html">roslua.service_client</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.slave_api.html">roslua.slave_api</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.slave_proxy.html">roslua.slave_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.srv_spec.html">roslua.srv_spec</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.subscriber.html">roslua.subscriber</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.tcpros.html">roslua.tcpros</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.time.html">roslua.time</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.utils.html">roslua.utils</a>
+	</li>
+
+</ul>
+
+
+
+<!-- File list -->
+
+
+
+
+
+
+</div><!-- id="navigation" -->
+
+<div id="content">
+
+<h1>Module <code>roslua.master_proxy</code></h1>
+
+<p>Master XML-RPC API proxy. This module contains the MasterProxy class to call methods provided via XML-RPC by the ROS master. <br /><br /> The user should not have to directly interact with the master. It is used register and unregister topic publishers/subscribers and services, to lookup nodes and services, and to gather information about the master.</p>
+
+
+<p>Copyright&copy; Tim Niemueller, Carnegie Mellon University, Intel Research Pittsburgh</p>
+
+
+<p><small><b>Release:</b> Released under BSD license</small></p>
+
+
+
+<h2>Functions</h2>
+<table class="function_list">
+
+	<tr>
+	<td class="name" nowrap><a href="#MasterProxy:getPublishedTopics">MasterProxy:getPublishedTopics</a>&nbsp;(subgraph)</td>
+	<td class="summary">Get published topics.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#MasterProxy:getSystemState">MasterProxy:getSystemState</a>&nbsp;()</td>
+	<td class="summary">Get master system state.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#MasterProxy:getUri">MasterProxy:getUri</a>&nbsp;()</td>
+	<td class="summary">Get master URI.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#MasterProxy:lookupNode">MasterProxy:lookupNode</a>&nbsp;(node_name, name)</td>
+	<td class="summary">Lookup node by name.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#MasterProxy:lookupService">MasterProxy:lookupService</a>&nbsp;(service)</td>
+	<td class="summary">Lookup service by name.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#MasterProxy:new">MasterProxy:new</a>&nbsp;(ros_master_uri, node_name)</td>
+	<td class="summary">Constructor.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#MasterProxy:registerPublisher">MasterProxy:registerPublisher</a>&nbsp;(topic, topic_type)</td>
+	<td class="summary">Register Publisher with the master.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#MasterProxy:registerService">MasterProxy:registerService</a>&nbsp;(service, service_api)</td>
+	<td class="summary">Register a service with the master.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#MasterProxy:registerSubscriber">MasterProxy:registerSubscriber</a>&nbsp;(topic, topic_type)</td>
+	<td class="summary">Register subscriber with the master.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#MasterProxy:unregisterPublisher">MasterProxy:unregisterPublisher</a>&nbsp;(topic)</td>
+	<td class="summary">Unregister publisher from master.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#MasterProxy:unregisterService">MasterProxy:unregisterService</a>&nbsp;(service, service_api)</td>
+	<td class="summary">Unregister a service from master.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#MasterProxy:unregisterSubscriber">MasterProxy:unregisterSubscriber</a>&nbsp;(topic)</td>
+	<td class="summary">Unregister subscriber from master.</td>
+	</tr>
+
+</table>
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+
+<h2><a name="functions"></a>Functions</h2>
+<dl class="function">
+
+
+
+<dt><a name="MasterProxy:getPublishedTopics"></a><strong>MasterProxy:getPublishedTopics</strong>&nbsp;(subgraph)</dt>
+<dd>
+Get published topics.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  subgraph: subgraph to query from master
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+graph of topics
+
+
+
+</dd>
+
+
+
+
+<dt><a name="MasterProxy:getSystemState"></a><strong>MasterProxy:getSystemState</strong>&nbsp;()</dt>
+<dd>
+Get master system state.
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+three array of registered publishers, subscribers, and services
+
+
+
+</dd>
+
+
+
+
+<dt><a name="MasterProxy:getUri"></a><strong>MasterProxy:getUri</strong>&nbsp;()</dt>
+<dd>
+Get master URI. Considering that you need to know the URI to call this method is's quite useless.
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+ROS master URI
+
+
+
+</dd>
+
+
+
+
+<dt><a name="MasterProxy:lookupNode"></a><strong>MasterProxy:lookupNode</strong>&nbsp;(node_name, name)</dt>
+<dd>
+Lookup node by name.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  node_name: 
+	</li>
+	
+	<li>
+	  name: of node to lookup
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+Slave API XML-RPC HTTP URI
+
+
+
+</dd>
+
+
+
+
+<dt><a name="MasterProxy:lookupService"></a><strong>MasterProxy:lookupService</strong>&nbsp;(service)</dt>
+<dd>
+Lookup service by name.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  service: name of service to lookup
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+ROS RPC URI of service provider
+
+
+
+</dd>
+
+
+
+
+<dt><a name="MasterProxy:new"></a><strong>MasterProxy:new</strong>&nbsp;(ros_master_uri, node_name)</dt>
+<dd>
+Constructor.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  ros_master_uri: XML-RPC HTTP URI of ROS master
+	</li>
+	
+	<li>
+	  node_name: name of this node
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="MasterProxy:registerPublisher"></a><strong>MasterProxy:registerPublisher</strong>&nbsp;(topic, topic_type)</dt>
+<dd>
+Register Publisher with the master.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  topic: topic to register for
+	</li>
+	
+	<li>
+	  topic_type: type of the topic
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="MasterProxy:registerService"></a><strong>MasterProxy:registerService</strong>&nbsp;(service, service_api)</dt>
+<dd>
+Register a service with the master.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  service: name of service to register
+	</li>
+	
+	<li>
+	  service_api: ROS RPC URI of service
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="MasterProxy:registerSubscriber"></a><strong>MasterProxy:registerSubscriber</strong>&nbsp;(topic, topic_type)</dt>
+<dd>
+Register subscriber with the master.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  topic: topic to register for
+	</li>
+	
+	<li>
+	  topic_type: type of the topic
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="MasterProxy:unregisterPublisher"></a><strong>MasterProxy:unregisterPublisher</strong>&nbsp;(topic)</dt>
+<dd>
+Unregister publisher from master.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  topic: topic to register for
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="MasterProxy:unregisterService"></a><strong>MasterProxy:unregisterService</strong>&nbsp;(service, service_api)</dt>
+<dd>
+Unregister a service from master.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  service: name of service to register
+	</li>
+	
+	<li>
+	  service_api: ROS RPC URI of service
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="MasterProxy:unregisterSubscriber"></a><strong>MasterProxy:unregisterSubscriber</strong>&nbsp;(topic)</dt>
+<dd>
+Unregister subscriber from master.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  topic: topic to register for
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+</dl>
+
+
+
+
+
+
+</div> <!-- id="content" -->
+
+</div> <!-- id="main" -->
+
+<div id="about">
+	<p><a href="http://validator.w3.org/check?uri=referer"><img src="http://www.w3.org/Icons/valid-xhtml10" alt="Valid XHTML 1.0!" height="31" width="88" /></a></p>
+</div> <!-- id="about" -->
+
+</div> <!-- id="container" -->	
+</body>
+</html>

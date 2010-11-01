@@ -1,0 +1,385 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../luadoc.css" type="text/css" />
+	<!--meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/-->
+</head>
+
+<body>
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b>roslua: ROS client library for Lua</b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+<div id="main">
+
+<div id="navigation">
+
+
+<h1>roslua</h1>
+
+<ul>
+	
+	<li><a href="../index.html">Index</a></li>
+	
+</ul>
+
+
+<!-- Module list -->
+
+<h1>Modules</h1>
+<ul>
+
+	<li>
+		<a href="../modules/roslua.html">roslua</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.logging.html">roslua.logging</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.master_proxy.html">roslua.master_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.message.html">roslua.message</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.msg_spec.html">roslua.msg_spec</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.param_proxy.html">roslua.param_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.publisher.html">roslua.publisher</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.registry.html">roslua.registry</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.service.html">roslua.service</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.service_client.html">roslua.service_client</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.slave_api.html">roslua.slave_api</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.slave_proxy.html">roslua.slave_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.srv_spec.html">roslua.srv_spec</a>
+	</li>
+
+	<li><strong>roslua.subscriber</strong></li>
+	
+	<li>
+		<a href="../modules/roslua.tcpros.html">roslua.tcpros</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.time.html">roslua.time</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.utils.html">roslua.utils</a>
+	</li>
+
+</ul>
+
+
+
+<!-- File list -->
+
+
+
+
+
+
+</div><!-- id="navigation" -->
+
+<div id="content">
+
+<h1>Module <code>roslua.subscriber</code></h1>
+
+<p>Topic subscriber. This module contains the Subscriber class to subscribe to a ROS topic. The class is used to connect to all publishers for a certain topic and receive messages published by and of these. <br /><br /> During spinning the messages are received and registered listeners are called to process the messages. </p>
+
+
+<p>Copyright&copy; Tim Niemueller, Carnegie Mellon University, Intel Research Pittsburgh</p>
+
+
+<p><small><b>Release:</b> Released under BSD license</small></p>
+
+
+
+<h2>Functions</h2>
+<table class="function_list">
+
+	<tr>
+	<td class="name" nowrap><a href="#Subscriber:add_listener">Subscriber:add_listener</a>&nbsp;(listener)</td>
+	<td class="summary">Add a listener to this subscriber.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Subscriber:connect">Subscriber:connect</a>&nbsp;()</td>
+	<td class="summary">Connect to all available publishers to which no connection has yet been established.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Subscriber:finalize">Subscriber:finalize</a>&nbsp;()</td>
+	<td class="summary">Finalize instance.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Subscriber:get_stats">Subscriber:get_stats</a>&nbsp;()</td>
+	<td class="summary">Get statistics about this subscriber.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Subscriber:new">Subscriber:new</a>&nbsp;(topic, type)</td>
+	<td class="summary">Constructor.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Subscriber:remove_listener">Subscriber:remove_listener</a>&nbsp;(listener)</td>
+	<td class="summary">remove the given listener.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Subscriber:spin">Subscriber:spin</a>&nbsp;()</td>
+	<td class="summary">Spin all connections to subscribers and dispatch incoming messages.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Subscriber:update_publishers">Subscriber:update_publishers</a>&nbsp;(publishers)</td>
+	<td class="summary">Update the publishers.</td>
+	</tr>
+
+</table>
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+
+<h2><a name="functions"></a>Functions</h2>
+<dl class="function">
+
+
+
+<dt><a name="Subscriber:add_listener"></a><strong>Subscriber:add_listener</strong>&nbsp;(listener)</dt>
+<dd>
+Add a listener to this subscriber.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  listener: A listener is either a function or a class which provides a message_received() method. The function or method is called for any successively received message. Note that your listener blocks all other listeners from receiving any further messages. For lengthy task you might consider storing the message and interleaving processing and node spinning.
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Subscriber:connect"></a><strong>Subscriber:connect</strong>&nbsp;()</dt>
+<dd>
+Connect to all available publishers to which no connection has yet been established.
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Subscriber:finalize"></a><strong>Subscriber:finalize</strong>&nbsp;()</dt>
+<dd>
+Finalize instance.
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Subscriber:get_stats"></a><strong>Subscriber:get_stats</strong>&nbsp;()</dt>
+<dd>
+Get statistics about this subscriber.
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+an array containing the topic name as the first entry, and another array as the second entry. This array contains itself tables with five fields each: the remote caller ID of the connection, the number of bytes received, number of messages received, the drop estimate (always -1) and connection aliveness (always true). Suitable for getBusStats of slave API.
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Subscriber:new"></a><strong>Subscriber:new</strong>&nbsp;(topic, type)</dt>
+<dd>
+Constructor. Create a new subscriber instance.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  topic: topic to subscribe to
+	</li>
+	
+	<li>
+	  type: type of the topic
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Subscriber:remove_listener"></a><strong>Subscriber:remove_listener</strong>&nbsp;(listener)</dt>
+<dd>
+remove the given listener. The listener will no longer be notified of incoming messages.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  listener: listener to remove
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Subscriber:spin"></a><strong>Subscriber:spin</strong>&nbsp;()</dt>
+<dd>
+Spin all connections to subscribers and dispatch incoming messages. Connections which are found dead are removed.
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Subscriber:update_publishers"></a><strong>Subscriber:update_publishers</strong>&nbsp;(publishers)</dt>
+<dd>
+Update the publishers. This method is called by the slave API handler when the <code>publisherUpdate()</code> XML-RPC method is called. The subscriber instance will connect to any new publishers that it had not connected to before (during the next call to <code>spin()</code> and will (immediately) disconnect from any publishers that are no longer available.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  publishers: an array of currently available and slave URIs that were registered at the core
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+</dl>
+
+
+
+
+
+
+</div> <!-- id="content" -->
+
+</div> <!-- id="main" -->
+
+<div id="about">
+	<p><a href="http://validator.w3.org/check?uri=referer"><img src="http://www.w3.org/Icons/valid-xhtml10" alt="Valid XHTML 1.0!" height="31" width="88" /></a></p>
+</div> <!-- id="about" -->
+
+</div> <!-- id="container" -->	
+</body>
+</html>

@@ -1,0 +1,531 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../luadoc.css" type="text/css" />
+	<!--meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/-->
+</head>
+
+<body>
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b>roslua: ROS client library for Lua</b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+<div id="main">
+
+<div id="navigation">
+
+
+<h1>roslua</h1>
+
+<ul>
+	
+	<li><a href="../index.html">Index</a></li>
+	
+</ul>
+
+
+<!-- Module list -->
+
+<h1>Modules</h1>
+<ul>
+
+	<li>
+		<a href="../modules/roslua.html">roslua</a>
+	</li>
+
+	<li><strong>roslua.logging</strong></li>
+	
+	<li>
+		<a href="../modules/roslua.master_proxy.html">roslua.master_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.message.html">roslua.message</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.msg_spec.html">roslua.msg_spec</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.param_proxy.html">roslua.param_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.publisher.html">roslua.publisher</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.registry.html">roslua.registry</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.service.html">roslua.service</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.service_client.html">roslua.service_client</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.slave_api.html">roslua.slave_api</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.slave_proxy.html">roslua.slave_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.srv_spec.html">roslua.srv_spec</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.subscriber.html">roslua.subscriber</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.tcpros.html">roslua.tcpros</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.time.html">roslua.time</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.utils.html">roslua.utils</a>
+	</li>
+
+</ul>
+
+
+
+<!-- File list -->
+
+
+
+
+
+
+</div><!-- id="navigation" -->
+
+<div id="content">
+
+<h1>Module <code>roslua.logging</code></h1>
+
+<p>Logging facilities for roslua. This module provides the framework for logging messages. Multiple loggers can be registered which are called for output. Two submodules are provided for logging to stdout and to rosout. A convenience method overrides the internal print function and adds a few more for specific log levels for convenient logging.</p>
+
+
+<p>Copyright&copy; Tim Niemueller, Carnegie Mellon University, Intel Research Pittsburgh</p>
+
+
+<p><small><b>Release:</b> Released under BSD license</small></p>
+
+
+
+<h2>Functions</h2>
+<table class="function_list">
+
+	<tr>
+	<td class="name" nowrap><a href="#add_logger">add_logger</a>&nbsp;(logger)</td>
+	<td class="summary">Add a logger.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#print">print</a>&nbsp;(...)</td>
+	<td class="summary">Print function replacement for loggers.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#print_debug">print_debug</a>&nbsp;(format, ...)</td>
+	<td class="summary">Print formatted.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#print_error">print_error</a>&nbsp;(format, ...)</td>
+	<td class="summary">Print formatted.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#print_fatal">print_fatal</a>&nbsp;(format, ...)</td>
+	<td class="summary">Print formatted.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#print_info">print_info</a>&nbsp;(format, ...)</td>
+	<td class="summary">Print formatted.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#print_warn">print_warn</a>&nbsp;(format, ...)</td>
+	<td class="summary">Print formatted.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#printf">printf</a>&nbsp;(format, ...)</td>
+	<td class="summary">Print formatted.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#register_print_funcs">register_print_funcs</a>&nbsp;(export_to)</td>
+	<td class="summary">Register print functions.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#remove_logger">remove_logger</a>&nbsp;(logger)</td>
+	<td class="summary">Remove a logger.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#set_log_level">set_log_level</a>&nbsp;(level)</td>
+	<td class="summary">Set the log level </td>
+	</tr>
+
+</table>
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+
+<h2><a name="functions"></a>Functions</h2>
+<dl class="function">
+
+
+
+<dt><a name="add_logger"></a><strong>add_logger</strong>&nbsp;(logger)</dt>
+<dd>
+Add a logger.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  logger: logger to add, must be a function that accepts three arguments, the log level (number), the time (Time instance), and the message (string)
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="print"></a><strong>print</strong>&nbsp;(...)</dt>
+<dd>
+Print function replacement for loggers. Can replace the standard print function and prints the given elements to loggers. Will be posted with INFO log level.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  ...: variable number of string arguments
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="print_debug"></a><strong>print_debug</strong>&nbsp;(format, ...)</dt>
+<dd>
+Print formatted. Prints a formatted string to loggers. Will be posted with DEBUG log level.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  format: format string (cf. string.format() documentation)
+	</li>
+	
+	<li>
+	  ...: appropriate arguments for format string
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="print_error"></a><strong>print_error</strong>&nbsp;(format, ...)</dt>
+<dd>
+Print formatted. Prints a formatted string to loggers. Will be posted with ERROR log level.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  format: format string (cf. string.format() documentation)
+	</li>
+	
+	<li>
+	  ...: appropriate arguments for format string
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="print_fatal"></a><strong>print_fatal</strong>&nbsp;(format, ...)</dt>
+<dd>
+Print formatted. Prints a formatted string to loggers. Will be posted with FATAL log level.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  format: format string (cf. string.format() documentation)
+	</li>
+	
+	<li>
+	  ...: appropriate arguments for format string
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="print_info"></a><strong>print_info</strong>&nbsp;(format, ...)</dt>
+<dd>
+Print formatted. Prints a formatted string to loggers. Will be posted with INFO log level.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  format: format string (cf. string.format() documentation)
+	</li>
+	
+	<li>
+	  ...: appropriate arguments for format string
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="print_warn"></a><strong>print_warn</strong>&nbsp;(format, ...)</dt>
+<dd>
+Print formatted. Prints a formatted string to loggers. Will be posted with WARN log level.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  format: format string (cf. string.format() documentation)
+	</li>
+	
+	<li>
+	  ...: appropriate arguments for format string
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="printf"></a><strong>printf</strong>&nbsp;(format, ...)</dt>
+<dd>
+Print formatted. Prints a formatted string to loggers. Will be posted with INFO log level.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  format: format string (cf. string.format() documentation)
+	</li>
+	
+	<li>
+	  ...: appropriate arguments for format string
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="register_print_funcs"></a><strong>register_print_funcs</strong>&nbsp;(export_to)</dt>
+<dd>
+Register print functions. In the given environment it overwrites the print function and adds printf, print_debug, print_info, print_warn, print_error, and print_fatal.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  export_to: module or table to export to
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="remove_logger"></a><strong>remove_logger</strong>&nbsp;(logger)</dt>
+<dd>
+Remove a logger.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  logger: logger to remove
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="set_log_level"></a><strong>set_log_level</strong>&nbsp;(level)</dt>
+<dd>
+Set the log level
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  level: log level. Anything of the same or a higher level is shown. Anything below is not.
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+</dl>
+
+
+
+
+
+
+</div> <!-- id="content" -->
+
+</div> <!-- id="main" -->
+
+<div id="about">
+	<p><a href="http://validator.w3.org/check?uri=referer"><img src="http://www.w3.org/Icons/valid-xhtml10" alt="Valid XHTML 1.0!" height="31" width="88" /></a></p>
+</div> <!-- id="about" -->
+
+</div> <!-- id="container" -->	
+</body>
+</html>

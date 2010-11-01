@@ -1,0 +1,755 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../luadoc.css" type="text/css" />
+	<!--meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/-->
+</head>
+
+<body>
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b>roslua: ROS client library for Lua</b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+<div id="main">
+
+<div id="navigation">
+
+
+<h1>roslua</h1>
+
+<ul>
+	
+	<li><a href="../index.html">Index</a></li>
+	
+</ul>
+
+
+<!-- Module list -->
+
+<h1>Modules</h1>
+<ul>
+
+	<li>
+		<a href="../modules/roslua.html">roslua</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.logging.html">roslua.logging</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.master_proxy.html">roslua.master_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.message.html">roslua.message</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.msg_spec.html">roslua.msg_spec</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.param_proxy.html">roslua.param_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.publisher.html">roslua.publisher</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.registry.html">roslua.registry</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.service.html">roslua.service</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.service_client.html">roslua.service_client</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.slave_api.html">roslua.slave_api</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.slave_proxy.html">roslua.slave_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.srv_spec.html">roslua.srv_spec</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.subscriber.html">roslua.subscriber</a>
+	</li>
+
+	<li><strong>roslua.tcpros</strong></li>
+	
+	<li>
+		<a href="../modules/roslua.time.html">roslua.time</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.utils.html">roslua.utils</a>
+	</li>
+
+</ul>
+
+
+
+<!-- File list -->
+
+
+
+
+
+
+</div><!-- id="navigation" -->
+
+<div id="content">
+
+<h1>Module <code>roslua.tcpros</code></h1>
+
+<p>TCPROS communication implementation. This module contains classes that implement the TCPROS communication protocol for topic as well as service communication. The user should not have to use these directly, rather they are encapsulated by the Publisher, Subscriber, Service, and ServiceClient classes.</p>
+
+
+<p>Copyright&copy; Tim Niemueller, Carnegie Mellon University, Intel Research Pittsburgh</p>
+
+
+<p><small><b>Release:</b> Released under BSD license</small></p>
+
+
+
+<h2>Functions</h2>
+<table class="function_list">
+
+	<tr>
+	<td class="name" nowrap><a href="#TcpRosConnection:accept">TcpRosConnection:accept</a>&nbsp;()</td>
+	<td class="summary">Accept new connections.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#TcpRosConnection:bind">TcpRosConnection:bind</a>&nbsp;()</td>
+	<td class="summary">Bind to random port as server.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#TcpRosConnection:close">TcpRosConnection:close</a>&nbsp;()</td>
+	<td class="summary">Close connection.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#TcpRosConnection:connect">TcpRosConnection:connect</a>&nbsp;(host, port)</td>
+	<td class="summary">Connect to given host and port.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#TcpRosConnection:data_available">TcpRosConnection:data_available</a>&nbsp;()</td>
+	<td class="summary">Check if data is available.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#TcpRosConnection:data_received">TcpRosConnection:data_received</a>&nbsp;()</td>
+	<td class="summary">Check if data has been received.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#TcpRosConnection:get_ip_port">TcpRosConnection:get_ip_port</a>&nbsp;()</td>
+	<td class="summary">Get IP and port of socket.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#TcpRosConnection:get_stats">TcpRosConnection:get_stats</a>&nbsp;()</td>
+	<td class="summary">Get connection statistics.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#TcpRosConnection:new">TcpRosConnection:new</a>&nbsp;(socket)</td>
+	<td class="summary">Constructor.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#TcpRosConnection:receive">TcpRosConnection:receive</a>&nbsp;()</td>
+	<td class="summary">Receive data from the network.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#TcpRosConnection:receive_header">TcpRosConnection:receive_header</a>&nbsp;()</td>
+	<td class="summary">Receive header.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#TcpRosConnection:send">TcpRosConnection:send</a>&nbsp;(message)</td>
+	<td class="summary">Send message.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#TcpRosConnection:send_header">TcpRosConnection:send_header</a>&nbsp;(fields, header)</td>
+	<td class="summary">Send out header.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#TcpRosConnection:spin">TcpRosConnection:spin</a>&nbsp;()</td>
+	<td class="summary">Spin ros connection.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#TcpRosConnection:wait_for_message">TcpRosConnection:wait_for_message</a>&nbsp;()</td>
+	<td class="summary">Wait for a message to arrive.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#TcpRosPubSubConnection:new">TcpRosPubSubConnection:new</a>&nbsp;(socket)</td>
+	<td class="summary">Publisher/Subscriber connection constructor.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#TcpRosPubSubConnection:receive">TcpRosPubSubConnection:receive</a>&nbsp;()</td>
+	<td class="summary">Receive data from the network.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#TcpRosPubSubConnection:receive_header">TcpRosPubSubConnection:receive_header</a>&nbsp;()</td>
+	<td class="summary">Receive header.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#TcpRosServiceClientConnection:new">TcpRosServiceClientConnection:new</a>&nbsp;(socket)</td>
+	<td class="summary">Service client connection constructor.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#TcpRosServiceClientConnection:receive">TcpRosServiceClientConnection:receive</a>&nbsp;()</td>
+	<td class="summary">Receive data from the network.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#TcpRosServiceProviderConnection:new">TcpRosServiceProviderConnection:new</a>&nbsp;(socket)</td>
+	<td class="summary">Service provider connection constructor.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#TcpRosServiceProviderConnection:receive">TcpRosServiceProviderConnection:receive</a>&nbsp;()</td>
+	<td class="summary">Receive data from the network.</td>
+	</tr>
+
+</table>
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+
+<h2><a name="functions"></a>Functions</h2>
+<dl class="function">
+
+
+
+<dt><a name="TcpRosConnection:accept"></a><strong>TcpRosConnection:accept</strong>&nbsp;()</dt>
+<dd>
+Accept new connections.
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+array of new connections, possibly empty
+
+
+
+</dd>
+
+
+
+
+<dt><a name="TcpRosConnection:bind"></a><strong>TcpRosConnection:bind</strong>&nbsp;()</dt>
+<dd>
+Bind to random port as server. This will transform the socket into a server socket allowing to accept connections. The socket will bind to a ephemeral port assigned by the operating system. It will set the timeout of the socket to zero to avoid locks on accepting new connections.
+
+
+
+
+
+
+
+
+
+<h3>See also:</h3>
+<ul>
+	
+	<li><a href="">
+		TcpRosConnection:get_ip_port()
+	</a>
+	
+	<li><a href="">
+		TcpRosConnection:accept()
+	</a>
+	
+</ul>
+
+</dd>
+
+
+
+
+<dt><a name="TcpRosConnection:close"></a><strong>TcpRosConnection:close</strong>&nbsp;()</dt>
+<dd>
+Close connection.
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="TcpRosConnection:connect"></a><strong>TcpRosConnection:connect</strong>&nbsp;(host, port)</dt>
+<dd>
+Connect to given host and port.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  host: hostname or IP address of remote side
+	</li>
+	
+	<li>
+	  port: port of remote side
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="TcpRosConnection:data_available"></a><strong>TcpRosConnection:data_available</strong>&nbsp;()</dt>
+<dd>
+Check if data is available.
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+true if data can be read, false otherwise
+
+
+
+</dd>
+
+
+
+
+<dt><a name="TcpRosConnection:data_received"></a><strong>TcpRosConnection:data_received</strong>&nbsp;()</dt>
+<dd>
+Check if data has been received.
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+true if data has been received, false otherwise. This method will return true only once if data has been received, consecutive calls will return false unless more data has been read with receive().
+
+
+
+</dd>
+
+
+
+
+<dt><a name="TcpRosConnection:get_ip_port"></a><strong>TcpRosConnection:get_ip_port</strong>&nbsp;()</dt>
+<dd>
+Get IP and port of socket.
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+two values, IP and port of socket
+
+
+
+</dd>
+
+
+
+
+<dt><a name="TcpRosConnection:get_stats"></a><strong>TcpRosConnection:get_stats</strong>&nbsp;()</dt>
+<dd>
+Get connection statistics.
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+six values: bytes received, bytes send, socket age in seconds, messages received, messages sent, total messages processed (sent + received)
+
+
+
+</dd>
+
+
+
+
+<dt><a name="TcpRosConnection:new"></a><strong>TcpRosConnection:new</strong>&nbsp;(socket)</dt>
+<dd>
+Constructor.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  socket: optionally a socket to use for communication
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="TcpRosConnection:receive"></a><strong>TcpRosConnection:receive</strong>&nbsp;()</dt>
+<dd>
+Receive data from the network. Upon return contains the new data in the payload field.
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="TcpRosConnection:receive_header"></a><strong>TcpRosConnection:receive_header</strong>&nbsp;()</dt>
+<dd>
+Receive header. This will read the header from the network connection and store it in the header field as well as return it.
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+table of header fields
+
+
+
+</dd>
+
+
+
+
+<dt><a name="TcpRosConnection:send"></a><strong>TcpRosConnection:send</strong>&nbsp;(message)</dt>
+<dd>
+Send message.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  message: either a serialized message string or a Message class instance.
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="TcpRosConnection:send_header"></a><strong>TcpRosConnection:send_header</strong>&nbsp;(fields, header)</dt>
+<dd>
+Send out header.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  fields: 
+	</li>
+	
+	<li>
+	  header: table with header fields to send
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="TcpRosConnection:spin"></a><strong>TcpRosConnection:spin</strong>&nbsp;()</dt>
+<dd>
+Spin ros connection. This will read messages from the wire when they become available. The field max_receives_per_spin is used to determine the maximum number of messages read per spin.
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="TcpRosConnection:wait_for_message"></a><strong>TcpRosConnection:wait_for_message</strong>&nbsp;()</dt>
+<dd>
+Wait for a message to arrive. This message blocks until a message has been received.
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="TcpRosPubSubConnection:new"></a><strong>TcpRosPubSubConnection:new</strong>&nbsp;(socket)</dt>
+<dd>
+Publisher/Subscriber connection constructor.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  socket: optionally a socket to use for communication
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="TcpRosPubSubConnection:receive"></a><strong>TcpRosPubSubConnection:receive</strong>&nbsp;()</dt>
+<dd>
+Receive data from the network. Upon return contains the new messages in the messages array field.
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="TcpRosPubSubConnection:receive_header"></a><strong>TcpRosPubSubConnection:receive_header</strong>&nbsp;()</dt>
+<dd>
+Receive header. This receives the header, asserts the type and loads the message specification into the msgspec field.
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+table of headers
+
+
+
+</dd>
+
+
+
+
+<dt><a name="TcpRosServiceClientConnection:new"></a><strong>TcpRosServiceClientConnection:new</strong>&nbsp;(socket)</dt>
+<dd>
+Service client connection constructor.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  socket: optionally a socket to use for communication
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="TcpRosServiceClientConnection:receive"></a><strong>TcpRosServiceClientConnection:receive</strong>&nbsp;()</dt>
+<dd>
+Receive data from the network. Upon return contains the new message in the message field.
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="TcpRosServiceProviderConnection:new"></a><strong>TcpRosServiceProviderConnection:new</strong>&nbsp;(socket)</dt>
+<dd>
+Service provider connection constructor.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  socket: optionally a socket to use for communication
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="TcpRosServiceProviderConnection:receive"></a><strong>TcpRosServiceProviderConnection:receive</strong>&nbsp;()</dt>
+<dd>
+Receive data from the network. Upon return contains the new messages in the messages array field.
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+</dl>
+
+
+
+
+
+
+</div> <!-- id="content" -->
+
+</div> <!-- id="main" -->
+
+<div id="about">
+	<p><a href="http://validator.w3.org/check?uri=referer"><img src="http://www.w3.org/Icons/valid-xhtml10" alt="Valid XHTML 1.0!" height="31" width="88" /></a></p>
+</div> <!-- id="about" -->
+
+</div> <!-- id="container" -->	
+</body>
+</html>

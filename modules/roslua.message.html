@@ -1,0 +1,443 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../luadoc.css" type="text/css" />
+	<!--meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/-->
+</head>
+
+<body>
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b>roslua: ROS client library for Lua</b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+<div id="main">
+
+<div id="navigation">
+
+
+<h1>roslua</h1>
+
+<ul>
+	
+	<li><a href="../index.html">Index</a></li>
+	
+</ul>
+
+
+<!-- Module list -->
+
+<h1>Modules</h1>
+<ul>
+
+	<li>
+		<a href="../modules/roslua.html">roslua</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.logging.html">roslua.logging</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.master_proxy.html">roslua.master_proxy</a>
+	</li>
+
+	<li><strong>roslua.message</strong></li>
+	
+	<li>
+		<a href="../modules/roslua.msg_spec.html">roslua.msg_spec</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.param_proxy.html">roslua.param_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.publisher.html">roslua.publisher</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.registry.html">roslua.registry</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.service.html">roslua.service</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.service_client.html">roslua.service_client</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.slave_api.html">roslua.slave_api</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.slave_proxy.html">roslua.slave_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.srv_spec.html">roslua.srv_spec</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.subscriber.html">roslua.subscriber</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.tcpros.html">roslua.tcpros</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.time.html">roslua.time</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.utils.html">roslua.utils</a>
+	</li>
+
+</ul>
+
+
+
+<!-- File list -->
+
+
+
+
+
+
+</div><!-- id="navigation" -->
+
+<div id="content">
+
+<h1>Module <code>roslua.message</code></h1>
+
+<p>ROS message representation. This class incorporates a ROS message that can be sent and received over a TCPROS connection. A message is created via the MsgSpec:instantiate() method. <br /><br /> A message has two important fields. One is the spec field. It contains a reference a a MsgSpec instance describing this message. Further there is a field values which is a dict table. It contains entries for the names of the message fields storing the appropriate. The values array has to be filled appropriately before sending a message, and on deserializing a received message it will contain the received values.</p>
+
+
+<p>Copyright&copy; Tim Niemueller, Carnegie Mellon University, Intel Research Pittsburgh</p>
+
+
+<p><small><b>Release:</b> Released under BSD license</small></p>
+
+
+
+<h2>Functions</h2>
+<table class="function_list">
+
+	<tr>
+	<td class="name" nowrap><a href="#Message:deserialize">Message:deserialize</a>&nbsp;(buffer, i)</td>
+	<td class="summary">Deserialize received message.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Message:format_string">Message:format_string</a>&nbsp;(buffer, i, farray, prefix, format)</td>
+	<td class="summary">Generate format string.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Message:generate_value_array">Message:generate_value_array</a>&nbsp;(flat_array, array)</td>
+	<td class="summary">Generate a value array from the stored values.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Message:new">Message:new</a>&nbsp;(spec, no_prefill)</td>
+	<td class="summary">Constructor.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Message:print">Message:print</a>&nbsp;(indent)</td>
+	<td class="summary">Print message.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Message:read_values">Message:read_values</a>&nbsp;(values, start)</td>
+	<td class="summary">Read values into values field.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Message:serialize">Message:serialize</a>&nbsp;()</td>
+	<td class="summary">Serialize message.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Message:set_from_array">Message:set_from_array</a>&nbsp;(arr)</td>
+	<td class="summary">Set message values from array.</td>
+	</tr>
+
+</table>
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+
+<h2><a name="functions"></a>Functions</h2>
+<dl class="function">
+
+
+
+<dt><a name="Message:deserialize"></a><strong>Message:deserialize</strong>&nbsp;(buffer, i)</dt>
+<dd>
+Deserialize received message. This will deserialize the message according to the message specification. Not that it is the users obligation to make sure that the buffer is correctly typed for the message, especially that the buffer has the appropriate size.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  buffer: buffer that contains the message as read from the TCPROS connection
+	</li>
+	
+	<li>
+	  i: Index from where to start parsing in the buffer, optional argument that defaults to 1
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Message:format_string"></a><strong>Message:format_string</strong>&nbsp;(buffer, i, farray, prefix, format)</dt>
+<dd>
+Generate format string. The format string is based on the base format of the message specification, but takes into account actual array sizes, replicating array parts as necessary.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  buffer: incoming buffer to be deserialized
+	</li>
+	
+	<li>
+	  i: index from where to start reading buffer
+	</li>
+	
+	<li>
+	  farray: base format array from message spec, if nil the one from internal spec is used (recursion parameter)
+	</li>
+	
+	<li>
+	  prefix: 
+	</li>
+	
+	<li>
+	  format: prefix if nil set to little endian and 1 byte alignment (recursion parameter)
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Message:generate_value_array"></a><strong>Message:generate_value_array</strong>&nbsp;(flat_array, array)</dt>
+<dd>
+Generate a value array from the stored values. This is used for serialization, but also during execution of service calls.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  flat_array: if set to true (the default) will generate a flat array, which means that the resulting value array from complex sub-messages are folded into the array at the place where the field is defined. If set to false the value arrays for the sub-messages are integrated verbatim as array at the appropriate position.
+	</li>
+	
+	<li>
+	  array: 
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+positional array of values, output depends on flat_array param, see above.
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Message:new"></a><strong>Message:new</strong>&nbsp;(spec, no_prefill)</dt>
+<dd>
+Constructor.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  spec: message specification
+	</li>
+	
+	<li>
+	  no_prefill: 
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Message:print"></a><strong>Message:print</strong>&nbsp;(indent)</dt>
+<dd>
+Print message.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  indent: string (normally spaces) to put before every line of output
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Message:read_values"></a><strong>Message:read_values</strong>&nbsp;(values, start)</dt>
+<dd>
+Read values into values field. This iterates over the given array and copies the values to the internal values field, instantiating sub-classes as necessary.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  values: array, flat array with all values of the message
+	</li>
+	
+	<li>
+	  start: index from where to start reading the values array
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Message:serialize"></a><strong>Message:serialize</strong>&nbsp;()</dt>
+<dd>
+Serialize message.
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+three values, the serialized string appropriate for sending over a TCPROS connection, the used struct format, and the array of values
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Message:set_from_array"></a><strong>Message:set_from_array</strong>&nbsp;(arr)</dt>
+<dd>
+Set message values from array. Set the values field from the given array. Assumes a non-flat array layout where positions of complex sub-messages contain an appropriate array of values for the message (possibly recursively having arrays again).
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  arr: array of values
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+</dl>
+
+
+
+
+
+
+</div> <!-- id="content" -->
+
+</div> <!-- id="main" -->
+
+<div id="about">
+	<p><a href="http://validator.w3.org/check?uri=referer"><img src="http://www.w3.org/Icons/valid-xhtml10" alt="Valid XHTML 1.0!" height="31" width="88" /></a></p>
+</div> <!-- id="about" -->
+
+</div> <!-- id="container" -->	
+</body>
+</html>

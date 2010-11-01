@@ -1,0 +1,671 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../luadoc.css" type="text/css" />
+	<!--meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/-->
+</head>
+
+<body>
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b>roslua: ROS client library for Lua</b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+<div id="main">
+
+<div id="navigation">
+
+
+<h1>roslua</h1>
+
+<ul>
+	
+	<li><a href="../index.html">Index</a></li>
+	
+</ul>
+
+
+<!-- Module list -->
+
+<h1>Modules</h1>
+<ul>
+
+	<li><strong>roslua</strong></li>
+	
+	<li>
+		<a href="../modules/roslua.logging.html">roslua.logging</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.master_proxy.html">roslua.master_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.message.html">roslua.message</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.msg_spec.html">roslua.msg_spec</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.param_proxy.html">roslua.param_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.publisher.html">roslua.publisher</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.registry.html">roslua.registry</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.service.html">roslua.service</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.service_client.html">roslua.service_client</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.slave_api.html">roslua.slave_api</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.slave_proxy.html">roslua.slave_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.srv_spec.html">roslua.srv_spec</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.subscriber.html">roslua.subscriber</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.tcpros.html">roslua.tcpros</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.time.html">roslua.time</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.utils.html">roslua.utils</a>
+	</li>
+
+</ul>
+
+
+
+<!-- File list -->
+
+
+
+
+
+
+</div><!-- id="navigation" -->
+
+<div id="content">
+
+<h1>Module <code>roslua</code></h1>
+
+<p>ROS language binding for Lua. This module and its sub-modules provides the necessary tools to write ROS nodes in the Lua programming language. It supports subscribing to and publishing topics, providing and calling services, and interacts with the standard ROS tools to provide introspection information.</p>
+
+
+<p>Copyright&copy; Tim Niemueller, Carnegie Mellon University, Intel Research Pittsburgh</p>
+
+
+<p><small><b>Release:</b> Released under BSD license</small></p>
+
+
+
+<h2>Functions</h2>
+<table class="function_list">
+
+	<tr>
+	<td class="name" nowrap><a href="#add_spinner">add_spinner</a>&nbsp;(spinner)</td>
+	<td class="summary">Add a spinner.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#exit">exit</a>&nbsp;()</td>
+	<td class="summary">Exit the program.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#finalize">finalize</a>&nbsp;()</td>
+	<td class="summary">Finalize this node.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#get_msgspec">get_msgspec</a>&nbsp;(msg_type)</td>
+	<td class="summary">Get message specification.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#get_slave_proxy">get_slave_proxy</a>&nbsp;(uri)</td>
+	<td class="summary">Get a slave proxy.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#get_srvspec">get_srvspec</a>&nbsp;(srv_type)</td>
+	<td class="summary">Get service specification.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#init_node">init_node</a>&nbsp;(args)</td>
+	<td class="summary">Initialize ROS node.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#publisher">publisher</a>&nbsp;(topic, type)</td>
+	<td class="summary">Get a new publisher for a topic.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#remove_spinner">remove_spinner</a>&nbsp;(spinner)</td>
+	<td class="summary">Remove spinner.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#run">run</a>&nbsp;(loop_frequency, desired)</td>
+	<td class="summary">Spin until program is stopped.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#service">service</a>&nbsp;(service, type, handler)</td>
+	<td class="summary">Get a new service handler.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#service_client">service_client</a>&nbsp;(service, type, persistent)</td>
+	<td class="summary">Get a service client.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#sleep">sleep</a>&nbsp;(sec_or_duration, sec)</td>
+	<td class="summary">Sleep the given number of seconds.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#subscriber">subscriber</a>&nbsp;(topic, type)</td>
+	<td class="summary">Get a new subscriber for a topic.</td>
+	</tr>
+
+</table>
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+
+<h2><a name="functions"></a>Functions</h2>
+<dl class="function">
+
+
+
+<dt><a name="add_spinner"></a><strong>add_spinner</strong>&nbsp;(spinner)</dt>
+<dd>
+Add a spinner. The spinner will be called in every loop after the other events have been processed.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  spinner: spinner to add, must be a function that is called without any arguments in each spin.
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="exit"></a><strong>exit</strong>&nbsp;()</dt>
+<dd>
+Exit the program. This sets the quit flag to true and will cause (proper) programs to exit.
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="finalize"></a><strong>finalize</strong>&nbsp;()</dt>
+<dd>
+Finalize this node. Call this function when existing the program to allow for proper unregistering of topic and services and to perform other cleanup tasks.
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="get_msgspec"></a><strong>get_msgspec</strong>&nbsp;(msg_type)</dt>
+<dd>
+Get message specification.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  msg_type: message type (e.g. std_msgs/String). The name must include the package.
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="get_slave_proxy"></a><strong>get_slave_proxy</strong>&nbsp;(uri)</dt>
+<dd>
+Get a slave proxy. Slave proxies are XML-RPC client-side wrappers to communicate with another ROS node via the XML-RPC protocol, e.g. for requesting information or topics. The proxies are maintained in a cache and there is always only one instance of a slave for a specific remote node.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  uri: URI of remote slave
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+SlaveProxy instance
+
+
+
+<h3>See also:</h3>
+<ul>
+	
+	<li><a href="">
+		SlaveProxy
+	</a>
+	
+</ul>
+
+</dd>
+
+
+
+
+<dt><a name="get_srvspec"></a><strong>get_srvspec</strong>&nbsp;(srv_type)</dt>
+<dd>
+Get service specification.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  srv_type: service type (e.g. std_msgs/String). The name must include the package.
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="init_node"></a><strong>init_node</strong>&nbsp;(args)</dt>
+<dd>
+Initialize ROS node. This function must be called before any other interaction with ROS or roslua is possible. Note that the library can always accomodate only one ROS node per interpreter instance! A signal handler is set for SIGINT (e.g. after pressing Ctrl-C) to set the quit flag to true if the signal is received.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  args: a table with argument entries. The following fields are mandatory: <dl> <dt>master_uri</dt><dd>The ROS master URI</dd> <dt>node_name</dt><dd>the name of the node using the library</dd> </dl> The following fields are optional. <dl> <dt>no_rosout</dt><dd>Do not log to /rosout.</dd> <dt>no_signal_handler</dt><dd>Do not register default signal handler.</dd> </dl>
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="publisher"></a><strong>publisher</strong>&nbsp;(topic, type)</dt>
+<dd>
+Get a new publisher for a topic. Request the creation of a publisher for a specific topic. Publishers are maintained in a cache, and for any one topic there is always at most one publisher which is shared.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  topic: name of topic to request publisher for
+	</li>
+	
+	<li>
+	  type: type of topic
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+Publisher instance for the requested topic
+
+
+
+<h3>See also:</h3>
+<ul>
+	
+	<li><a href="">
+		Publisher
+	</a>
+	
+</ul>
+
+</dd>
+
+
+
+
+<dt><a name="remove_spinner"></a><strong>remove_spinner</strong>&nbsp;(spinner)</dt>
+<dd>
+Remove spinner.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  spinner: spinner to remove
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="run"></a><strong>run</strong>&nbsp;(loop_frequency, desired)</dt>
+<dd>
+Spin until program is stopped. This will spin infinitely until roslua.quit is set to true, e.g. by a interrupt signal after pressing Ctrl-C.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  loop_frequency: 
+	</li>
+	
+	<li>
+	  desired: loop frequency in Hz. If set to anything less or equal to zero will run as fast as possible Warning, may cause high CPU load. Defaults to 25 Hz. You should increase the loop frequency if you need small communication latencies.
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="service"></a><strong>service</strong>&nbsp;(service, type, handler)</dt>
+<dd>
+Get a new service handler. Request the creation of a new service, i.e. the server side or provider of the service. An error is thrown if the service has already been registered.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  service: name of the provided service
+	</li>
+	
+	<li>
+	  type: type of the provided service
+	</li>
+	
+	<li>
+	  handler: the service handler, this is either a function or a class instance which provides a service_call() method.
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+Service instance for the requested service
+
+
+
+<h3>See also:</h3>
+<ul>
+	
+	<li><a href="">
+		Service
+	</a>
+	
+</ul>
+
+</dd>
+
+
+
+
+<dt><a name="service_client"></a><strong>service_client</strong>&nbsp;(service, type, persistent)</dt>
+<dd>
+Get a service client. Request the creation of a new service client to access a ROS service. Service clients are not cached and a new client is created for every new creation request.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  service: name of the requested service
+	</li>
+	
+	<li>
+	  type: type of service
+	</li>
+	
+	<li>
+	  persistent: true to request a persistent connection to the service
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+<h3>See also:</h3>
+<ul>
+	
+	<li><a href="">
+		ServiceClient
+	</a>
+	
+</ul>
+
+</dd>
+
+
+
+
+<dt><a name="sleep"></a><strong>sleep</strong>&nbsp;(sec_or_duration, sec)</dt>
+<dd>
+Sleep the given number of seconds. During the sleep time events will be processed if the sleep time is at least 0.05 sec.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  sec_or_duration: 
+	</li>
+	
+	<li>
+	  sec: time in seconds or duration to sleep
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="subscriber"></a><strong>subscriber</strong>&nbsp;(topic, type)</dt>
+<dd>
+Get a new subscriber for a topic. Request the creation of a subscriber for a specific topic. Subscribers are maintained in a cache, and for any one topic there is always at most one subscriber which is shared.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  topic: name of topic to request subscriber for
+	</li>
+	
+	<li>
+	  type: type of topic
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+Subscriber instance for the requested topic
+
+
+
+<h3>See also:</h3>
+<ul>
+	
+	<li><a href="">
+		Publisher
+	</a>
+	
+</ul>
+
+</dd>
+
+
+</dl>
+
+
+
+
+
+
+</div> <!-- id="content" -->
+
+</div> <!-- id="main" -->
+
+<div id="about">
+	<p><a href="http://validator.w3.org/check?uri=referer"><img src="http://www.w3.org/Icons/valid-xhtml10" alt="Valid XHTML 1.0!" height="31" width="88" /></a></p>
+</div> <!-- id="about" -->
+
+</div> <!-- id="container" -->	
+</body>
+</html>
