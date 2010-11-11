@@ -396,6 +396,48 @@ function Message:generate_value_array(flat_array, array)
    return format, rv
 end
 
+
+--- Get plain value table.
+-- This creates a new table which contains all the values from the values
+-- field. The major difference is that this will be done recursively for
+-- sub-message types.
+-- @return value table
+function Message:plain_value_table()
+   local rv = {}
+   for _, f in ipairs(self.spec.fields) do
+      if f.is_builtin and f.is_array then
+	 local arr = {}
+	 for _, v in ipairs(self.values[f.name]) do
+	    if f.type == "duration" or f.type == "time" then
+	       if roslua.Time.is_instance(v) then
+		  table.insert(arr, {v.sec, v.nsec})
+	       else
+		  table.insert(arr, {v[1], v[2]})
+	       end
+	    else
+	       table.insert(arr, v)
+	    end
+	 end
+	 rv[f.name] = arr
+      elseif f.is_builtin then
+	 if f.type == "duration" or f.type == "time" then
+	    rv[f.name] = {self.values[f.name].sec, self.values[f.name].nsec}
+	 else
+	    rv[f.name] = self.values[f.name]
+	 end
+      elseif f.is_array then -- complex type array
+	 local arr = {}
+	 for _, v in ipairs(self.values[f.name]) do
+	    table.insert(arr, v:plain_value_table())
+	 end
+	 rv[f.name] = arr
+      else -- single complex type
+	 rv[f.name] = self.values[f.name]:plain_value_table()
+      end
+   end
+   return rv
+end
+
 --- Serialize message.
 -- @return three values, the serialized string appropriate for sending over a
 -- TCPROS connection, the used struct format, and the array of values
