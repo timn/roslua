@@ -132,6 +132,41 @@
 <table class="function_list">
 
 	<tr>
+	<td class="name" nowrap><a href="#ServiceClient:concexec_abort">ServiceClient:concexec_abort</a>&nbsp;()</td>
+	<td class="summary">Abort the execution.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#ServiceClient:concexec_failed">ServiceClient:concexec_failed</a>&nbsp;()</td>
+	<td class="summary">Check if execution has failed.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#ServiceClient:concexec_finished">ServiceClient:concexec_finished</a>&nbsp;()</td>
+	<td class="summary">Check if execution has failed or succeeded </td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#ServiceClient:concexec_result">ServiceClient:concexec_result</a>&nbsp;()</td>
+	<td class="summary">Get execution result.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#ServiceClient:concexec_start">ServiceClient:concexec_start</a>&nbsp;(args)</td>
+	<td class="summary">Initiate service execution.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#ServiceClient:concexec_succeeded">ServiceClient:concexec_succeeded</a>&nbsp;()</td>
+	<td class="summary">Check if execution is finished successfully.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#ServiceClient:concexec_wait">ServiceClient:concexec_wait</a>&nbsp;()</td>
+	<td class="summary">Wait for the execution to finish.</td>
+	</tr>
+
+	<tr>
 	<td class="name" nowrap><a href="#ServiceClient:connect">ServiceClient:connect</a>&nbsp;()</td>
 	<td class="summary">Connect to service provider.</td>
 	</tr>
@@ -165,6 +200,146 @@
 
 <h2><a name="functions"></a>Functions</h2>
 <dl class="function">
+
+
+
+<dt><a name="ServiceClient:concexec_abort"></a><strong>ServiceClient:concexec_abort</strong>&nbsp;()</dt>
+<dd>
+Abort the execution. Note that this does not actually stop the execution on the server side, rather we just close the connection as to not receive the result. The connection will be closed even if it is marked persistent. It will be reopened on the next call.
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="ServiceClient:concexec_failed"></a><strong>ServiceClient:concexec_failed</strong>&nbsp;()</dt>
+<dd>
+Check if execution has failed. Precondition is that the service is being concurrently executed.
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+true if the execution is finished and a result has been received, false otherwise
+
+
+
+</dd>
+
+
+
+
+<dt><a name="ServiceClient:concexec_finished"></a><strong>ServiceClient:concexec_finished</strong>&nbsp;()</dt>
+<dd>
+Check if execution has failed or succeeded
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+true if the execution is finished, false otherwise
+
+
+
+</dd>
+
+
+
+
+<dt><a name="ServiceClient:concexec_result"></a><strong>ServiceClient:concexec_result</strong>&nbsp;()</dt>
+<dd>
+Get execution result. Precondition is that the service is being concurrently executed and has finished.
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+service return value
+
+
+
+</dd>
+
+
+
+
+<dt><a name="ServiceClient:concexec_start"></a><strong>ServiceClient:concexec_start</strong>&nbsp;(args)</dt>
+<dd>
+Initiate service execution. This starts the execution of the service in a way it can be handled concurrently. The request will be sent, afterwards the concexec_finished(), concexec_result(), and concexec_wait() methods can be used.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  args: argument array
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="ServiceClient:concexec_succeeded"></a><strong>ServiceClient:concexec_succeeded</strong>&nbsp;()</dt>
+<dd>
+Check if execution is finished successfully. Precondition is that the service is being concurrently executed.
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+true if the execution is finished and a result has been received, false otherwise
+
+
+
+</dd>
+
+
+
+
+<dt><a name="ServiceClient:concexec_wait"></a><strong>ServiceClient:concexec_wait</strong>&nbsp;()</dt>
+<dd>
+Wait for the execution to finish.
+
+
+
+
+
+
+
+
+
+</dd>
+
 
 
 
