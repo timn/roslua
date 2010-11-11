@@ -88,6 +88,22 @@ local finalizers = {}
 -- that init_node() was called.
 quit = true
 
+--- Assert a specific roslua version.
+-- Throws an error if minimum version requirements are not met.
+-- @param major minimum required major version
+-- @param minor minimum required minor version (if major version is equal)
+-- @param micro minimum required micro version (if major and minor versions are equal)
+function assert_version(major, minor, micro)
+   assert(major and minor and micro, "All version parts must be passed, use zero to ignore")
+   if major >  VERSION_MAJOR
+   or major == VERSION_MAJOR and minor >  VERSION_MINOR
+   or major == VERSION_MAJOR and minor == VERSION_MINOR and micro > VERSION_MICRO
+   then
+      local reqv = string.format("%d.%d.%d", major, minor, micro)
+      error("Insufficient roslua version, requested " ..reqv.. " vs. installed " .. VERSION)
+   end
+end
+
 --- Initialize ROS node.
 -- This function must be called before any other interaction with ROS or roslua
 -- is possible. Note that the library can always accomodate only one ROS node per
@@ -104,7 +120,6 @@ quit = true
 --  <dt>no_rosout</dt><dd>Do not log to /rosout.</dd>
 --  <dt>no_signal_handler</dt><dd>Do not register default signal handler.</dd>
 -- </dl>
-
 function init_node(args)
    roslua.master_uri = args.master_uri
    roslua.node_name  = args.node_name
