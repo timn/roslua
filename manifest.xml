@@ -10,6 +10,7 @@
   <depend package="roslang"/>
   <depend package="roslib"/>
   <rosdep name="lua" />
+  <rosdep name="lua-devel" />
   <rosdep name="lua-md5" />
   <rosdep name="lua-posix" />
   <rosdep name="lua-socket" />

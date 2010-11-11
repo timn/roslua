@@ -1,6 +1,9 @@
 lua:
   fedora: lua
   ubuntu: lua5.1
+lua-devel:
+  fedora: lua-devel
+  ubuntu: liblua5.1-0-dev
 lua-md5:
   fedora: lua-md5
   ubuntu: liblua5.1-md5-0
