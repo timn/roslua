@@ -7,6 +7,9 @@
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/roslua</url>
+  <export>
+    <doxymaker external="http://timn.github.com/roslua/" />
+  </export>
   <depend package="roslang"/>
   <depend package="roslib"/>
   <rosdep name="lua" />
