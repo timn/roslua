@@ -47,7 +47,7 @@ local socket = require("socket")
 
 VERSION_MAJOR = 0
 VERSION_MINOR = 4
-VERSION_MICRO = 0
+VERSION_MICRO = 1
 VERSION = VERSION_MAJOR .. "." .. VERSION_MINOR .. "." .. VERSION_MICRO
 
 -- Imports from other libs to have a unified entry point
