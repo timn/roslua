@@ -162,12 +162,17 @@
 	</tr>
 
 	<tr>
+	<td class="name" nowrap><a href="#Subscriber:reset_messages">Subscriber:reset_messages</a>&nbsp;()</td>
+	<td class="summary">Reset messages.</td>
+	</tr>
+
+	<tr>
 	<td class="name" nowrap><a href="#Subscriber:spin">Subscriber:spin</a>&nbsp;()</td>
 	<td class="summary">Spin all connections to subscribers and dispatch incoming messages.</td>
 	</tr>
 
 	<tr>
-	<td class="name" nowrap><a href="#Subscriber:update_publishers">Subscriber:update_publishers</a>&nbsp;(publishers)</td>
+	<td class="name" nowrap><a href="#Subscriber:update_publishers">Subscriber:update_publishers</a>&nbsp;(publishers, connect_now)</td>
 	<td class="summary">Update the publishers.</td>
 	</tr>
 
@@ -324,6 +329,23 @@ remove the given listener. The listener will no longer be notified of incoming m
 
 
 
+<dt><a name="Subscriber:reset_messages"></a><strong>Subscriber:reset_messages</strong>&nbsp;()</dt>
+<dd>
+Reset messages. You can use this for a latching subscriber to erase the messages at a certain point manually.
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
 <dt><a name="Subscriber:spin"></a><strong>Subscriber:spin</strong>&nbsp;()</dt>
 <dd>
 Spin all connections to subscribers and dispatch incoming messages. Connections which are found dead are removed.
@@ -341,7 +363,7 @@ Spin all connections to subscribers and dispatch incoming messages. Connections 
 
 
 
-<dt><a name="Subscriber:update_publishers"></a><strong>Subscriber:update_publishers</strong>&nbsp;(publishers)</dt>
+<dt><a name="Subscriber:update_publishers"></a><strong>Subscriber:update_publishers</strong>&nbsp;(publishers, connect_now)</dt>
 <dd>
 Update the publishers. This method is called by the slave API handler when the <code>publisherUpdate()</code> XML-RPC method is called. The subscriber instance will connect to any new publishers that it had not connected to before (during the next call to <code>spin()</code> and will (immediately) disconnect from any publishers that are no longer available.
 
@@ -351,6 +373,10 @@ Update the publishers. This method is called by the slave API handler when the <
 	
 	<li>
 	  publishers: an array of currently available and slave URIs that were registered at the core
+	</li>
+	
+	<li>
+	  connect_now: if set to true will immediately try to connect to unconnected publishers instead of only marking enqueuing a try for the next spin
 	</li>
 	
 </ul>

@@ -152,6 +152,11 @@
 	</tr>
 
 	<tr>
+	<td class="name" nowrap><a href="#Message:plain_value_table">Message:plain_value_table</a>&nbsp;()</td>
+	<td class="summary">Get plain value table.</td>
+	</tr>
+
+	<tr>
 	<td class="name" nowrap><a href="#Message:print">Message:print</a>&nbsp;(indent)</td>
 	<td class="summary">Print message.</td>
 	</tr>
@@ -169,6 +174,11 @@
 	<tr>
 	<td class="name" nowrap><a href="#Message:set_from_array">Message:set_from_array</a>&nbsp;(arr)</td>
 	<td class="summary">Set message values from array.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Message:split_format">Message:split_format</a>&nbsp;(format)</td>
+	<td class="summary">Format splitting iterator.</td>
 	</tr>
 
 </table>
@@ -323,6 +333,26 @@ Constructor.
 
 
 
+<dt><a name="Message:plain_value_table"></a><strong>Message:plain_value_table</strong>&nbsp;()</dt>
+<dd>
+Get plain value table. This creates a new table which contains all the values from the values field. The major difference is that this will be done recursively for sub-message types.
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+value table
+
+
+
+</dd>
+
+
+
+
 <dt><a name="Message:print"></a><strong>Message:print</strong>&nbsp;(indent)</dt>
 <dd>
 Print message.
@@ -417,6 +447,35 @@ Set message values from array. Set the values field from the given array. Assume
 
 
 
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Message:split_format"></a><strong>Message:split_format</strong>&nbsp;(format)</dt>
+<dd>
+Format splitting iterator. Splits the struct format after 200 characters (202 if a string definition would be split otherwise).
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  format: format to split
+	</li>
+	
+</ul>
+
+
+
+
+
+
+<h3>Return value:</h3>
+iterator function
 
 
 

@@ -179,27 +179,27 @@ likely not work.
 - Lua POSIX 5.1.7 (i)(*)	http://luaforge.net/projects/luaposix/
 - Xavante 2.2.0	(*)		http://keplerproject.github.com/xavante/
 - WSAPI 1.3.4			http://keplerproject.github.com/wsapi/
-- Lua XML-RPC 1.0 (*)		http://www.keplerproject.org/luaxmlrpc/
+- Lua XML-RPC 1.2.0		http://keplerproject.github.com/lua-xmlrpc/
 - Lua struct lib (i)(*)		http://www.inf.puc-rio.br/~roberto/struct/
 - Lua MD5 1.1.2	 		http://www.keplerproject.org/md5/
+- Lua Signal 1.0.0		http://luaforge.net/projects/luasignal/
+
+roslua comes with a rosdep file with the requirements that can be
+provided by the operating system (only Ubuntu for now, Fedora is
+mentioned but some more packages need to be pushed first).
 
 
 Additional notes
 ----------------
 Xavante:
   Needs a small patch to allow for using a ephemeral port.
-  git clone git@github.com:timn/xavante.git
+  git clone git@github.com:keplerproject/xavante.git
   Use this version, or use src/xavante/httpd.lua to replace the one on
-  your system.
+  your system. The patch has been merged upstream.
 Lua POSIX:
   A patched version currently comes with roslua. Patches to extend
   the functionality have been accepted upstream. Once the new version
   arrives downstream in the distros the module will be removed.
-Lua XML-RPC:
-  A patch is available in the patches/ directory. On Ubuntu 10.04
-  (and probably earlier versions) simply replace
-  /usr/share/lua/5.1/xmlrpc/xmlrpc.lua with the version that comes
-  with roslua.
 Lua struct lib:
   The library is usually not available as a distribution package,
   therefore it has been bundled with roslua. It has been patched to
