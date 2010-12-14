@@ -71,10 +71,16 @@ mentioned but some more packages need to be pushed first).
 Additional notes
 ----------------
 Xavante:
-  Needs a small patch to allow for using a ephemeral port.
-  git clone git@github.com:keplerproject/xavante.git
-  Use this version, or use src/xavante/httpd.lua to replace the one on
-  your system. The patch has been merged upstream.
+  Nothing needs to be done for Fedora 13 and later.
+
+  If using 2.2.0 on Ubuntu 10.04 a small patch is needed allow for using
+  an ephemeral port. To get this either install from git, or clone the
+  repository and replace the httpd.lua file of your local Xavante
+  installation. The latter way is much easier and recommended if you
+  have Xavante 2.2.0 installed (and not an older version). I cannot
+  tell for other distributions, but these steps work for Ubuntu:
+  git clone git://github.com/keplerproject/xavante.git
+  cp xavante/src/xavante/httpd.lua /usr/share/lua/5.1/xavante
 Lua POSIX:
   A patched version currently comes with roslua. Patches to extend
   the functionality have been accepted upstream. Once the new version
