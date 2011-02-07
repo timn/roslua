@@ -163,7 +163,11 @@ function TcpRosConnection:receive()
    end
    local packet_size = struct.unpack("<!1i4", packet_size_d)
 
-   self.payload = assert(self.socket:receive(packet_size))
+   if packet_size > 0 then
+      self.payload = assert(self.socket:receive(packet_size))
+   else
+      self.payload = ""
+   end
    self.received = true
    self.msg_stats.received = self.msg_stats.received + 1
    self.msg_stats.total    = self.msg_stats.total    + 1
@@ -253,7 +257,9 @@ end
 function TcpRosPubSubConnection:receive_header()
    TcpRosConnection.receive_header(self)
 
-   assert(self.header.type == "*" or self.header.type == self.msgspec.type, "Opposite site did not set proper type")
+   assert(self.header.type == "*" or self.header.type == self.msgspec.type,
+          "Opposite site did not set proper type (got " .. self.header.type ..
+          ", expected: " .. self.msgspec.type .. ")")
 
    return self.header
 end
