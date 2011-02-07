@@ -24,7 +24,7 @@ module("roslua.publisher", package.seeall)
 require("roslua")
 require("roslua.msg_spec")
 
-Publisher = {}
+Publisher = {DEBUG = false}
 
 --- Constructor.
 -- Create a new publisher instance.
@@ -96,12 +96,21 @@ function Publisher:accept_connections()
 		    type=self.type,
 		    md5sum=md5sum}
       local ok, error = pcall(c.receive_header, c)
+
+      if (ok and self.DEBUG) then
+	 print_debug("Publisher[%s::%s]: subscriber connection from %s (%s:%d)",
+		     self.topic, self.type, c.header.callerid,
+		     c.socket:getpeername())
+      end
+
       if not ok then
-	 print_warn("Publisher[%s::%s]: accepting connection failed: %s", self.topic, self.type, error)
+	 print_warn("Publisher[%s::%s]: accepting connection failed: %s",
+		    self.topic, self.type, error)
 	 c:close()
       elseif c.header.md5sum ~= "*" and c.header.md5sum ~= md5sum then
-	 print_warn("Publisher[%s::%s]: received non-matching MD5 (here: %s there: %s) sum from %s, "..
-		    "disconnecting and ignoring", self.topic, self.type, md5sum, c.header.md5sum, c.header.callerid)
+	 print_warn("Publisher[%s::%s]: received non-matching MD5 "..
+		    "(here: %s there: %s) sum from %s, disconnecting and ignoring",
+		 self.topic, self.type, md5sum, c.header.md5sum, c.header.callerid)
 	 c:close()
       else
 	 if self.latched and self.latched_message then
@@ -109,7 +118,7 @@ function Publisher:accept_connections()
 	    if not ok then
 	       local ip, port = c:get_ip_port()
 	       print_warn("Publisher[%s::%s]: failed sending to %s:%s for latched message (%s)",
-			  self.type, self.name, ip, port, error)
+			  self.type, self.topic, ip, port, error)
 	       self.subscribers[uri].connection:close() 
 	       self.subscribers[uri] = nil
 	    end
@@ -150,11 +159,28 @@ function Publisher:publish(message)
       self.latched_message = {message=message, serialized=sm}
    end
    local uri, s
-   for uri, s in pairs(self.subscribers) do
-      local ok, error = pcall(s.connection.send, s.connection, sm)
-      if not ok then
-	 self.subscribers[uri].connection:close()
-	 self.subscribers[uri] = nil
+   if not next(self.subscribers) and self.topic ~= "/rosout" then
+      if self.DEBUG then
+	 print_warn("Publisher[%s::%s]: cannot send message, no subscribers",
+		    self.type, self.topic)
+      end
+   else
+      for uri, s in pairs(self.subscribers) do
+	 local ok, error = pcall(s.connection.send, s.connection, sm)
+
+	 if self.DEBUG and self.topic ~= "/rosout" then
+	    if ok then
+	       print_warn("Publisher[%s::%s]: sent to %s",
+			  self.type, self.topic, s.connection.header.callerid)
+	    else
+	       print_warn("Publisher[%s::%s]: failed to send to %s",
+			  self.type, self.topic, s.connection.header.callerid)
+	    end
+	 end
+	 if not ok then
+	    self.subscribers[uri].connection:close()
+	    self.subscribers[uri] = nil
+	 end
       end
    end
 end

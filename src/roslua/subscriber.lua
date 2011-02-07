@@ -27,7 +27,7 @@ require("roslua.tcpros")
 
 CONNECTION_MAX_TRIES = 10
 
-Subscriber = {}
+Subscriber = {DEBUG = false}
 
 --- Constructor.
 -- Create a new subscriber instance.
@@ -170,7 +170,10 @@ function Subscriber:connect()
 	 if ok and proto then
 	    assert(proto[1] == "TCPROS", "TCPROS not supported by remote")
 
-	    --print_debug("Subscriber[%s]: Connect", self.topic)
+	    if self.DEBUG then
+	       print_debug("Subscriber[%s:%s]: Connecting to %s:%d",
+			   self.type, self.topic, proto[2], proto[3])
+	    end
 	    local c = roslua.tcpros.TcpRosPubSubConnection:new()
 	    local ok, err = pcall(c.connect, c, proto[2], proto[3])
 	    if ok then
@@ -182,14 +185,16 @@ function Subscriber:connect()
 			     md5sum=md5sum}
 	       local ok, err = pcall(c.receive_header, c)
 	       if not ok then
-		  print_warn("Subscriber[%s] -> %s:%d: Failed to received header (%s)", self.topic,
-			     proto[2], proto[3], err)
+		  print_warn("Subscriber[%s] -> %s:%d: Failed to receive header"..
+			     " (%s)", self.topic, proto[2], proto[3], err)
 	       else
 		  --print_debug("Subscriber[%s]: Received header", self.topic)
 		  if c.header.md5sum ~= md5sum then
-		     print_warn("Subscriber[%s]: received non-matching MD5 (here: %s there: %s) sum from %s, "..
+		     print_warn("Subscriber[%s]: received non-matching MD5 "..
+				"(here: %s there: %s) from %s, "..
 				"disconnecting and ignoring",
-			        self.topic, md5sum, c.header.md5sum, c.header.callerid)
+			        self.topic, md5sum, c.header.md5sum,
+			        c.header.callerid)
 		     c:close()
 		     p.num_tries = CONNECTION_MAX_TRIES
 		  else
@@ -198,12 +203,14 @@ function Subscriber:connect()
 	       end
 	    else
 	       -- Connection failed, retry in next spin
-	       print_warn("Subscriber[%s]: connection failed (%s)", self.topic, err)
+	       print_warn("Subscriber[%s]: connection failed (%s)",
+			  self.topic, err)
 	       self.connect_on_spin = true
 	    end
 	 else
 	    -- Connection parameter negotiation failed, retry in next spin
-	    --print_warn("Subscriber[%s]: parameter negotiation failed", self.topic)
+	    --print_warn("Subscriber[%s:%s]: parameter negotiation failed",
+	    --           self.type, self.topic)
 	    self.connect_on_spin = true
 	 end
       end
@@ -212,8 +219,8 @@ function Subscriber:connect()
    local remove_uris = {}
    for uri, p in pairs(self.publishers) do
       if not p.connection and p.num_tries >= CONNECTION_MAX_TRIES then
-	 print_warn("Subscriber[%s]: publisher %s connection failed %d times, dropping publisher",
-		    self.topic, uri, p.num_tries)
+	 print_warn("Subscriber[%s]: publisher %s connection failed %d times, "..
+		    "dropping publisher", self.topic, uri, p.num_tries)
 	 table.insert(remove_uris, uri)
       end
    end
