@@ -113,7 +113,11 @@ function Publisher:accept_connections()
 		 self.topic, self.type, md5sum, c.header.md5sum, c.header.callerid)
 	 c:close()
       else
-	 if self.latched and self.latched_message then
+	 if self.latching and self.latched_message then
+	    if self.DEBUG then
+	       print_warn("Publisher[%s::%s]: sending latched message",
+			  self.type, self.topic)
+	    end
 	    local ok, error = pcall(c.send, c, self.latched_message.serialized)
 	    if not ok then
 	       local ip, port = c:get_ip_port()
