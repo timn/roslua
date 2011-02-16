@@ -280,12 +280,11 @@ function xmlrpc_exports.requestTopic(caller_id, topic, protocols)
    assert(protocols, "Protocols are missing")
 
    if not roslua.publishers[topic] then
-      return rosreply_encaps(ROS_CODE_ERROR, "Topic is not published on this node", 0)
+      return rosreply_encaps(ROS_CODE_ERROR,
+			     "Topic "..topic.." is not published on this node", 0)
    end
 
-   if __DEBUG then
-      print(caller_id .. " requests topic " .. topic)
-   end
+   if __DEBUG then print(caller_id .. " requests topic " .. topic) end
 
    for _,p in ipairs(protocols) do
       if p[1] == "TCPROS" then
@@ -298,10 +297,12 @@ function xmlrpc_exports.requestTopic(caller_id, topic, protocols)
 			topic, caller_id, socket.dns.gethostname(),
 			roslua.publishers[topic].publisher.port)
 	 end
+	 if __DEBUG then print_warn("TCP ROS for topic %s", topic) end
 	 return rosreply_encaps(ROS_CODE_SUCCESS, "", xprotodef)
       end
    end
 
+   if __DEBUG then print_error("No suitable protocol for topic %s", topic) end
    return rosreply_encaps(ROS_CODE_FAILURE, "No suitable protocol found", 0)   
 end
 
