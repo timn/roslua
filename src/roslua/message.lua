@@ -466,9 +466,20 @@ function Message:set_from_array(arr)
    local i = 1
    for _, f in ipairs(self.spec.fields) do
       local ftype, fname = f.type, f.name
-      if roslua.msg_spec.is_builtin_type(ftype) then
+      if f.is_builtin then
 	 self.values[fname] = arr[f.name] or arr[i]
+      elseif f.is_array then
+	 -- complex type and array
+	 local ma = {}
+	 for _,va in ipairs(arr[fname] or arr[i]) do
+	    local ms = roslua.get_msgspec(f.base_type)
+	    local m = ms:instantiate(false)
+	    m:set_from_array(va)
+	    table.insert(ma, m)
+	 end
+	 self.values[fname] = ma
       else
+	 -- complex, but not an array
 	 local ms = roslua.get_msgspec(ftype)
 	 local m = ms:instantiate(false)
 	 m:set_from_array(arr[f.name] or arr[i])
