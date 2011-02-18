@@ -61,6 +61,13 @@ function Service:new(service, srvtype, handler)
    o.clients = {}
    o.num_calls = 0
 
+   o.is_complex = false
+   for _, f in ipairs(o.srvspec.reqspec.fields) do
+      if f.is_array or not f.is_builtin then
+	 o.is_complex = true
+      end
+   end
+
    -- connect to all publishers
    o:start_server()
 
@@ -148,15 +155,26 @@ end
 -- @param client client whose requests to process
 function Service:dispatch(client)
    for _, m in ipairs(client.connection.messages) do
-      local format, args = m:generate_value_array(false)
       local t = type(self.handler)
       local rv
-      if t == "function" then
-	 rv = self.handler(unpack(args))
-      elseif t == "table" then
-	 rv = self.handler:service_call(unpack(args))
+
+      if self.is_complex then
+	 if t == "function" then
+	    rv = self.handler(m.values)
+	 elseif t == "table" then
+	    rv = self.handler:service_call(unpack(args))
+	 else
+	    self:send_error(client.connection, "Could not handle request")
+	 end
       else
-	 self:send_error(client.connection, "Could not handle request")
+	 local format, args = m:generate_value_array(false)
+	 if t == "function" then
+	    rv = self.handler(unpack(args))
+	 elseif t == "table" then
+	    rv = self.handler:service_call(unpack(args))
+	 else
+	    self:send_error(client.connection, "Could not handle request")
+	 end
       end
 
       self:send_response(client.connection, rv)
