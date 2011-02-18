@@ -157,27 +157,33 @@ function Service:dispatch(client)
    for _, m in ipairs(client.connection.messages) do
       local t = type(self.handler)
       local rv
+      local ok
 
       if self.is_complex then
 	 if t == "function" then
-	    rv = self.handler(m.values)
+	    ok, rv = pcall(self.handler, m.values)
 	 elseif t == "table" then
-	    rv = self.handler:service_call(unpack(args))
+	    ok, rv = pcall(self.handler.service_call, self.handler, unpack(args))
 	 else
-	    self:send_error(client.connection, "Could not handle request")
+            ok = false
+            rv = "Could not handle request"
 	 end
       else
 	 local format, args = m:generate_value_array(false)
 	 if t == "function" then
-	    rv = self.handler(unpack(args))
+	    ok, rv = pcall(self.handler, unpack(args))
 	 elseif t == "table" then
-	    rv = self.handler:service_call(unpack(args))
+	    ok, rv = pcall(self.handler.service_call, self.handler, unpack(args))
 	 else
-	    self:send_error(client.connection, "Could not handle request")
+            ok = false
+            rv = "Could not handle request"
 	 end
       end
-
-      self:send_response(client.connection, rv)
+      if ok then
+         self:send_response(client.connection, rv)
+      else
+         self:send_error(client.connection, rv)
+      end
       if not client.connection.header.persistent == 1 then
 	 client.connection:close()
 	 self.clients[client.uri] = nil
