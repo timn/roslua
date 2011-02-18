@@ -316,7 +316,7 @@ function TcpRosServiceClientConnection:receive()
 
    TcpRosConnection.receive(self)
 
-   if ok_byte then
+   if ok_byte == 1 then
       local message = self.srvspec.respspec:instantiate()
       message:deserialize(self.payload)
       self.message = message
