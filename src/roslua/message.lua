@@ -103,7 +103,7 @@ function Message:deserialize(buffer)
    local i = 1
    for s in self:split_format(format) do
       l = l + #s
-      local tmpval = {struct.unpack("<!1" .. s, buffer, i)}
+      local tmpval = struct.unpack_table("<!1" .. s, buffer, i)
       i = tmpval[#tmpval]
       table.remove(tmpval)
       for _, v in ipairs(tmpval) do
