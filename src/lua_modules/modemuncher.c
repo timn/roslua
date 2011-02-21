@@ -95,7 +95,6 @@ static void modechopper(mode_t mode, char *p)
 
 static int mode_munch(mode_t *mode, const char* p)
 {
-
 	char op=0;
 	mode_t affected_bits, ch_mode;
 	int doneFlag = 0;
@@ -235,11 +234,11 @@ printf("modemuncher: doneflag = %u\n", doneFlag);
 		if (ch_mode) switch (op)
 		{
 			case '+':
-			*mode = *mode |= ch_mode & affected_bits;
+			*mode |= ch_mode & affected_bits;
 			break;
 
 			case '-':
-			*mode = *mode &= ~(ch_mode & affected_bits);
+			*mode &= ~(ch_mode & affected_bits);
 			break;
 
 			case '=':
