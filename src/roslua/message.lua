@@ -4,9 +4,9 @@
 --
 --  Created: Mon Jul 26 19:50:16 2010 (at Intel Research, Pittsburgh)
 --  License: BSD, cf. LICENSE file of roslua
---  Copyright  2010  Tim Niemueller [www.niemueller.de]
---             2010  Carnegie Mellon University
---             2010  Intel Research Pittsburgh
+--  Copyright  2010-2011  Tim Niemueller [www.niemueller.de]
+--             2010       Carnegie Mellon University
+--             2010       Intel Research Pittsburgh
 ----------------------------------------------------------------------------
 
 --- ROS message representation.
@@ -54,7 +54,7 @@ function Message:prefill()
 	    self.values[f.name] = {}
 	 elseif f.is_builtin then -- set default builtin value
 	    self.values[f.name] = self.default_values[f.type]
-	 else -- generate new complex message with no values set to trigger defaults
+	 else -- generate new complex msg with no values set to trigger defaults
 	    self.values[f.name] = f.spec:instantiate()
 	 end
       end
@@ -92,9 +92,10 @@ Message.builtin_formats = {
 -- This will deserialize the message according to the message specification.
 -- Not that it is the users obligation to make sure that the buffer is correctly
 -- typed for the message, especially that the buffer has the appropriate size.
--- @param buffer buffer that contains the message as read from the TCPROS connection
--- @param i Index from where to start parsing in the buffer, optional argument
--- that defaults to 1
+-- @param buffer buffer that contains the message as read from the
+-- TCPROS connection
+-- @param i Index from where to start parsing in the buffer, optional
+-- argument that defaults to 1
 function Message:deserialize(buffer)
    local format = self:format_string(buffer, 1, self.farray, "")
 
@@ -288,13 +289,15 @@ end
 
 
 --- Generate a value array from the stored values.
--- This is used for serialization, but also during execution of service calls.
--- @param flat_array if set to true (the default) will generate a flat array, which
--- means that the resulting value array from complex sub-messages are folded into
--- the array at the place where the field is defined. If set to false the value arrays
--- for the sub-messages are integrated verbatim as array at the appropriate
--- position.
--- @return positional array of values, output depends on flat_array param, see above.
+-- This is used for serialization, but also during execution of
+-- service calls.
+-- @param flat_array if set to true (the default) will generate a flat
+-- array, which means that the resulting value array from complex
+-- sub-messages are folded into the array at the place where the field
+-- is defined. If set to false the value arrays for the sub-messages
+-- are integrated verbatim as array at the appropriate position.
+-- @return positional array of values, output depends on flat_array
+-- param, see above.
 function Message:generate_value_array(flat_array, array)
    local rv = array or {}
    local format = ""
@@ -316,7 +319,7 @@ function Message:generate_value_array(flat_array, array)
 	    self.values[fname] = {}
 	 elseif f.is_builtin then -- set default builtin value from table
 	    self.values[fname] = self.default_values[ftype]
-	 else -- generate new complex message with no values set to trigger defaults
+	 else -- generate new complex msg with no values set to trigger defaults
 	    self.values[fname] = roslua.get_msgspec(ftype):instantiate()
 	 end
       end
@@ -324,7 +327,8 @@ function Message:generate_value_array(flat_array, array)
 
       local v, j
       if f.is_builtin and f.is_array then
-	 format = format .. "I4" .. string.rep(self.builtin_formats[ftype], #self.values[fname])
+	 format = format .. "I4"
+	    .. string.rep(self.builtin_formats[ftype], #self.values[fname])
 	 table.insert(rv, #self.values[fname])
 	 for _,v in ipairs(self.values[fname]) do
 	    if ftype == "duration" or ftype == "time" then
@@ -346,7 +350,7 @@ function Message:generate_value_array(flat_array, array)
 	       table.insert(rv, v)
 	    end
 	 end
-	    
+	 
       elseif f.is_builtin then
 	 format = format .. self.builtin_formats[ftype]
 	 if ftype == "duration" or ftype == "time" then
@@ -373,8 +377,9 @@ function Message:generate_value_array(flat_array, array)
 	 table.insert(rv, #self.values[fname])
 	 for _,v in ipairs(self.values[fname]) do
 	    if f.spec then
-	       assert(f.spec:is_instance(v), "Expected message type is " .. f.spec.type
-		   .. " but got type " .. tostring(v.type))
+	       assert(f.spec:is_instance(v),
+		      "Expected message type is " .. f.spec.type
+			 .. " but got type " .. tostring(v.type))
 	    end
 	    local f = v:generate_value_array(flat_array, rv)
 	    format = format .. f
@@ -385,8 +390,9 @@ function Message:generate_value_array(flat_array, array)
 	    if not self.values[fname] then
 	       self.values[fname] = f.spec:instantiate()
 	    end
-	    assert(f.spec:is_instance(self.values[fname]), "Expected message type is "
-		.. f.spec.type .. " but got type " .. tostring(self.values[fname].type))
+	    assert(f.spec:is_instance(self.values[fname]),
+		   "Expected message type is " .. f.spec.type
+		      .. " but got type " .. tostring(self.values[fname].type))
 	 end
 	 local f, va = self.values[fname]:generate_value_array(flat_array, rv)
 	 format = format .. f
