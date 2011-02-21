@@ -287,7 +287,7 @@ function sleep(sec_or_duration)
    end
    local end_time = Time.now() + duration
    local now = Time.now()
-   while now < end_time do
+   while not roslua.quit and now < end_time do
       spin()
       local diff = (end_time - now):to_sec()
       if diff > 0.05 then
