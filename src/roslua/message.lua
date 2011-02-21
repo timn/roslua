@@ -469,28 +469,33 @@ end
 -- values for the message (possibly recursively having arrays again).
 -- @param arr array of values
 function Message:set_from_array(arr)
-   local i = 1
-   for _, f in ipairs(self.spec.fields) do
+   for i, f in ipairs(self.spec.fields) do
       local ftype, fname = f.type, f.name
       if f.is_builtin then
-	 self.values[fname] = arr[f.name] or arr[i]
+	 self.values[fname] = arr[fname] or arr[i]
       elseif f.is_array then
 	 -- complex type and array
 	 local ma = {}
-	 for _,va in ipairs(arr[fname] or arr[i]) do
-	    local ms = roslua.get_msgspec(f.base_type)
-	    local m = ms:instantiate(false)
-	    m:set_from_array(va)
-	    table.insert(ma, m)
-	 end
-	 self.values[fname] = ma
+         if not arr[fname] and not arr[i] then
+            self.values[fname] = {}
+         else
+	    local a = arr[fname] or arr[i] or {}
+	    if a then
+	       for _,va in ipairs(a) do
+		  local ms = roslua.get_msgspec(f.base_type)
+		  local m = ms:instantiate(false)
+		  m:set_from_array(va)
+		  table.insert(ma, m)
+	       end
+	       self.values[fname] = ma
+	    end
+         end
       else
 	 -- complex, but not an array
 	 local ms = roslua.get_msgspec(ftype)
 	 local m = ms:instantiate(false)
-	 m:set_from_array(arr[f.name] or arr[i])
+	 m:set_from_array(arr[fname] or arr[i] or {})
 	 self.values[fname] = m
       end
-      i = i + 1
    end
 end
