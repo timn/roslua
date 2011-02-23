@@ -71,7 +71,9 @@ function ServiceClient:new(args_or_service, srvtype)
    assert(o.type, "Service type is missing")
 
    if o.persistent then
-      o:connect()
+      -- we don't care if it fails, we'll try again when the service is
+      -- actually called, hence wrap in pcall.
+      pcall(o.connect, o)
    end
 
    return o
