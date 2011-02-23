@@ -310,7 +310,7 @@ function TcpRosServiceClientConnection:receive()
    -- get OK-byte
    local ok, ok_byte_d, err = pcall(self.socket.receive, self.socket, 1)
    if not ok or ok_byte_d == nil then
-      error(err, (err == "closed") and 0)
+      error("Reading OK byte failed: " .. err, (err == "closed") and 0)
    end
    local ok_byte = struct.unpack("<!1I1", ok_byte_d)
 
@@ -321,6 +321,10 @@ function TcpRosServiceClientConnection:receive()
       message:deserialize(self.payload)
       self.message = message
    else
-      error(self.payload, 0)
+      if #self.payload > 0 then
+         error("Service execution failed: " .. self.payload, 0)
+      else
+         error("Service execution failed (no error message received)")
+      end
    end
 end
