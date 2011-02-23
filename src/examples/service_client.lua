@@ -18,10 +18,14 @@ local srvtype = "rospy_tutorials/AddTwoInts"
 math.randomseed(os.time())
 local a, b = math.random(1000), math.random(1000)
 
-local s = roslua.service_client(service, srvtype)
-local res = s{a, b}
+local s = roslua.service_client(service, srvtype, {simplified_return=true})
+local ok, res = pcall(s, {a, b})
 
-print(a .. " + " .. b .. " = " .. res)
+if ok then
+   print(a .. " + " .. b .. " = " .. res)
+else
+   printf("Service execution failed: %s", res)
+end
 
 roslua.finalize()
 

@@ -17,7 +17,7 @@ local srvtype = "rospy_tutorials/AddTwoInts"
 
 function add_two_ints(a, b)
    -- Randomly fail to show and test error handling
-   if math.random() < 0.3 then error("Failed") end
+   if math.random() < 0.3 then error("Failed on purpose") end
    print(a .. " + " .. b .. " = " .. a+b)
    return { a + b }
 end
