@@ -161,8 +161,13 @@ function ServiceClient:concexec_succeeded()
 
    if not self.finished then
       if self.connection:data_available() then
-	 self.finished = true
-	 pcall(self.connection.receive, self.connection)
+	 local ok, err = pcall(self.connection.receive, self.connection)
+         if ok then
+	          self.finished = true
+         else
+	          self.concexec_error = "Receiving result failed: " .. err
+            self._concexec_failed = true
+         end
       end
    end
    return self.finished
@@ -200,9 +205,8 @@ function ServiceClient:concexec_result()
 
    self.running = false
 
-   if not message then
-      return
-   elseif self.simplified_return then
+   assert(message, "Service "..self.service.." ("..self.type..") no result received")
+   if self.simplified_return then
      local _, rv = message:generate_value_array(false)
      return unpack(rv)
    else
