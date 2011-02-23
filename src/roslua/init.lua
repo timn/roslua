@@ -441,8 +441,17 @@ end
 -- new creation request.
 -- @param service name of the requested service
 -- @param type type of service
--- @param persistent true to request a persistent connection to the service
+-- @param options a table defining additional for the service. The possible
+-- valid fields are:
+-- persistent: true to request a persistent connection to the service
+-- simplified_return: true, to make the return value the unpacked array of the
+-- returned message. This is useful for services which have a small return
+-- value, e.g. just a boolean success flag or a few simple values. Note that
+-- complex types will be flattened in the return value.
 -- @see ServiceClient
-function service_client(service, type, persistent)
-   return ServiceClient:new{service, type, persistent=persistent}
+function service_client(service, type, options)
+   return ServiceClient:new{service, type,
+			    persistent=options.persistent,
+			    simplified_return=options.simplified_return}
 end
+

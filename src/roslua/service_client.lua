@@ -54,6 +54,7 @@ function ServiceClient:new(args_or_service, srvtype)
       o.service    = args_or_service[1] or args_or_service.service
       lsrvtype     = args_or_service[2] or args_or_service.type
       o.persistent = args_or_service.persistent
+      o.simplified_return = args_or_service.simplified_return
    else
       o.service    = args_or_service
       lsrvtype     = srvtype
@@ -191,17 +192,21 @@ function ServiceClient:concexec_result()
    assert(self.concurrent, "Service "..self.service.." ("..self.type..") is not executed concurrently")
    assert(self:concexec_succeeded(), "Service "..self.service.." ("..self.type..") is not finished")
 
-   if self.connection.message then
-      local _, rv = self.connection.message:generate_value_array(false)
-      if #rv == 1 then
-	 rv = rv[1]
-      end
-   end
-
-   self.running = false
+   local message = self.connection.message
    if not self.persistent then
       self.connection:close()
       self.connection = nil
+   end
+
+   self.running = false
+
+   if not message then
+      return
+   elseif self.simplified_return then
+     local _, rv = message:generate_value_array(false)
+     return unpack(rv)
+   else
+     return message
    end
 end
 
@@ -234,10 +239,7 @@ function ServiceClient:execute(args)
    self.connection:send(m)
    self.connection:wait_for_message()
 
-   local _, rv = self.connection.message:generate_value_array(false)
-   if #rv == 1 then
-      rv = rv[1]
-   end
+   local message = self.connection.message
 
    if not self.persistent then
       self.connection:close()
@@ -245,5 +247,12 @@ function ServiceClient:execute(args)
    end
 
    self.running = false
-   return rv
+
+   if self.simplified_return then
+     local _, rv = message:generate_value_array(false)
+     return unpack(rv)
+   else
+     return message
+   end
 end
+
