@@ -222,8 +222,10 @@ end
 -- be closed even if it is marked persistent. It will be reopened on the next call.
 function ServiceClient:concexec_abort()
    self.running = false
-   self.connection:close()
-   self.connection = nil
+   if not self.persistent then
+      self.connection:close()
+      self.connection = nil
+   end
 end
 
 --- Execute service.
