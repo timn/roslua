@@ -115,8 +115,9 @@ function Message:deserialize(buffer)
 end
 
 --- Format splitting iterator.
--- Splits the struct format after 200 characters (202 if a string definition
--- would be split otherwise).
+-- Splits the struct format after 200 characters (up to 202 if a string
+-- definition would otherwise be illegal, e.g. a 'c' not followed by a 0, or
+-- an i/I without the number of bytes).
 -- @param format format to split
 -- @return iterator function
 function Message:split_format(format)
@@ -134,6 +135,12 @@ function Message:split_format(format)
 		if format:sub(l, l+1) == "c0" then
 		   f = f .. format:sub(l, l+1)
 		   l = l + 2
+                else
+                   local last = format:sub(l-1,l-1)
+                   if last == "i" or last == "I" or last == "c" then
+                      f = f .. format:sub(l,l)
+                      l = l + 1
+                   end
 		end
 		return f
 	     end
