@@ -21,6 +21,7 @@ require("roslua")
 subscribers = {}
 publishers  = {}
 services    = {}
+timers      = {}
 
 --- Register subscriber.
 -- As a side effect registers the subscriber with the master.
@@ -126,4 +127,24 @@ function unregister_service(service, type, provider)
 
    roslua.master:unregisterService(service, roslua.services[service].provider:uri())
    roslua.services[service] = nil
+end
+
+
+--- Register timer.
+-- @param timer timer to register
+-- @see Timer
+function register_timer(timer)
+   assert(not roslua.timers[timer], "Timer has already been registerd")
+
+   roslua.timers[timer] = timer
+end
+
+
+--- Unregister timer
+-- @param timer timer to unregister
+-- @see Timer
+function unregister_timer(timer)
+   assert(roslua.timers[timer], "Timer has not been registered")
+
+   roslua.timers[timer] = nil
 end

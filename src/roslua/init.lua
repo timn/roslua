@@ -39,6 +39,7 @@ require("roslua.service")
 require("roslua.service_client")
 require("roslua.registry")
 require("roslua.time")
+require("roslua.timer")
 require("roslua.logging")
 require("roslua.logging.rosout")
 
@@ -59,6 +60,7 @@ Service = roslua.service.Service
 ServiceClient = roslua.service_client.ServiceClient
 Time = roslua.time.Time
 Duration = roslua.time.Duration
+Timer = roslua.timer.Timer
 
 --- Get message specification.
 -- @name get_msgspec
@@ -78,6 +80,7 @@ get_srvspec = roslua.srv_spec.get_srvspec
 subscribers   = roslua.registry.subscribers
 publishers    = roslua.registry.publishers
 services      = roslua.registry.services
+timers        = roslua.registry.timers
 
 local slave_proxies = {}
 local spinners = {}
@@ -229,6 +232,10 @@ function finalize()
       s.provider:finalize()
       roslua.registry.unregister_service(service, s.type, s.provider)
    end
+   for _,t in pairs(roslua.timers) do
+      t:finalize()
+      roslua.registry.unregister_timer(t)
+   end
    local fcopy = {}
    for i, f in ipairs(finalizers) do
       fcopy[i] = f
@@ -348,6 +355,9 @@ function spin()
    end
    --tracked_times.providers.endtime = roslua.Time.now()
 
+   for _,t in pairs(roslua.timers) do
+      t:spin()
+   end
 
    --*** Spin all registered spinners
    -- work on a copy of the list as the list might change while we run the
@@ -472,3 +482,15 @@ function service_client(service, type, options)
    return ServiceClient:new(o)
 end
 
+
+--- Create timer.
+-- Creates a timer and registers it for execution.
+-- @param interval minimum time between invocations, i.e. the desired
+-- time interval between invocations. Either a number, which is considered
+-- as time in seconds, or an instance of Duration.
+-- @param callback function to execute when the timer is due
+function timer(interval, callback)
+   local t = Timer:new(interval, callback)
+   roslua.registry.register_timer(t)
+   return t
+end
