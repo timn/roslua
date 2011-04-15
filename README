@@ -20,6 +20,10 @@ coming from external Lua modules written in Lua and C
 and unpacking of data of the TCPROS protocol, XML parsing, HTTP web
 server etc.).
 
+The original client library roslua has been written during an
+internship at Intel Labs Pittsburgh by Tim Niemueller. It continues to
+be used and developed at Intel Labs Pittsburgh. Current development is
+sponsored by SRI International.
 
 Notable differences
 -------------------
@@ -64,8 +68,7 @@ likely not work.
 - Lua Signal 1.0.0		http://luaforge.net/projects/luasignal/
 
 roslua comes with a rosdep file with the requirements that can be
-provided by the operating system (only Ubuntu for now, Fedora is
-mentioned but some more packages need to be pushed first).
+provided by the operating system (Ubuntu and Fedora in particular).
 
 
 Additional notes

@@ -4,9 +4,10 @@
 --
 --  Created: Fri Jul 16 17:29:03 2010 (at Intel Research, Pittsburgh)
 --  License: BSD, cf. LICENSE file of roslua
---  Copyright  2010  Tim Niemueller [www.niemueller.de]
---             2010  Carnegie Mellon University
---             2010  Intel Research Pittsburgh
+--  Copyright  2010-2011  Tim Niemueller [www.niemueller.de]
+--             2010-2011  Carnegie Mellon University
+--             2010-2011  Intel Labs Pittsburgh
+--             2011       SRI International
 ----------------------------------------------------------------------------
 
 --- ROS language binding for Lua.
@@ -14,7 +15,8 @@
 -- ROS nodes in the Lua programming language. It supports subscribing to
 -- and publishing topics, providing and calling services, and interacts with
 -- the standard ROS tools to provide introspection information.
--- @copyright Tim Niemueller, Carnegie Mellon University, Intel Research Pittsburgh
+-- @copyright Tim Niemueller, Carnegie Mellon University, Intel Labs Pittsburgh,
+-- SRI International
 -- @release Released under BSD license
 module("roslua", package.seeall)
 

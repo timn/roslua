@@ -98,6 +98,10 @@
 	</li>
 
 	<li>
+		<a href="../modules/roslua.timer.html">roslua.timer</a>
+	</li>
+
+	<li>
 		<a href="../modules/roslua.utils.html">roslua.utils</a>
 	</li>
 
@@ -147,6 +151,11 @@
 	</tr>
 
 	<tr>
+	<td class="name" nowrap><a href="#register_timer">register_timer</a>&nbsp;(timer)</td>
+	<td class="summary">Register timer.</td>
+	</tr>
+
+	<tr>
 	<td class="name" nowrap><a href="#unregister_publisher">unregister_publisher</a>&nbsp;(topic, type, publisher)</td>
 	<td class="summary">Unregister publisher.</td>
 	</tr>
@@ -159,6 +168,11 @@
 	<tr>
 	<td class="name" nowrap><a href="#unregister_subscriber">unregister_subscriber</a>&nbsp;(topic, type, subscriber)</td>
 	<td class="summary">Unregister subscriber.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#unregister_timer">unregister_timer</a>&nbsp;(timer)</td>
+	<td class="summary">Unregister timer </td>
 	</tr>
 
 </table>
@@ -311,6 +325,41 @@ Register subscriber. As a side effect registers the subscriber with the master.
 
 
 
+<dt><a name="register_timer"></a><strong>register_timer</strong>&nbsp;(timer)</dt>
+<dd>
+Register timer.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  timer: timer to register
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+<h3>See also:</h3>
+<ul>
+	
+	<li><a href="">
+		Timer
+	</a>
+	
+</ul>
+
+</dd>
+
+
+
+
 <dt><a name="unregister_publisher"></a><strong>unregister_publisher</strong>&nbsp;(topic, type, publisher)</dt>
 <dd>
 Unregister publisher. As a side effect unregisters the publisher with the master.
@@ -435,6 +484,41 @@ Unregister subscriber. As a side effect unregisters the subscriber with the mast
 	
 	<li><a href="">
 		Subscriber
+	</a>
+	
+</ul>
+
+</dd>
+
+
+
+
+<dt><a name="unregister_timer"></a><strong>unregister_timer</strong>&nbsp;(timer)</dt>
+<dd>
+Unregister timer
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  timer: timer to unregister
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+<h3>See also:</h3>
+<ul>
+	
+	<li><a href="">
+		Timer
 	</a>
 	
 </ul>
