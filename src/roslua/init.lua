@@ -259,15 +259,27 @@ function run(loop_frequency)
    else -- if loop_frequency > 0 then
       spin_time = 1. / loop_frequency
    end
+   local last_spin_start = nil
    while not roslua.quit do
       local spin_start = roslua.Time.now()
       roslua.spin()
       local spin_end   = roslua.Time.now()
       local spin_runtime   = (spin_end - spin_start):to_sec()
-      local time_remaining = spin_time - spin_runtime
-      if time_remaining > 0 then
-	 sleep(time_remaining)
+
+      -- take overlong loop times into account
+      local adjustment = 0
+      if last_spin_start ~= nil then
+	 adjustment = (spin_start - last_spin_start - spin_time):to_sec()
+	 -- We only want positive adjustments. For one to guarantee that the
+	 -- loop time is the minimum loop time and for another because negative
+	 -- times have shown a more negative impact in experiments
+	 if adjustment < 0 then adjustment = 0 end
       end
+
+      local time_remaining = spin_time - spin_runtime - adjustment
+      last_spin_start = spin_start
+
+      if time_remaining > 0 then sleep(time_remaining) end
    end
    roslua.finalize()
 end
