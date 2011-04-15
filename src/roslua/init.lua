@@ -145,8 +145,8 @@ function init_node(args)
       roslua.logging.add_logger(roslua.logging.rosout.get_logger())
    end
 
-   if roslua.parameter_server:has_param("/use_sim_time parameter") then
-      local use_sim_time = roslua.parameter_server:get_param("/use_sim_time parameter")
+   if roslua.parameter_server:has_param("/use_sim_time") then
+      local use_sim_time = roslua.parameter_server:get_param("/use_sim_time")
       if use_sim_time then
 	 roslua.time.init_simtime()
       end
@@ -392,11 +392,12 @@ end
 -- @param topic name of topic to request subscriber for
 -- @param type type of topic
 -- @return Subscriber instance for the requested topic
--- @see Publisher
+-- @see Subscriber
 function subscriber(topic, type)
    if not roslua.subscribers[topic] then
       local s = Subscriber:new(topic, type)
-      roslua.registry.register_subscriber(topic, s.type, s) -- this sets subscribers table entry
+      -- the following sets subscribers table entry
+      roslua.registry.register_subscriber(topic, s.type, s)
    end
    return roslua.subscribers[topic].subscriber
 end
@@ -412,7 +413,8 @@ end
 function publisher(topic, type)
    if not roslua.publishers[topic] then
       local p = Publisher:new(topic, type)
-      roslua.registry.register_publisher(topic, p.type, p) -- this sets publishers table entry
+      -- the following sets publishers table entry
+      roslua.registry.register_publisher(topic, p.type, p)
    end
    return roslua.publishers[topic].publisher
 end
