@@ -42,12 +42,15 @@ function Subscriber:new(topic, type)
    if roslua.msg_spec.is_msgspec(type) then
       o.type    = type.type
       o.msgspec = type
-   else
+   elseif _G.type(type) == "string" then
       o.type    = type
       o.msgspec = roslua.get_msgspec(type)
+   else
+      error("Subscriber: topic type must be a string or message spec")
    end
-   assert(o.topic, "Topic name is missing")
-   assert(o.type, "Topic type is missing")
+   assert(o.type, "Subscriber: topic type is missing")
+   assert(o.topic, "Subscriber: topic name is missing")
+   assert(_G.type(o.topic) == "string", "Subscriber: topic name must be a string")
 
    o.publishers = {}
    o.listeners  = {}

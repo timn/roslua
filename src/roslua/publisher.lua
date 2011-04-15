@@ -40,12 +40,15 @@ function Publisher:new(topic, type)
    if roslua.msg_spec.is_msgspec(type) then
       o.type    = type.type
       o.msgspec = type
-   else
+   elseif _G.type(type) == "string" then
       o.type    = type
       o.msgspec = roslua.get_msgspec(type)
+   else
+      error("Publisher: topic type must be a string or message spec")
    end
-   assert(o.topic, "Topic name is missing")
-   assert(o.type, "Topic type is missing")
+   assert(o.type, "Publisher: topic type is missing")
+   assert(o.topic, "Publisher: topic name is missing")
+   assert(_G.type(o.topic) == "string", "Publisher: topic name must be a string")
 
    o.subscribers = {}
 
