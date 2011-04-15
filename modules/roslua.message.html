@@ -98,6 +98,10 @@
 	</li>
 
 	<li>
+		<a href="../modules/roslua.timer.html">roslua.timer</a>
+	</li>
+
+	<li>
 		<a href="../modules/roslua.utils.html">roslua.utils</a>
 	</li>
 
@@ -457,7 +461,7 @@ Set message values from array. Set the values field from the given array. Assume
 
 <dt><a name="Message:split_format"></a><strong>Message:split_format</strong>&nbsp;(format)</dt>
 <dd>
-Format splitting iterator. Splits the struct format after 200 characters (202 if a string definition would be split otherwise).
+Format splitting iterator. Splits the struct format after 200 characters (up to 202 if a string definition would otherwise be illegal, e.g. a 'c' not followed by a 0, or an i/I without the number of bytes).
 
 
 <h3>Parameters</h3>

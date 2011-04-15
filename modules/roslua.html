@@ -98,6 +98,10 @@
 	</li>
 
 	<li>
+		<a href="../modules/roslua.timer.html">roslua.timer</a>
+	</li>
+
+	<li>
 		<a href="../modules/roslua.utils.html">roslua.utils</a>
 	</li>
 
@@ -121,7 +125,7 @@
 <p>ROS language binding for Lua. This module and its sub-modules provides the necessary tools to write ROS nodes in the Lua programming language. It supports subscribing to and publishing topics, providing and calling services, and interacts with the standard ROS tools to provide introspection information.</p>
 
 
-<p>Copyright&copy; Tim Niemueller, Carnegie Mellon University, Intel Research Pittsburgh</p>
+<p>Copyright&copy; Tim Niemueller, Carnegie Mellon University, Intel Labs Pittsburgh, SRI International</p>
 
 
 <p><small><b>Release:</b> Released under BSD license</small></p>
@@ -159,6 +163,11 @@
 	<tr>
 	<td class="name" nowrap><a href="#get_msgspec">get_msgspec</a>&nbsp;(msg_type)</td>
 	<td class="summary">Get message specification.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#get_name">get_name</a>&nbsp;()</td>
+	<td class="summary">Get node name.</td>
 	</tr>
 
 	<tr>
@@ -202,7 +211,7 @@
 	</tr>
 
 	<tr>
-	<td class="name" nowrap><a href="#service_client">service_client</a>&nbsp;(service, type, persistent)</td>
+	<td class="name" nowrap><a href="#service_client">service_client</a>&nbsp;(service, type, options)</td>
 	<td class="summary">Get a service client.</td>
 	</tr>
 
@@ -214,6 +223,11 @@
 	<tr>
 	<td class="name" nowrap><a href="#subscriber">subscriber</a>&nbsp;(topic, type)</td>
 	<td class="summary">Get a new subscriber for a topic.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#timer">timer</a>&nbsp;(interval, callback)</td>
+	<td class="summary">Create timer.</td>
 	</tr>
 
 </table>
@@ -371,6 +385,26 @@ Get message specification.
 
 
 
+
+
+
+</dd>
+
+
+
+
+<dt><a name="get_name"></a><strong>get_name</strong>&nbsp;()</dt>
+<dd>
+Get node name.
+
+
+
+
+
+
+
+<h3>Return value:</h3>
+node name
 
 
 
@@ -639,7 +673,7 @@ Service instance for the requested service
 
 
 
-<dt><a name="service_client"></a><strong>service_client</strong>&nbsp;(service, type, persistent)</dt>
+<dt><a name="service_client"></a><strong>service_client</strong>&nbsp;(service, type, options)</dt>
 <dd>
 Get a service client. Request the creation of a new service client to access a ROS service. Service clients are not cached and a new client is created for every new creation request.
 
@@ -656,7 +690,7 @@ Get a service client. Request the creation of a new service client to access a R
 	</li>
 	
 	<li>
-	  persistent: true to request a persistent connection to the service
+	  options: a table defining additional for the service. The possible valid fields are: persistent: true to request a persistent connection to the service simplified_return: true, to make the return value the unpacked array of the returned message. This is useful for services which have a small return value, e.g. just a boolean success flag or a few simple values. Note that complex types will be flattened in the return value.
 	</li>
 	
 </ul>
@@ -744,10 +778,40 @@ Subscriber instance for the requested topic
 <ul>
 	
 	<li><a href="">
-		Publisher
+		Subscriber
 	</a>
 	
 </ul>
+
+</dd>
+
+
+
+
+<dt><a name="timer"></a><strong>timer</strong>&nbsp;(interval, callback)</dt>
+<dd>
+Create timer. Creates a timer and registers it for execution.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  interval: minimum time between invocations, i.e. the desired time interval between invocations. Either a number, which is considered as time in seconds, or an instance of Duration.
+	</li>
+	
+	<li>
+	  callback: function to execute when the timer is due
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
 
 </dd>
 

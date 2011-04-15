@@ -1,0 +1,249 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../luadoc.css" type="text/css" />
+	<!--meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/-->
+</head>
+
+<body>
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b>roslua: ROS client library for Lua</b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+<div id="main">
+
+<div id="navigation">
+
+
+<h1>roslua</h1>
+
+<ul>
+	
+	<li><a href="../index.html">Index</a></li>
+	
+</ul>
+
+
+<!-- Module list -->
+
+<h1>Modules</h1>
+<ul>
+
+	<li>
+		<a href="../modules/roslua.html">roslua</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.logging.html">roslua.logging</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.master_proxy.html">roslua.master_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.message.html">roslua.message</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.msg_spec.html">roslua.msg_spec</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.param_proxy.html">roslua.param_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.publisher.html">roslua.publisher</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.registry.html">roslua.registry</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.service.html">roslua.service</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.service_client.html">roslua.service_client</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.slave_api.html">roslua.slave_api</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.slave_proxy.html">roslua.slave_proxy</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.srv_spec.html">roslua.srv_spec</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.subscriber.html">roslua.subscriber</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.tcpros.html">roslua.tcpros</a>
+	</li>
+
+	<li>
+		<a href="../modules/roslua.time.html">roslua.time</a>
+	</li>
+
+	<li><strong>roslua.timer</strong></li>
+	
+	<li>
+		<a href="../modules/roslua.utils.html">roslua.utils</a>
+	</li>
+
+</ul>
+
+
+
+<!-- File list -->
+
+
+
+
+
+
+</div><!-- id="navigation" -->
+
+<div id="content">
+
+<h1>Module <code>roslua.timer</code></h1>
+
+<p>Timer. This module contains the Timer class for periodical execution of a function. A time period is given, in which the function should be executed. Due to the nature of Lua, especially because it is inherently single-threaded, the times cannot be guaranteed, rather, a minimum time between calls to the function is defined. <br /><br /> During spinning the all timers are evaluated and executed if the minimum time has gone by. Make sure that timer callbacks are functions that run quickly and have a very short duration as not to influence the overall system performance negatively. <br /><br /> The rate at which the spinning function is called defines the minimum period for which timers can be called somewhat accurately. For example, if the roslua.spin() function is called once every 30ms, then these 30ms are the very minimum duration of a timer, a shorter time is not possible. You will see increasing offsets between the current_expected and current_real times which will periodically get small once the offset approaches half the spinning time. <br /><br /> The callback is invoked with a table as parameter of the following entries: * last_expected     Time when the last callback should have happened * last_real         Time when the last callback actually happened * current_expected  Time when the current callback should have happened * current_real      Time at the start of the current execution * last_duration     Time in seconds the last callback ran </p>
+
+
+<p>Copyright&copy; Tim Niemueller, SRI International, Carnegie Mellon University, Intel Labs Pittsburgh</p>
+
+
+<p><small><b>Release:</b> Released under BSD license</small></p>
+
+
+
+<h2>Functions</h2>
+<table class="function_list">
+
+	<tr>
+	<td class="name" nowrap><a href="#Timer:finalize">Timer:finalize</a>&nbsp;()</td>
+	<td class="summary">Finalize instance.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Timer:new">Timer:new</a>&nbsp;(period, callback)</td>
+	<td class="summary">Constructor.</td>
+	</tr>
+
+	<tr>
+	<td class="name" nowrap><a href="#Timer:spin">Timer:spin</a>&nbsp;()</td>
+	<td class="summary">Check time and execute callback if due.</td>
+	</tr>
+
+</table>
+
+
+
+
+
+
+<br/>
+<br/>
+
+
+
+<h2><a name="functions"></a>Functions</h2>
+<dl class="function">
+
+
+
+<dt><a name="Timer:finalize"></a><strong>Timer:finalize</strong>&nbsp;()</dt>
+<dd>
+Finalize instance.
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Timer:new"></a><strong>Timer:new</strong>&nbsp;(period, callback)</dt>
+<dd>
+Constructor. Create a new Timer instance.
+
+
+<h3>Parameters</h3>
+<ul>
+	
+	<li>
+	  period: minimum time between invocations, i.e. the desired time interval between invocations. Either a number, which is considered as time in seconds, or an instance of Duration.
+	</li>
+	
+	<li>
+	  callback: function to execute when the timer is due
+	</li>
+	
+</ul>
+
+
+
+
+
+
+
+
+</dd>
+
+
+
+
+<dt><a name="Timer:spin"></a><strong>Timer:spin</strong>&nbsp;()</dt>
+<dd>
+Check time and execute callback if due.
+
+
+
+
+
+
+
+
+
+</dd>
+
+
+</dl>
+
+
+
+
+
+
+</div> <!-- id="content" -->
+
+</div> <!-- id="main" -->
+
+<div id="about">
+	<p><a href="http://validator.w3.org/check?uri=referer"><img src="http://www.w3.org/Icons/valid-xhtml10" alt="Valid XHTML 1.0!" height="31" width="88" /></a></p>
+</div> <!-- id="about" -->
+
+</div> <!-- id="container" -->	
+</body>
+</html>
