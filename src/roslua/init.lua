@@ -407,6 +407,12 @@ function get_slave_proxy(uri)
    return slave_proxies[uri]
 end
 
+--- Get node name.
+-- @return node name
+function get_name()
+   return roslua.node_name
+end
+
 --- Get a new subscriber for a topic.
 -- Request the creation of a subscriber for a specific topic. Subscribers are
 -- maintained in a cache, and for any one topic there is always at most one
