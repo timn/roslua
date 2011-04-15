@@ -4,9 +4,10 @@
 --
 --  Created: Mon Aug 09 14:11:59 2010 (at Intel Research, Pittsburgh)
 --  License: BSD, cf. LICENSE file of roslua
---  Copyright  2010  Tim Niemueller [www.niemueller.de]
---             2010  Carnegie Mellon University
---             2010  Intel Research Pittsburgh
+--  Copyright  2010-2011  Tim Niemueller [www.niemueller.de]
+--             2010-2011  Carnegie Mellon University
+--             2010-2011  Intel Labs Pittsburgh
+--             2011       SRI International
 ----------------------------------------------------------------------------
 
 --- Time utility class for roslua.
@@ -161,9 +162,13 @@ function Time.__add(t1, t2)
       local n = math.floor(t2)
       t.sec  = t1.sec  + n
       t.nsec = t1.nsec + math.floor((t2 - n) * 1000000000)
-   else
+
+   elseif Duration.is_instance(t2) then
       t.sec  = t1.sec + t2.sec
       t.nsec = t1.nsec + t2.nsec
+
+   else
+      error("Unsupported type " .. type(t2) .. " for t2 when adding times")
    end
    if t.nsec > 1000000000 then
       local n = math.floor(t.nsec / 1000000000)
@@ -179,15 +184,34 @@ end
 -- @param t2 time or duration to subtract
 -- @return new time instance for the result of t1 - t2
 function Time.__sub(t1, t2)
-   local t = Time:new()
-   t.sec = t1.sec - t2.sec
-   t.nsec = t1.nsec - t2.nsec
-   if t.nsec < 0 then
-      local n = math.floor(-t.nsec / 1000000000)
-      t.sec  = t.sec  - n
-      t.nsec = t.nsec + n * 1000000000
+   local rv
+
+   if type(t2) == "number" then
+      local n = math.floor(t2)
+      local sec  = t1.sec  - n
+      local nsec = t1.nsec - math.floor((t2 - n) * 1000000000)
+      rv = Time:new(sec, nsec)
+
+   elseif Duration.is_instance(t2) then
+      local sec  = t1.sec - t2.sec
+      local nsec = t1.nsec - t2.nsec
+      rv = Time:new(sec, nsec)
+
+   elseif Time.is_instance(t2) then
+      local sec  = t1.sec - t2.sec
+      local nsec = t1.nsec - t2.nsec
+      rv = Duration:new(sec, nsec)
+
+   else
+      error("Unsupported type " .. type(t2) .. " for t2 when subtracting times")
    end
-   return t
+
+   if rv.nsec < 0 then
+      local n = math.floor(-rv.nsec / 1000000000)
+      rv.sec  = rv.sec  - n
+      rv.nsec = rv.nsec + n * 1000000000
+   end
+   return rv
 end
 
 
@@ -220,12 +244,8 @@ end
 -- @param t time to convert
 -- @return string representing this time
 function Time.__tostring(t)
-   if t.sec < 1000000000 then
-      return string.format("%9d.%09d", t.sec, t.nsec)
-   else
-      local tm = posix.localtime(t.sec)
-      return string.format("%s.%09d", posix.strftime("%H:%M:%S", tm), t.nsec)
-   end
+   local tm = posix.localtime(t.sec)
+   return string.format("%s.%09d", posix.strftime("%H:%M:%S", tm), t.nsec)
 end
 
 --- Format time as string.
@@ -326,13 +346,15 @@ end
 -- @return new duration instance with the sum of d1 and d2
 function Duration.__add(d1, d2)
    local d = Duration:new()
-   if type(t2) == "number" then
-      local n = math.floor(t2)
+   if type(d2) == "number" then
+      local n = math.floor(d2)
       d.sec  = d1.sec + n
-      d.nsec = d1.nsec + math.floor((t2 - n) * 1000000000)
-   else
+      d.nsec = d1.nsec + math.floor((d2 - n) * 1000000000)
+   elseif Duration.is_instance(d2) then
       d.sec  = d1.sec + d2.sec
       d.nsec = d1.nsec + d2.nsec
+   else
+      error("Unsupported type " .. type(d2) .. " for d2 when adding durations")
    end
    if d.nsec > 1000000000 then
       local n = math.floor(d.nsec / 1000000000)
@@ -348,15 +370,28 @@ end
 -- @param d2 duration to subtract
 -- @return new duration instance for the result of d1 - d2
 function Duration.__sub(d1, d2)
-   local t = Duration:new()
-   t.sec = d1.sec - d2.sec
-   t.nsec = d1.nsec - d2.nsec
-   if t.nsec < 0 then
-      local n = math.floor(-t.nsec / 1000000000)
-      t.sec  = t.sec  - n
-      t.nsec = t.nsec + n * 1000000000
+   local d = Duration:new()
+
+   if type(d2) == "number" then
+      local n = math.floor(d2)
+      d.sec  = d1.sec - n
+      d.nsec = d1.nsec - math.floor((d2 - n) * 1000000000)
+
+   elseif Duration.is_instance(d2) then
+      d.sec = d1.sec - d2.sec
+      d.nsec = d1.nsec - d2.nsec
+
+   else
+      error("Unsupported type " .. type(d2) .. " for d2 when "..
+	    "subtracting durations")
    end
-   return t
+
+   if d.nsec < 0 then
+      local n = math.floor(-d.nsec / 1000000000)
+      d.sec  = d.sec  - n
+      d.nsec = d.nsec + n * 1000000000
+   end
+   return d
 end
 
 
