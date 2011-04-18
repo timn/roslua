@@ -47,6 +47,35 @@ function Message:new(spec, no_prefill)
 end
 
 
+--- Clone this message.
+-- This creates a new message and copies the values array to it. The method
+-- recursively clones complex sub-type values.
+function Message:clone()
+   local m = Message:new(self.spec, true)
+   for _, f in ipairs(self.spec.fields) do
+      if f.is_array then
+	 local t = {}
+	 if f.is_builtin then
+	    -- simply copy array
+	    for i, v in ipairs(self.values[f.name]) do
+	       t[i] = v
+	    end
+	 else
+	    for i, v in ipairs(self.values[f.name]) do
+	       t[i] = v:clone()
+	    end
+	 end
+	 m.values[f.name] = t
+      else
+	 if f.is_builtin then
+	    m.values[f.name] = self.values[f.name]
+	 else
+	    m.values[f.name] = self.values[f.name]:clone()
+	 end
+      end
+   end
+end
+
 function Message:prefill()
    for _, f in ipairs(self.spec.fields) do
       if not self.values[f.name] then
