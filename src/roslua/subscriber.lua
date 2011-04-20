@@ -121,8 +121,13 @@ function Subscriber:update_publishers(publishers, connect_now)
    for _, uri in ipairs(publishers) do
       pub_rev[uri] = true
       if not self.publishers[uri] then
-	 self.publishers[uri] = { uri = uri, num_tries = 0 }
-	 self.connect_on_spin = true
+	 if roslua.slave_uri == uri then
+	    print_warn("Subscriber[%s:%s]: removing ourselves from list of "..
+		       "publishers", self.type, self.topic)
+	 else
+	    self.publishers[uri] = { uri = uri, num_tries = 0 }
+	    self.connect_on_spin = true
+	 end
       end
    end
    local remove_pubs = {}
