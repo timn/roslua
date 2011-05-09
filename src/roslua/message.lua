@@ -78,6 +78,42 @@ function Message:clone()
    return m
 end
 
+
+--- Copy values from message.
+-- This method takes another message of the same type and copies all values
+-- from that message to this message. An error is raised if the message types
+-- do not match. This method checks values on the other message and only copies
+-- non-nil values. It might be a good idea to prefill or erase all values
+-- if you want to detect unset values.
+function Message:copy(message)
+   for _, f in ipairs(self.spec.fields) do
+      if message.values[f.name] ~= nil then
+	 if f.is_array then
+	    local t = {}
+	    if f.is_builtin then
+	       -- simply copy array
+	       for i, v in ipairs(self.values[f.name]) do
+		  t[i] = v
+	       end
+	    else
+	       for i, v in ipairs(self.values[f.name]) do
+		  t[i] = v:clone()
+	       end
+	    end
+	    m.values[f.name] = t
+	 else
+	    if f.is_builtin then
+	       m.values[f.name] = self.values[f.name]
+	    else
+	       m.values[f.name] = self.values[f.name]:clone()
+	    end
+	 end
+      end
+   end
+end
+
+
+--- Prefill message with default values.
 function Message:prefill()
    for _, f in ipairs(self.spec.fields) do
       if not self.values[f.name] then
