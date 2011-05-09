@@ -74,6 +74,8 @@ function Message:clone()
 	 end
       end
    end
+
+   return m
 end
 
 function Message:prefill()
