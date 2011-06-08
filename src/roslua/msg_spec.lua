@@ -36,6 +36,17 @@ for _,v in ipairs(BUILTIN_TYPES) do
 end
 EXTENDED_TYPES = { time={"uint32", "uint32"}, duration={"int32", "int32"} }
 
+DEFAULT_PACKAGE = "std_msgs"
+
+--- Initialize message sub-system.
+function init()
+   local ros_ver_codename, ros_ver_major, ros_ver_minor, ros_ver_micro =
+      roslua.utils.rosversion()
+   if ros_ver_major < 1 or (ros_ver_major == 1 and ros_ver_minor < 4) then
+      DEFAULT_PACKAGE = "roslib"
+   end
+end
+
 local msgspec_cache = {}
 
 --- Get the base version of type, i.e. the non-array type.
@@ -118,7 +129,7 @@ function MsgSpec:new(o)
    assert(o.type, "Message type is missing")
 
    local slashpos = o.type:find("/")
-   o.package    = "roslib"
+   o.package    = DEFAULT_PACKAGE
    o.short_type = o.type
    if slashpos then
       o.package    = o.type:sub(1, slashpos - 1)
@@ -162,7 +173,7 @@ function MsgSpec:load_from_iterator(iterator)
       if line ~= "" then -- else comment or empty
 	 local ftype, fname = string.match(line, "^([%w_/%[%]]+)[%s]+([%w_%[%]]+)$")
 	 if ftype and fname then
-	    if ftype == "Header" then ftype = "roslib/Header" end
+	    if ftype == "Header" then ftype = DEFAULT_PACKAGE .. "/Header" end
 	    ftype = self:resolve_type(ftype)
 	    local msgspec = nil
 	    if not is_builtin_type(ftype) then

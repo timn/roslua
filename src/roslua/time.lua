@@ -41,7 +41,14 @@ end
 -- This function is called automatically from roslua.init_node() if required,
 -- so you should not call this function directly.
 function init_simtime()
-   sub_clock = roslua.subscriber("/clock", "roslib/Clock")
+   local ros_ver_codename, ros_ver_major, ros_ver_minor, ros_ver_micro =
+      roslua.utils.rosversion()
+   if ros_ver_major < 1 or (ros_ver_major == 1 and ros_ver_minor < 4) then
+      sub_clock = roslua.subscriber("/clock", "roslib/Clock")
+   else
+      sub_clock = roslua.subscriber("/clock", "rosgraph_msgs/Clock")
+   end
+
    sub_clock.add_listener(simtime_update)
 end
 
