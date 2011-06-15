@@ -78,7 +78,7 @@ end
 --- Get parameter.
 -- @param key key of the parameter to query
 -- @return value of the parameter
-function ParamProxy:getParam(key)
+function ParamProxy:get_param(key)
    local res = self:do_call("getParam", key)
 
    return res[3]
