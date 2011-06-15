@@ -16,6 +16,7 @@
 module("roslua.logging.rosout", package.seeall)
 
 require("roslua")
+require("roslua.utils")
 
 pub_rosout = nil
 
@@ -41,7 +42,13 @@ end
 -- @return initialized rosout logger
 function get_logger()
    if not pub_rosout then
-      pub_rosout  = roslua.publisher("/rosout", "roslib/Log")
+      local ros_ver_codename, ros_ver_major, ros_ver_minor, ros_ver_micro =
+	 roslua.utils.rosversion()
+      if ros_ver_major < 1 or (ros_ver_major == 1 and ros_ver_minor < 4) then
+	 pub_rosout  = roslua.publisher("/rosout", "roslib/Log")
+      else
+	 pub_rosout  = roslua.publisher("/rosout", "rosgraph_msgs/Log")
+      end
    end
    return log_rosout
 end

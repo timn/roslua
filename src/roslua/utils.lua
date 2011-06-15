@@ -29,6 +29,44 @@ end
 
 local rospack_path_cache = {}
 
+
+local ros_version_major = nil
+local ros_version_minor = nil
+local ros_version_micro = nil
+local ros_version_codename = nil
+
+--- Get ROS version.
+-- @return four values, first value is version code name, second value is
+-- major version number, third is minor version number, and fourth and last is
+-- micro version number. For example, for ROS 1.4.6 it would return the
+-- four values "diamondback", 1, 4, 6.
+function rosversion()
+   if ros_version_major == nil then
+      assert_rospack()
+      local p = io.popen("rosversion ros 2>/dev/null")
+      local version = p:read("*a")
+
+      local t = split(version, ".")
+      ros_version_major = tonumber(t[1])
+      ros_version_minor = tonumber(t[2])
+      ros_version_micro = tonumber(t[3])
+
+      ros_version_codename = "unknown"
+      if ros_version_major == 1 then
+	 if ros_version_minor == 0 then
+	    ros_version_codename = "boxturtle"
+	 elseif ros_version_minor == 2 then
+	    ros_version_codename = "cturtle"
+	 elseif ros_version_minor == 4 then
+	    ros_version_codename = "diamondback"
+	 end
+      end
+   end
+
+   return ros_version_codename,
+          ros_version_major, ros_version_minor, ros_version_micro
+end
+
 --- Get path for a package.
 -- Uses rospack to find the path to a certain package. The path is cached so
 -- that consecutive calls will not trigger another rospack execution, but are

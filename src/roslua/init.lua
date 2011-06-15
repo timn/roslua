@@ -133,6 +133,8 @@ function init_node(args)
    assert(roslua.node_name, "Node name not set")
    roslua.anonymous = args.anonymous or false
 
+   roslua.msg_spec.init()
+
    if anonymous then
       -- make up random name
       local posix = require("posix")
