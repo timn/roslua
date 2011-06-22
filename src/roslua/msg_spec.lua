@@ -4,9 +4,10 @@
 --
 --  Created: Mon Jul 26 16:59:59 2010 (at Intel Research, Pittsburgh)
 --  License: BSD, cf. LICENSE file of roslua
---  Copyright  2010  Tim Niemueller [www.niemueller.de]
---             2010  Carnegie Mellon University
---             2010  Intel Research Pittsburgh
+--  Copyright  2010-2011  Tim Niemueller [www.niemueller.de]
+--             2010-2011  Carnegie Mellon University
+--             2010-2011  Intel Research Pittsburgh
+--             2011       SRI International
 ----------------------------------------------------------------------------
 
 --- Message specification.
@@ -182,20 +183,27 @@ function MsgSpec:load_from_iterator(iterator)
 	    end
 	    local typeinfo = {ftype, fname, msgspec, type=ftype, name=fname,
 			      base_type=base_type(ftype), spec=msgspec,
-			      is_array=is_array_type(ftype), is_builtin=is_builtin_type(ftype),
+			      is_array=is_array_type(ftype),
+			      is_builtin=is_builtin_type(ftype),
 			      value_index=field_i}
 	    self.fields[fname] = typeinfo
 	    table.insert(self.fields, typeinfo)
 	    field_i = field_i + 1
 	 else -- check for constant
-	    local ctype, cname, cvalue = line:match("^([%w_]+)[%s]+([%w_]+)[%s]*=[%s]*([-%w]+)$")
+	    local ctype, cname, cvalue =
+	       line:match("^([%w_]+)[%s]+([%w_]+)[%s]*=[%s]*([-%w]+)$")
+	    if ctype == nil or cname == nil or cvalue == nil then
+	       -- might be string constant
+	       ctype, cname, cvalue =
+		  line:match("^(string)[%s]+([%w_]+)[%s]*=[%s]*\"([^\"]+)\"$")
+	    end
 	    if ctype and cname and cvalue then
 	       local nv = tonumber(cvalue)
 	       if nv ~= nil then cvalue = nv end
 	       self.constants[cname] = { ctype, cvalue, type=ctype, value=cvalue }
 	       table.insert(self.constants, {ctype, cname, cvalue})
 	    else
-	       error("Unparsable line: " .. line)
+	       error(self.type .. " unparsable line: " .. line)
 	    end
 	 end
       end
