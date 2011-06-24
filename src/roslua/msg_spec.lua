@@ -281,7 +281,11 @@ end
 function MsgSpec:generate_hashtext()
    local s = ""
    for _, spec in ipairs(self.constants) do
-      s = s .. string.format("%s %s=%s\n", spec[1], spec[2], spec[3])
+      if spec[1] == "string" then
+         s = s .. string.format("%s %s=%q\n", spec[1], spec[2], spec[3])
+      else
+         s = s .. string.format("%s %s=%s\n", spec[1], spec[2], spec[3])
+      end
    end
 
    for _, spec in ipairs(self.fields) do
