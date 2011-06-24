@@ -257,9 +257,10 @@ end
 function TcpRosPubSubConnection:receive_header()
    TcpRosConnection.receive_header(self)
 
+   assert(self.header.error == nil, "Opposite side reported error: " .. tostring(self.header.error))
    assert(self.header.type == "*" or self.header.type == self.msgspec.type,
-          "Opposite site did not set proper type (got " .. self.header.type ..
-          ", expected: " .. self.msgspec.type .. ")")
+          "Opposite site did not set proper type (got " .. tostring(self.header.type) ..
+          ", expected: " .. tostring(self.msgspec.type) .. ")")
 
    return self.header
 end
