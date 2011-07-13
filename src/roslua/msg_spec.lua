@@ -191,12 +191,7 @@ function MsgSpec:load_from_iterator(iterator)
 	    field_i = field_i + 1
 	 else -- check for constant
 	    local ctype, cname, cvalue =
-	       line:match("^([%w_]+)[%s]+([%w_]+)[%s]*=[%s]*([-%w]+)$")
-	    if ctype == nil or cname == nil or cvalue == nil then
-	       -- might be string constant
-	       ctype, cname, cvalue =
-		  line:match("^(string)[%s]+([%w_]+)[%s]*=[%s]*\"([^\"]+)\"$")
-	    end
+	       line:match("^([%w_]+)[%s]+([%w_]+)[%s]*=[%s]*([%w%s\"._-]+)$")
 	    if ctype and cname and cvalue then
 	       local nv = tonumber(cvalue)
 	       if nv ~= nil then cvalue = nv end
@@ -281,11 +276,7 @@ end
 function MsgSpec:generate_hashtext()
    local s = ""
    for _, spec in ipairs(self.constants) do
-      if spec[1] == "string" then
-         s = s .. string.format("%s %s=%q\n", spec[1], spec[2], spec[3])
-      else
-         s = s .. string.format("%s %s=%s\n", spec[1], spec[2], spec[3])
-      end
+      s = s .. string.format("%s %s=%s\n", spec[1], spec[2], spec[3])
    end
 
    for _, spec in ipairs(self.fields) do
