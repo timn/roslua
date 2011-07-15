@@ -203,7 +203,8 @@ end
 --- Receive data from the network.
 -- Upon return contains the new data in the payload field.
 function TcpRosConnection:receive()
-   local packet_size_d = assert(self:receive_data(4))
+   local packet_size_d = self:receive_data(4)
+   if not packet_size_d then return false end
    local packet_size = struct.unpack("<!1i4", packet_size_d)
 
    if packet_size > 0 then
@@ -214,6 +215,8 @@ function TcpRosConnection:receive()
    self.received = true
    self.msg_stats.received = self.msg_stats.received + 1
    self.msg_stats.total    = self.msg_stats.total    + 1
+
+   return true
 end
 
 --- Check if data has been received.
@@ -288,11 +291,11 @@ end
 --- Receive data from the network.
 -- Upon return contains the new messages in the messages array field.
 function TcpRosPubSubConnection:receive()
-   TcpRosConnection.receive(self)
-
-   local message = self.msgspec:instantiate()
-   message:deserialize(self.payload)
-   table.insert(self.messages, message)
+   if TcpRosConnection.receive(self) then
+      local message = self.msgspec:instantiate()
+      message:deserialize(self.payload)
+      table.insert(self.messages, message)
+   end
 end
 
 --- Receive header.
@@ -302,9 +305,11 @@ end
 function TcpRosPubSubConnection:receive_header(yield_on_timeout)
    TcpRosConnection.receive_header(self, yield_on_timeout)
 
-   assert(self.header.error == nil, "Opposite side reported error: " .. tostring(self.header.error))
+   assert(self.header.error == nil,
+	  "Opposite side reported error: " .. tostring(self.header.error))
    assert(self.header.type == "*" or self.header.type == self.msgspec.type,
-          "Opposite site did not set proper type (got " .. tostring(self.header.type) ..
+          "Opposite site did not set proper type (got " ..
+	  tostring(self.header.type) ..
           ", expected: " .. tostring(self.msgspec.type) .. ")")
 
    return self.header
@@ -328,11 +333,11 @@ end
 --- Receive data from the network.
 -- Upon return contains the new messages in the messages array field.
 function TcpRosServiceProviderConnection:receive()
-   TcpRosConnection.receive(self)
-
-   local message = self.srvspec.reqspec:instantiate()
-   message:deserialize(self.payload)
-   table.insert(self.messages, message)
+   if TcpRosConnection.receive(self) then
+      local message = self.srvspec.reqspec:instantiate()
+      message:deserialize(self.payload)
+      table.insert(self.messages, message)
+   end
 end
 
 
@@ -354,13 +359,15 @@ end
 -- Upon return contains the new message in the message field.
 function TcpRosServiceClientConnection:receive()
    -- get OK-byte
-   local ok, ok_byte_d, err = self:receive(1)
+   local ok, ok_byte_d, err = roslua.utils.socket_recv(self.socket, 1)
    if not ok or ok_byte_d == nil then
       error("Reading OK byte failed: " .. err, (err == "closed") and 0)
    end
    local ok_byte = struct.unpack("<!1I1", ok_byte_d)
 
-   TcpRosConnection.receive(self)
+   if not TcpRosConnection.receive(self) then
+      error("Service execution failed: failed to receive message")
+   end
 
    if ok_byte == 1 then
       local message = self.srvspec.respspec:instantiate()
