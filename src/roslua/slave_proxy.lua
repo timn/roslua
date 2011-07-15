@@ -59,8 +59,8 @@ function SlaveProxy:do_call(method_name, ...)
 				     method_name, tostring(res[2])))
 
    if __DEBUG then
-      print(string.format("Ok: %s  Code: %d  Error: %s  arrlen: %i", tostring(ok), tostring(res[1]),
-			  tostring(res[2]), #res))
+      print(string.format("Ok: %s  Code: %d  Error: %s  arrlen: %i",
+			  tostring(ok), tostring(res[1]), tostring(res[2]), #res))
    end
 
    return res
@@ -137,7 +137,6 @@ function SlaveProxy:assert_running_method(method)
 end
 
 function SlaveProxy:requestTopic_start(topic)
-   printf("***** Starting call to requestTopic(%s)", topic)
    return self.xmlrpc_post:start_call("requestTopic", self.node_name,
 				      topic, self:connection_params())
 end

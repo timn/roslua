@@ -229,10 +229,7 @@ function socket_recv(socket, num_bytes, yield_on_timeout)
    local read_bytes = 0
    socket:settimeout(0)
    while read_bytes < num_bytes do
-      printf("Start socket receive %d bytes yield %s\n", num_bytes,
-	     tostring(yield_on_timeout))
       local data, error, chunk = socket:receive(num_bytes - read_bytes)
-      printf("Receive returned")
       if not data then
 	 if error ~= "timeout" then
 	    return nil, error
@@ -240,7 +237,6 @@ function socket_recv(socket, num_bytes, yield_on_timeout)
 	    read_bytes = read_bytes + #chunk
 	    result = result .. chunk
 	    if yield_on_timeout then
-	       printscr("YIELD")
 	       coroutine.yield(read_bytes)
 	    end
 	 end

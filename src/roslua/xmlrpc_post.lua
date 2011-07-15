@@ -104,8 +104,6 @@ end
 function XmlRpcPost:start_call(method, ...)
    assert(self.state == STATE_IDLE, "A request is already running")
 
-   printf("Starting call to %s", method)
-
    self:setup_request(method, ...)
 
    self.c = socket.tcp()
@@ -194,7 +192,6 @@ function XmlRpcPost:receive_headers(yield_on_timeout)
       name = string.lower(name)
       -- get next line (value might be folded)
       line, err  = socket_recvline(self.c, yield_on_timeout)
-      printf("H Received %s", line)
       if err then return nil, err end
       -- unfold any folded values
       while string.find(line, "^%s") do
@@ -356,18 +353,17 @@ function XmlRpcPost:spin()
 
       elseif coroutine.status(self.read_coroutine) == "dead" then
 	 -- finished
-	 print_debug("XMLRPC Post: received reply")
 	 self.read_coroutine = nil
 	 self.state = STATE_RECEIVED
       end
 
    elseif self.state == STATE_FAILED then
       -- We failed, remove spinner
-      printf("Call failed with '%s'", self.error)
+      --printf("Call failed with '%s'", self.error)
       roslua.remove_spinner(self.spinner)
    end
 
-   if old_state  ~= self.state then
-      printf("%s -> %s", num_to_state[old_state], num_to_state[self.state])
-   end
+   --if old_state  ~= self.state then
+   --   printf("%s -> %s", num_to_state[old_state], num_to_state[self.state])
+   --end
 end

@@ -29,7 +29,7 @@ require("roslua.tcpros")
 
 CONNECTION_MAX_TRIES = 10
 
-Subscriber = {DEBUG = true,
+Subscriber = {DEBUG = false,
 	      PUBSTATE_DISCONNECTED = 1,
 	      PUBSTATE_TOPIC_REQUESTED = 2,
 	      PUBSTATE_TOPIC_NEGOTIATED = 3,
@@ -206,16 +206,12 @@ function Subscriber:connect()
 	       print_debug("Subscriber[%s]: Request topic from %s",
 			   self.topic, uri)
 	    end
-	    if slave:requestTopic_busy() then
-	       print_warn("Subscriber[%s:%s]: BUSY", self.topic, uri)
-	
-	    else
-	       print_warn("Subscriber[%s:%s]: Requesting", self.topic, uri)
+	    if not slave:requestTopic_busy() then
 	       local ok, err = pcall(slave.requestTopic_start, slave, self.topic)
 	       if not ok then
 		  p.state = self.PUBSTATE_FAILED
-		  print_warn("Subscriber[%s:%s]: parameter negotiation to %s "..
-			     "failed (%s)", self.type, self.topic, uri, err)
+		  print_warn("Subscriber[%s:%s]: parameter negotiation to "..
+			     "%s failed (%s)", self.type, self.topic, uri, err)
 	       end
 	       p.state = self.PUBSTATE_TOPIC_REQUESTED
 	    end
@@ -269,7 +265,6 @@ function Subscriber:connect()
 	    end
 
 	 elseif p.state == self.PUBSTATE_CONNECTED then
-	    print_debug("Subscriber[%s:%s]: Send header", self.type, self.topic)
 	    p.md5sum = self.msgspec:md5()
 	    p.connection:send_header{callerid=roslua.node_name,
 				topic=self.topic,
@@ -279,8 +274,6 @@ function Subscriber:connect()
 
 	    p.header_receive_coroutine =
 	       coroutine.create(function ()
-				   printf("Subscriber[%s]: receive coroutine",
-					  self.topic)
 				   return p.connection:receive_header(true)
 				end)
 	    
@@ -293,7 +286,6 @@ function Subscriber:connect()
 	       p.state = self.PUBSTATE_FAILED
 	    elseif coroutine.status(p.header_receive_coroutine) == "dead" then
 	       -- finished
-	       print_debug("Subscriber[%s]: Received header", self.topic)
 	       p.header_receive_coroutine = nil
 	       p.state = self.PUBSTATE_HEADER_RECEIVED
 	    end
@@ -308,8 +300,10 @@ function Subscriber:connect()
 	       p.state = self.PUBSTATE_FAILED
 	       p.num_tries = CONNECTION_MAX_TRIES
 	    else
-	       printf("Subscriber[%s]: established connection to %s",
-		      self.topic, p.connection.header.callerid)
+	       if self.DEBUG then
+		  printf("Subscriber[%s]: established connection to %s",
+			 self.topic, p.connection.header.callerid)
+	       end
 	       p.callerid   = p.connection.header.callerid
 	       p.state = self.PUBSTATE_COMMUNICATING
 	    end
@@ -330,10 +324,10 @@ function Subscriber:connect()
 	    self.connect_on_spin = true
 	 end
 
-	 if p.state ~= old_state then
-	    printf("Subscriber[%s] pub %s: %s -> %s", self.topic, p.uri,
-		   self.PUBSTATE_TO_STR[old_state], self.PUBSTATE_TO_STR[p.state])
-	 end
+	 --if p.state ~= old_state then
+	 --   printf("Subscriber[%s] pub %s: %s -> %s", self.topic, p.uri,
+	 --	   self.PUBSTATE_TO_STR[old_state], self.PUBSTATE_TO_STR[p.state])
+	 --end
       end
    end
 
@@ -375,7 +369,6 @@ function Subscriber:spin()
       if p.state == self.PUBSTATE_COMMUNICATING and p.connection then
 	 p.connection.messages = {}
 	 if p.connection:data_available() then
-	    printf("Subscriber[%s]: data available, receiving", self.topic)
 	    local ok, err = pcall(p.connection.receive, p.connection)
 	    if not ok then
 	       if err == "closed" then

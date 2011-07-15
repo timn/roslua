@@ -80,19 +80,8 @@ end
 --- Close connection.
 function TcpRosConnection:close()
    if self.socket then
-      if self.name then
-	 printf("%s: **** CLOSE called", self.name)
-      else
-	 printf("**** CLOSE called")
-      end
       self.socket:close()
       self.socket = nil
-   else
-      if self.name then
-	 printf("%s: **** CLOSE called  --- AGAIN!", self.name)
-      else
-	 printf("**** CLOSE called  --- AGAIN!")
-      end
    end
 end
 
@@ -159,13 +148,9 @@ end
 function TcpRosConnection:receive_header(yield_on_timeout)
    self.header = {}
 
-   printf("Receive 1, yield %s", tostring(yield_on_timeout))
    local rd = assert(self:receive_data(4, yield_on_timeout))
    local packet_size = struct.unpack("<!1i4", rd)
-
-   printf("Receive 2, yield %s", tostring(yield_on_timeout))
    local packet = assert(self:receive_data(packet_size, yield_on_timeout))
-   --printf("Req: %d  Actual: %d  Header: %s", #packet, packet_size, packet)
 
    local i = 1
 

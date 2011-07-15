@@ -26,7 +26,7 @@ module("roslua.publisher", package.seeall)
 require("roslua")
 require("roslua.msg_spec")
 
-Publisher = {DEBUG = true,
+Publisher = {DEBUG = false,
 	     SUBSTATE_CONNECTED = 1,
 	     SUBSTATE_HEADER_SENT = 2,
 	     SUBSTATE_HEADER_RECEIVED = 3,
@@ -123,8 +123,8 @@ function Publisher:process_subscribers()
       if s.state < self.SUBSTATE_COMMUNICATING then
 	 local old_state = s.state
 	 if s.state == self.SUBSTATE_CONNECTED then
-	    printf("Publisher[%s] accepting connection from %s:%s",
-		   self.topic, self.server:get_ip_port())
+	    --printf("Publisher[%s] accepting connection from %s:%s",
+	    --	     self.topic, self.server:get_ip_port())
 
 	    s.md5sum = self.msgspec:md5()
 	    s.connection:send_header{callerid=roslua.node_name,
@@ -132,17 +132,13 @@ function Publisher:process_subscribers()
 				     type=self.type,
 				     md5sum=s.md5sum}
 
-	    printf("Publisher creating coroutine")
 	    s.header_receive_coroutine =
 	       coroutine.create(function ()
-				   printf("Publisher[%s]: receive coroutine",
-					  self.topic)
 				   return s.connection:receive_header(true)
 				end)
 	    s.state = self.SUBSTATE_HEADER_SENT
 
 	 elseif s.state == self.SUBSTATE_HEADER_SENT then
-	    printf("Publisher Resuming")
 	    local data, err = coroutine.resume(s.header_receive_coroutine)
 	    if not data then
 	       print_warn("Publisher[%s]: failed to receive header: %s",
@@ -150,7 +146,6 @@ function Publisher:process_subscribers()
 	       s.state = self.SUBSTATE_FAILED
 	    elseif coroutine.status(s.header_receive_coroutine) == "dead" then
 	       -- finished
-	       print_debug("Subscriber[%s]: Received header", self.topic)
 	       s.header_receive_coroutine = nil
 	       s.state = self.SUBSTATE_HEADER_RECEIVED
 	    end
@@ -186,8 +181,10 @@ function Publisher:process_subscribers()
 	       end
 	    end
 	    if s.state ~= self.SUBSTATE_FAILED then
-	       printf("Publisher[%s::%s]: accepted connection from %s",
-		      self.type, self.topic, s.connection.header.callerid)
+	       if self.DEBUG then
+		  printf("Publisher[%s::%s]: accepted connection from %s",
+			 self.type, self.topic, s.connection.header.callerid)
+	       end
 	       s.callerid = s.connection.header.callerid
 	       s.connection.name = string.format("Publisher[%s:%s]/%s", self.type,
 						 self.topic, s.callerid)
@@ -205,6 +202,7 @@ function Publisher:process_subscribers()
 	    s.connection = nil
 	 end
 
+	 --[[
 	 if old_state ~= s.state then
 	    local remote = "?"
 	    if s.connection and s.connection.header then
@@ -214,8 +212,10 @@ function Publisher:process_subscribers()
 	       remote = tostring(rip) .. ":" .. tostring(rport)
 	    end
 	    printf("Publisher[%s:%s] %s: %s -> %s", self.type, self.topic,
-		   remote, self.SUBSTATE_TO_STR[old_state], self.SUBSTATE_TO_STR[s.state])
+		   remote, self.SUBSTATE_TO_STR[old_state],
+		   self.SUBSTATE_TO_STR[s.state])
 	 end
+	 --]]
       end
    end
 end
@@ -225,8 +225,10 @@ end
 function Publisher:cleanup_subscribers()
    for i=#self.subscribers, 1, -1 do
       if self.subscribers[i].state == self.SUBSTATE_FAILED then
-	 printf("Publisher[%s:%s]: removing failed subscriber %s",
-		self.type, self.topic, self.subscribers[i].callerid)
+	 if self.DEBUG then
+	    printf("Publisher[%s:%s]: removing failed subscriber %s",
+		   self.type, self.topic, self.subscribers[i].callerid)
+	 end
 	 table.remove(self.subscribers, i)
       end
    end
@@ -262,7 +264,6 @@ function Publisher:publish(message)
    if self.latching  then
       self.latched_message = {message=message, serialized=sm}
    end
-   local uri, s
    if not next(self.subscribers) and self.topic ~= "/rosout" then
       --if self.DEBUG then
       -- print_warn("Publisher[%s::%s]: cannot send message, no subscribers",
@@ -271,24 +272,13 @@ function Publisher:publish(message)
    else
       for _, s in ipairs(self.subscribers) do
 	 if s.state == self.SUBSTATE_COMMUNICATING then
-	    if self.topic ~= "/rosout" then
-	       printscr("Publisher[%s]: sending to %s",
-			self.topic, s.connection.header.callerid)
-	    end
 	    local ok, error = s.connection:send(sm)
 
-	    if self.DEBUG and self.topic ~= "/rosout" then
-	       if ok then
-		  -- print_warn("Publisher[%s::%s]: sent to %s",
-		  -- self.type, self.topic, s.connection.header.callerid)
-	       else
+	    if not ok then
+	       if self.DEBUG and self.topic ~= "/rosout" then
 		  print_warn("Publisher[%s::%s]: failed to send to %s",
 			     self.type, self.topic, s.connection.header.callerid)
 	       end
-	    end
-	    if not ok then
-	       print_warn("Publisher[%s::%s]: not ok: %s",
-			  self.type, self.topic, tostring(error))
 	       s.connection:close()
 	       s.connection = nil
 	       s.state = self.SUBSTATE_FAILED
@@ -304,7 +294,6 @@ end
 function Publisher:spin()
    self:accept_connections()
    if self.waiting_subscribers > 0 then
-      printf("%d more subscribers waiting", self.waiting_subscribers)
       self:process_subscribers()
    end
    if self.failed_subscribers > 0 then
