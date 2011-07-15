@@ -22,8 +22,11 @@ module("roslua.slave_proxy", package.seeall)
 
 require("xmlrpc")
 require("xmlrpc.http")
-assert(xmlrpc._VERSION_MAJOR and (xmlrpc._VERSION_MAJOR > 1 or xmlrpc._VERSION_MAJOR == 1 and xmlrpc._VERSION_MINOR >= 2),
+assert(xmlrpc._VERSION_MAJOR and
+       (xmlrpc._VERSION_MAJOR > 1 or
+	xmlrpc._VERSION_MAJOR == 1 and xmlrpc._VERSION_MINOR >= 2),
        "You must use version 1.2 or newer of lua-xmlrpc")
+require("roslua.xmlrpc_post")
 
 __DEBUG = false
 
@@ -39,6 +42,7 @@ function SlaveProxy:new(slave_uri, node_name)
 
    o.slave_uri = slave_uri
    o.node_name = node_name
+   o.xmlrpc_post = roslua.xmlrpc_post.XmlRpcPost:new(slave_uri)
 
    return o
 end
@@ -61,6 +65,7 @@ function SlaveProxy:do_call(method_name, ...)
 
    return res
 end
+
 
 --- Get bus stats.
 -- @return bus stats
@@ -109,16 +114,54 @@ function SlaveProxy:getPublications()
    return res[3]
 end
 
+
+function SlaveProxy:connection_params()
+   local protocols = {}
+   local tcpros = {"TCPROS"}
+   table.insert(protocols, xmlrpc.newTypedValue(tcpros, xmlrpc.newArray()))
+   return xmlrpc.newTypedValue(protocols, xmlrpc.newArray("array"))
+end
+
 --- Request a TCPROS connection for a specific topic.
 -- @param topic name of topic
 -- @return TCPROS communication parameters
 function SlaveProxy:requestTopic(topic)
-   local protocols = {}
-   local tcpros = {"TCPROS"}
-   table.insert(protocols, xmlrpc.newTypedValue(tcpros, xmlrpc.newArray()))
-   local protocols_x = xmlrpc.newTypedValue(protocols, xmlrpc.newArray("array"))
-
-   local res = self:do_call("requestTopic", topic, protocols_x)
+   local res = self:do_call("requestTopic", topic, self:connection_params())
 
    return res[3]
+end
+
+function SlaveProxy:assert_running_method(method)
+   assert(self.xmlrpc_post.request and self.xmlrpc_post.request.method == method,
+          method .. " is not currently being executed")
+end
+
+function SlaveProxy:requestTopic_start(topic)
+   printf("***** Starting call to requestTopic(%s)", topic)
+   return self.xmlrpc_post:start_call("requestTopic", self.node_name,
+				      topic, self:connection_params())
+end
+
+function SlaveProxy:requestTopic_busy()
+   return self.xmlrpc_post:running()
+end
+
+function SlaveProxy:requestTopic_done()
+   self:assert_running_method("requestTopic")
+   return self.xmlrpc_post:done()
+end
+
+function SlaveProxy:requestTopic_failed()
+   self:assert_running_method("requestTopic")
+   return self.xmlrpc_post:failed()
+end
+
+function SlaveProxy:requestTopic_result()
+   self:assert_running_method("requestTopic")
+   assert(self.xmlrpc_post:done(), "requestTopic not done")
+   assert(self.xmlrpc_post.result[1][1] == 1,
+	  string.format("XML-RPC call %s failed on server: %s",
+			self.xmlrpc_post.request.method,
+			tostring(self.xmlrpc_post.result[1][2])))
+   return self.xmlrpc_post.result[1][3]
 end
