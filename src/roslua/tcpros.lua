@@ -4,9 +4,10 @@
 --
 --  Created: Sat Jul 24 14:02:06 2010 (at Intel Research, Pittsburgh)
 --  License: BSD, cf. LICENSE file of roslua
---  Copyright  2010  Tim Niemueller [www.niemueller.de]
---             2010  Carnegie Mellon University
---             2010  Intel Research Pittsburgh
+--  Copyright  2010-2011  Tim Niemueller [www.niemueller.de]
+--             2010-2011  Carnegie Mellon University
+--             2010-2011  Intel Research Pittsburgh
+--             2011       SRI International
 ----------------------------------------------------------------------------
 
 --- TCPROS communication implementation.
@@ -24,13 +25,9 @@ require("roslua.msg_spec")
 
 TcpRosConnection = { payload = nil, received = false, max_receives_per_spin = 10 }
 
--- Timeouts are in seconds
-CLIENT_TIMEOUT  = 5
-SERVER_TIMEOUT  = 0
-
 --- Constructor.
 -- @param socket optionally a socket to use for communication
-function TcpRosConnection:new(socket)
+function TcpRosConnection:new(socket, name)
    local o = {}
    setmetatable(o, self)
    self.__index = self
@@ -38,6 +35,10 @@ function TcpRosConnection:new(socket)
    o.socket    = socket
    o.msg_stats = {total = 0, received = 0, sent = 0}
    o.is_client = false
+
+   if self.socket then
+      self.socket:settimeout(0)
+   end
 
    return o
 end
@@ -47,15 +48,52 @@ end
 -- @param port port of remote side
 function TcpRosConnection:connect(host, port)
    assert(not self.socket, "Socket has already been created")
-   self.socket = assert(socket.connect(host, port))
-   self.socket:settimeout(CLIENT_TIMEOUT)
+   self.socket = socket.tcp()
+   self.socket:settimeout(0)
+   assert(socket.connect(host, port))
    self.is_client = true
+end
+
+--- Connect non-blocking to given host and port.
+-- @param host hostname or IP address of remote side
+-- @param port port of remote side
+function TcpRosConnection:connect_start(host, port)
+   assert(not self.socket, "Socket has already been created")
+   self.socket = socket.tcp()
+   self.socket:settimeout(0)
+   local ok, err = self.socket:connect(host, port)
+   if not ok and err ~= "timeout" then
+      error("Failed to connect to %s:%d: %s", host, port, err)
+   end
+   self.is_client = true
+end
+
+function TcpRosConnection:connect_done()
+   assert(self.socket, "Connect has not been initiated")
+   if self:writable() then
+      return true
+   else
+      return false
+   end
 end
 
 --- Close connection.
 function TcpRosConnection:close()
-   self.socket:close()
-   self.socket = nil
+   if self.socket then
+      if self.name then
+	 printf("%s: **** CLOSE called", self.name)
+      else
+	 printf("**** CLOSE called")
+      end
+      self.socket:close()
+      self.socket = nil
+   else
+      if self.name then
+	 printf("%s: **** CLOSE called  --- AGAIN!", self.name)
+      else
+	 printf("**** CLOSE called  --- AGAIN!")
+      end
+   end
 end
 
 --- Bind to random port as server.
@@ -68,7 +106,7 @@ end
 function TcpRosConnection:bind()
    assert(not self.socket, "Socket has already been created")
    self.socket = assert(socket.bind("*", 0))
-   self.socket:settimeout(SERVER_TIMEOUT)
+   self.socket:settimeout(0)
 end
 
 --- Accept new connections.
@@ -84,6 +122,14 @@ function TcpRosConnection:accept()
       end
    end
    return conns
+end
+
+function TcpRosConnection:send_data(data)
+   return roslua.utils.socket_send(self.socket, data)
+end
+
+function TcpRosConnection:receive_data(num_bytes, yield_on_timeout)
+   return roslua.utils.socket_recv(self.socket, num_bytes, yield_on_timeout)
 end
 
 --- Get IP and port of socket.
@@ -103,20 +149,23 @@ function TcpRosConnection:send_header(fields)
       s = s .. fp
    end
 
-   self.socket:send(struct.pack("<!1i4", #s) .. s)
+   self:send_data(struct.pack("<!1i4", #s) .. s)
 end
 
 --- Receive header.
 -- This will read the header from the network connection and store
 -- it in the header field as well as return it.
 -- @return table of header fields
-function TcpRosConnection:receive_header()
+function TcpRosConnection:receive_header(yield_on_timeout)
    self.header = {}
 
-   local rd = assert(self.socket:receive(4))
+   printf("Receive 1, yield %s", tostring(yield_on_timeout))
+   local rd = assert(self:receive_data(4, yield_on_timeout))
    local packet_size = struct.unpack("<!1i4", rd)
 
-   local packet = assert(self.socket:receive(packet_size))
+   printf("Receive 2, yield %s", tostring(yield_on_timeout))
+   local packet = assert(self:receive_data(packet_size, yield_on_timeout))
+   --printf("Req: %d  Actual: %d  Header: %s", #packet, packet_size, packet)
 
    local i = 1
 
@@ -136,6 +185,18 @@ function TcpRosConnection:receive_header()
 
    return self.header
 end
+
+
+function TcpRosConnection:writable()
+   local _, ready_w = socket.select({}, {self.socket})
+   return (ready_w[self.socket] ~= nil)
+end
+
+function TcpRosConnection:readable()
+   local ready_r, _ = socket.select({self.socket}, {})
+   return (ready_r[self.socket] ~= nil)
+end
+
 
 --- Wait for a message to arrive.
 -- This message blocks until a message has been received.
@@ -157,14 +218,11 @@ end
 --- Receive data from the network.
 -- Upon return contains the new data in the payload field.
 function TcpRosConnection:receive()
-   local ok, packet_size_d, err = pcall(self.socket.receive, self.socket, 4)
-   if not ok or packet_size_d == nil then
-      error(err, (err == "closed") and 0)
-   end
+   local packet_size_d = assert(self:receive_data(4))
    local packet_size = struct.unpack("<!1i4", packet_size_d)
 
    if packet_size > 0 then
-      self.payload = assert(self.socket:receive(packet_size))
+      self.payload = assert(self:receive_data(packet_size))
    else
       self.payload = ""
    end
@@ -196,14 +254,16 @@ end
 -- @param message either a serialized message string or a Message
 -- class instance.
 function TcpRosConnection:send(message)
+   local bytes, error
    if type(message) == "string" then
-      assert(self.socket:send(message))
+      bytes, error = self:send_data(message)
    else
       local s = message:serialize()
-      assert(self.socket:send(s))
+      bytes, error = self:send_data(s)
    end
    self.msg_stats.sent  = self.msg_stats.sent  + 1
    self.msg_stats.total = self.msg_stats.total + 1
+   return bytes, error
 end
 
 --- Spin ros connection.
@@ -254,8 +314,8 @@ end
 -- This receives the header, asserts the type and loads the message
 -- specification into the msgspec field.
 -- @return table of headers
-function TcpRosPubSubConnection:receive_header()
-   TcpRosConnection.receive_header(self)
+function TcpRosPubSubConnection:receive_header(yield_on_timeout)
+   TcpRosConnection.receive_header(self, yield_on_timeout)
 
    assert(self.header.error == nil, "Opposite side reported error: " .. tostring(self.header.error))
    assert(self.header.type == "*" or self.header.type == self.msgspec.type,
@@ -309,7 +369,7 @@ end
 -- Upon return contains the new message in the message field.
 function TcpRosServiceClientConnection:receive()
    -- get OK-byte
-   local ok, ok_byte_d, err = pcall(self.socket.receive, self.socket, 1)
+   local ok, ok_byte_d, err = self:receive(1)
    if not ok or ok_byte_d == nil then
       error("Reading OK byte failed: " .. err, (err == "closed") and 0)
    end
