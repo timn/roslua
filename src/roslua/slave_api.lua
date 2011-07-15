@@ -156,15 +156,17 @@ function xmlrpc_exports.getBusInfo(caller_id)
 
    for topic, s in pairs(roslua.subscribers) do
       for uri, p in pairs(s.subscriber.publishers) do
-	 local conn = {p.uri, uri, "i", "TCPROS", topic, (p.connection ~= nil)}
+	 local conn = {p.uri, uri, "i", "TCPROS", topic,
+		       p.state == roslua.Subscriber.PUBSTATE_COMMUNICATING}
 	 local xconn = xmlrpc.newTypedValue(conn, xmlrpc.newArray())
 	 table.insert(businfo, xconn)
       end
    end
 
    for topic, p in pairs(roslua.publishers) do
-      for _, s in pairs(p.publisher.subscribers) do
-	 local conn = {s.uri, "", "o", "TCPROS", topic, (s.connection ~= nil)}
+      for i, s in pairs(p.publisher.subscribers) do
+	 local conn = {tostring(i), s.callerid, "o", "TCPROS", topic,
+		       (s.state == roslua.Publisher.SUBSTATE_COMMUNICATING)}
 	 local xconn = xmlrpc.newTypedValue(conn, xmlrpc.newArray())
 	 table.insert(businfo, xconn)
       end
