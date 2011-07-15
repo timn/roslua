@@ -4,9 +4,10 @@
 --
 --  Created: Tue Aug 10 09:46:10 2010 (at Intel Research, Pittsburgh)
 --  License: BSD, cf. LICENSE file of roslua
---  Copyright  2010  Tim Niemueller [www.niemueller.de]
---             2010  Carnegie Mellon University
---             2010  Intel Research Pittsburgh
+--  Copyright  2010-2011  Tim Niemueller [www.niemueller.de]
+--             2010-2011  Carnegie Mellon University
+--             2010       Intel Research Pittsburgh
+--             2011       SRI International
 ----------------------------------------------------------------------------
 
 --- Logging facilities for roslua.
@@ -72,6 +73,7 @@ end
 -- print_debug, print_info, print_warn, print_error, and print_fatal.
 -- @param export_to module or table to export to
 function register_print_funcs(export_to)
+   export_to.printscr    = _M.printscr
    export_to.print       = _M.print
    export_to.printf      = _M.printf
    export_to.print_debug = _M.print_debug
@@ -96,6 +98,16 @@ end
 -- @param ... variable number of string arguments
 function print(...)
    return dispatch(INFO, table.concat({...}, "\t"))
+end
+
+
+--- Print formatted to screen only.
+-- Prints a formatted string to screen.
+-- @param format format string (cf. string.format() documentation)
+-- @param ... appropriate arguments for format string
+function printscr(format, ...)
+   io.write(string.format("[SCREEN] %s %s\n",
+			  tostring(roslua.Time.now()), string.format(format, ...)))
 end
 
 --- Print formatted.
