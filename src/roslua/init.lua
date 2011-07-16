@@ -485,7 +485,7 @@ end
 -- @see ServiceClient
 function service_client(service, type, options)
    local o = {service, type}
-   if options and type(options) == "table" then
+   if options and _G.type(options) == "table" then
       o.persistent=options.persistent
       o.simplified_return=options.simplified_return
    end
