@@ -131,30 +131,46 @@ function SlaveProxy:requestTopic(topic)
    return res[3]
 end
 
+
+--- Assert that a specific method is currently running.
+-- If the method is not running throws an error.
+-- @param method name of the method that must run
 function SlaveProxy:assert_running_method(method)
    assert(self.xmlrpc_post.request and self.xmlrpc_post.request.method == method,
           method .. " is not currently being executed")
 end
 
+--- Start a topic request.
+-- This starts a concurrent execution of requestTopic().
+-- @param topic topic to request
 function SlaveProxy:requestTopic_start(topic)
    return self.xmlrpc_post:start_call("requestTopic", self.node_name,
 				      topic, self:connection_params())
 end
 
+--- Check if concurrent execution is still busy.
+-- @return true if execution is still busy, false otherwise
 function SlaveProxy:requestTopic_busy()
+   self:assert_running_method("requestTopic")
    return self.xmlrpc_post:running()
 end
 
+--- Check if concurrent execution has successfully completed.
+-- @return true if execution has succeeded, false otherwise
 function SlaveProxy:requestTopic_done()
    self:assert_running_method("requestTopic")
    return self.xmlrpc_post:done()
 end
 
+--- Check if concurrent execution has failed.
+-- @return true if execution has failed, false otherwise
 function SlaveProxy:requestTopic_failed()
    self:assert_running_method("requestTopic")
    return self.xmlrpc_post:failed()
 end
 
+--- Result from completed concurrent call.
+-- @return result of completed concurrent call
 function SlaveProxy:requestTopic_result()
    self:assert_running_method("requestTopic")
    assert(self.xmlrpc_post:done(), "requestTopic not done")
