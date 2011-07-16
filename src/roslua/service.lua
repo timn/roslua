@@ -32,7 +32,20 @@ require("roslua.utils")
 require("struct")
 require("socket")
 
-Service = {}
+Service = {DEBUG=false,
+	   CLSTATE_CONNECTED = 1,
+	   CLSTATE_HEADER_SENT = 2,
+	   CLSTATE_HEADER_RECEIVED = 3,
+	   CLSTATE_COMMUNICATING = 4,
+	   CLSTATE_FAILED = 5,
+	   CLSTATE_DISCONNECTED = 6,
+
+	   CLSTATE_TO_STR = { "CLSTATE_CONNECTED",
+			      "CLSTATE_HEADER_SENT",
+			      "CLSTATE_HEADER_RECEIVED",
+			      "CLSTATE_COMMUNICATING",
+			      "CLSTATE_FAILED", "CLSTATE_DISCONNECTED" }
+}
 
 --- Constructor.
 -- Create a new service provider instance.
@@ -62,6 +75,8 @@ function Service:new(service, srvtype, handler)
 
    o.clients = {}
    o.num_calls = 0
+   o.waiting_clients = 0
+   o.failed_clients = 0
 
    o.is_complex = false
    for _, f in ipairs(o.srvspec.reqspec.fields) do
@@ -99,16 +114,97 @@ end
 function Service:accept_connections()
    local conns = self.server:accept()
    for _, c in ipairs(conns) do
+      table.insert(self.clients, {connection = c, state = self.CLSTATE_CONNECTED})
       c.srvspec = self.srvspec
-      c:send_header{callerid=roslua.node_name,
-		    service=self.service,
-		    type=self.type,
-		    md5sum=self.srvspec:md5()}
-      c:receive_header()
+   end
+   self.waiting_clients = self.waiting_clients + #conns
+end
 
-      self.clients[c.header.callerid] = {uri = c.header.callerid, connection = c}
+
+-- (internal) Called by spin to process waiting clients.
+function Service:process_clients()
+   for _, c in ipairs(self.clients) do
+      if c.state < self.CLSTATE_COMMUNICATING then
+	 if c.state == self.CLSTATE_CONNECTED then
+	    c.md5sum = self.srvspec:md5()
+	    c.connection:send_header{callerid=roslua.node_name,
+				     service=self.service,
+				     type=self.type,
+				     md5sum=c.md5sum}
+
+	    c.header_receive_coroutine =
+	       coroutine.create(function ()
+				   return c.connection:receive_header(true)
+				end)
+	    c.state = self.CLSTATE_HEADER_SENT
+
+	 elseif c.state == self.CLSTATE_HEADER_SENT then
+	    local data, err = coroutine.resume(c.header_receive_coroutine)
+	    if not data then
+	       print_warn("Service[%s]: failed to receive header from %s: %s",
+			  self.service, c.uri, err)
+	       c.state = self.CLSTATE_FAILED
+	    elseif coroutine.status(c.header_receive_coroutine) == "dead" then
+	       -- finished
+	       c.header_receive_coroutine = nil
+	       c.state = self.CLSTATE_HEADER_RECEIVED
+	    end
+
+	 elseif c.state == self.CLSTATE_HEADER_RECEIVED then
+	    if self.DEBUG then
+	       print_debug("Service[%s]: incoming client connection",
+			   self.service)
+	    end
+
+	    if c.connection.header.md5sum ~= "*" and
+	       c.connection.header.md5sum ~= c.md5sum
+	    then
+	       print_warn("Service[%s]: received non-matching MD5 "..
+			  "(here: %s there: %s) sum from %s, disconnecting and "..
+			  "ignoring", self.service, c.md5sum,
+		       c.connection.header.md5sum, c.connection.header.callerid)
+	       c.state = self.CLSTATE_FAILED
+	    else
+	       if self.DEBUG then
+		  printf("Service[%s]: accepted connection from %s",
+			 self.service, c.connection.header.callerid)
+	       end
+	       c.callerid = c.connection.header.callerid
+	       c.connection.name = string.format("Service[%s]/%s",
+						 self.service, c.callerid)
+	       c.state = self.CLSTATE_COMMUNICATING
+	       self.waiting_clients = self.waiting_clients - 1
+	    end
+	 end
+
+	 if c.state == self.CLSTATE_FAILED then
+	    self.waiting_clients = self.waiting_clients - 1
+	    self.failed_client = self.failed_clients + 1
+	    print_warn("Service[%s]: accepting connection failed", self.service)
+	    c.connection:close()
+	    c.connection = nil
+	 end
+      end
    end
 end
+
+
+-- (internal) Called by spin() to cleanup failed clients.
+function Service:cleanup_subscribers()
+   for i=#self.clients, 1, -1 do
+      if self.clients[i].state == self.CLSTATE_FAILED or
+	 self.clients[i].state == self.CLSTATE_DISCONNECTED
+      then
+	 if self.DEBUG then
+	    printf("Service[%s]: removing failed/disconnected client %s",
+		   self.service, self.clients[i].callerid)
+	 end
+	 table.remove(self.clients, i)
+      end
+   end
+   self.failed_clients = 0
+end
+
 
 
 -- (internal) Send response to the given connection
@@ -188,10 +284,29 @@ function Service:dispatch(client)
       end
       if not client.connection.header.persistent == 1 then
 	 client.connection:close()
-	 self.clients[client.uri] = nil
+	 client.state = CLSTATE_DISCONNECTED
       end
 
       self.num_calls = self.num_calls + 1
+   end
+end
+
+
+function Service:process_calls()
+   -- handle service calls
+   for _, c in ipairs(self.clients) do
+      if c.state == self.CLSTATE_COMMUNICATING then
+	 local ok, err = pcall(c.connection.spin, c.connection)
+	 if not ok then
+	    if err == "closed" then
+	       -- remote closed the connection, we remove this service
+	       c.connection:close()
+	       c.state = self.CLSTATE_FAILED
+	    end
+	 elseif c.connection:data_received() then
+	    self:dispatch(c)
+	 end
+      end
    end
 end
 
@@ -201,17 +316,13 @@ end
 function Service:spin()
    self:accept_connections()
 
-   -- handle service calls
-   for uri, c in pairs(self.clients) do
-      local ok, err = pcall(c.connection.spin, c.connection)
-      if not ok then
-	 if err == "closed" then
-	    -- remote closed the connection, we remove this service
-	    c.connection:close()
-	    self.clients[uri] = nil
-	 end
-      elseif c.connection:data_received() then
-	 self:dispatch(c)
-      end
+   if self.waiting_clients > 0 then
+      self:process_clients()
+   end
+
+   self:process_calls()
+
+   if self.failed_clients > 0 then
+      self:cleanup_clients()
    end
 end
