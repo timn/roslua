@@ -2,11 +2,12 @@
 ----------------------------------------------------------------------------
 --  service_client.lua - Service client
 --
---  Created: Fri Jul 30 10:34:47 2010 (at Intel Research, Pittsburgh)
+--  Created: Fri Jul 30 10:34:47 2010 (at Intel Labs Pittsburgh)
 --  License: BSD, cf. LICENSE file of roslua
---  Copyright  2010  Tim Niemueller [www.niemueller.de]
---             2010  Carnegie Mellon University
---             2010  Intel Research Pittsburgh
+--  Copyright  2010-2011  Tim Niemueller [www.niemueller.de]
+--             2010-2011  Carnegie Mellon University
+--             2010       Intel Labs Pittsburgh
+--             2011       SRI International
 ----------------------------------------------------------------------------
 
 --- Service client.

@@ -49,8 +49,8 @@ end
 function TcpRosConnection:connect(host, port)
    assert(not self.socket, "Socket has already been created")
    self.socket = socket.tcp()
+   assert(self.socket:connect(host, port))
    self.socket:settimeout(0)
-   assert(socket.connect(host, port))
    self.is_client = true
 end
 
@@ -203,12 +203,13 @@ end
 --- Receive data from the network.
 -- Upon return contains the new data in the payload field.
 function TcpRosConnection:receive()
-   local packet_size_d = self:receive_data(4)
-   if not packet_size_d then return false end
+   local packet_size_d, err = self:receive_data(4)
+   if not packet_size_d then return nil, err end
    local packet_size = struct.unpack("<!1i4", packet_size_d)
 
    if packet_size > 0 then
-      self.payload = assert(self:receive_data(packet_size))
+      self.payload, err = self:receive_data(packet_size)
+      if not self.payload then return nil, err end
    else
       self.payload = ""
    end
@@ -262,7 +263,9 @@ function TcpRosConnection:spin()
    self.messages = {}
    local i = 1
    while self:data_available() and i <= self.max_receives_per_spin do
-      self:receive()
+      local ok, err = pcall(self.receive, self)
+      if not ok then error(err, 0) end
+      i = i + 1
    end
 end
 
@@ -291,7 +294,7 @@ end
 --- Receive data from the network.
 -- Upon return contains the new messages in the messages array field.
 function TcpRosPubSubConnection:receive()
-   if TcpRosConnection.receive(self) then
+   if assert(TcpRosConnection.receive(self)) then
       local message = self.msgspec:instantiate()
       message:deserialize(self.payload)
       table.insert(self.messages, message)
@@ -333,10 +336,13 @@ end
 --- Receive data from the network.
 -- Upon return contains the new messages in the messages array field.
 function TcpRosServiceProviderConnection:receive()
-   if TcpRosConnection.receive(self) then
+   local ok, err = TcpRosConnection.receive(self)
+   if ok then
       local message = self.srvspec.reqspec:instantiate()
       message:deserialize(self.payload)
       table.insert(self.messages, message)
+   else
+      error(err, 0)
    end
 end
 
@@ -359,8 +365,8 @@ end
 -- Upon return contains the new message in the message field.
 function TcpRosServiceClientConnection:receive()
    -- get OK-byte
-   local ok, ok_byte_d, err = roslua.utils.socket_recv(self.socket, 1)
-   if not ok or ok_byte_d == nil then
+   local ok_byte_d, err = roslua.utils.socket_recv(self.socket, 1)
+   if ok_byte_d == nil then
       error("Reading OK byte failed: " .. err, (err == "closed") and 0)
    end
    local ok_byte = struct.unpack("<!1I1", ok_byte_d)

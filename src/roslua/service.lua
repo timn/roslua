@@ -2,11 +2,12 @@
 ----------------------------------------------------------------------------
 --  service.lua - Service provider
 --
---  Created: Thu Jul 29 14:43:45 2010 (at Intel Research, Pittsburgh)
+--  Created: Thu Jul 29 14:43:45 2010 (at Intel Labs Pittsburgh)
 --  License: BSD, cf. LICENSE file of roslua
---  Copyright  2010  Tim Niemueller [www.niemueller.de]
---             2010  Carnegie Mellon University
---             2010  Intel Research Pittsburgh
+--  Copyright  2010-2011  Tim Niemueller [www.niemueller.de]
+--             2010-2011  Carnegie Mellon University
+--             2010       Intel Labs Pittsburgh
+--             2011       SRI International
 ----------------------------------------------------------------------------
 
 --- Service provider.
@@ -26,6 +27,7 @@ module("roslua.service", package.seeall)
 
 require("roslua")
 require("roslua.srv_spec")
+require("roslua.utils")
 
 require("struct")
 require("socket")
@@ -104,7 +106,7 @@ function Service:accept_connections()
 		    md5sum=self.srvspec:md5()}
       c:receive_header()
 
-      self.clients[c.header.callerid] = { uri = c.header.callerid, connection = c }
+      self.clients[c.header.callerid] = {uri = c.header.callerid, connection = c}
    end
 end
 
@@ -125,7 +127,7 @@ function Service:send_response(connection, msg_or_vals)
    end
    local s = struct.pack("<!1I1", 1)
 
-   connection:send(s .. m:serialize())
+   roslua.utils.socket_send(connection, s .. m:serialize())
 end
 
 -- (internal) send error message.
@@ -133,7 +135,7 @@ end
 -- @param message error message to send
 function Service:send_error(connection, message)
    local s = struct.pack("<!1I1I4c0", 0, #message, message)
-   connection:send(s)
+   roslua.utils.socket_send(connection, s)
 end
 
 
@@ -207,8 +209,6 @@ function Service:spin()
 	    -- remote closed the connection, we remove this service
 	    c.connection:close()
 	    self.clients[uri] = nil
-	 else
-	    error(err)
 	 end
       elseif c.connection:data_received() then
 	 self:dispatch(c)
