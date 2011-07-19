@@ -76,23 +76,29 @@ end
 -- @param ... any parameter required for the method call
 function XmlRpcPost:setup_request(method, ...)
    local request_body = xmlrpc.clEncode(method, ...)
+
+   local u = socket.url.parse(self.uri, {path="/"})
+
    self.request = {
-      uri=self.uri,
+      url = u,
+      uri=socket.url.build({path=u.path}),
       method = method,
       http_method = "POST",
       request_body = request_body,
       headers = {
 	 ["user-agent"] = xmlrpc._PKGNAME .. " " .. xmlrpc._VERSION,
+	 ["host"] = u.host,
+	 ["connection"] = "close",
 	 ["content-type"] = "text/xml",
 	 ["content-length"] = tostring(string.len(request_body)),
       },
    }
 
-   local u = socket.url.parse(self.uri)
    for k,v in pairs(u) do
       --printf("U: %s: %s", k, tostring(v))
       self.request[k] = v
    end
+
    --for k,v in pairs(self.request) do
    --  printf("R: %s: %s", k, tostring(v))
    --end
@@ -139,6 +145,7 @@ function XmlRpcPost:post_request()
 
    local reqline = string.format("%s %s HTTP/1.1\r\n",
 				 self.request.http_method, self.request.uri)
+
    local bytes, err = socket_send(self.c, reqline)
    assert(bytes == #reqline, "Failed to send request line "..tostring(err))
 
@@ -354,7 +361,6 @@ function XmlRpcPost:spin()
       elseif coroutine.status(self.read_coroutine) == "dead" then
 	 -- finished
 	 self.read_coroutine = nil
-	 self.state = STATE_RECEIVED
       end
 
    elseif self.state == STATE_FAILED then
