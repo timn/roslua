@@ -202,11 +202,11 @@ function Subscriber:connect()
 	 p.state ~= self.PUBSTATE_FAILED
       then
 	 if p.state == self.PUBSTATE_DISCONNECTED then
-	    if self.DEBUG then
-	       print_debug("Subscriber[%s]: Request topic from %s",
-			   self.topic, uri)
-	    end
 	    if not slave:requestTopic_busy() then
+	       if self.DEBUG then
+	          print_debug("Subscriber[%s]: Request topic from %s",
+			      self.topic, uri)
+	       end
 	       local ok, err = pcall(slave.requestTopic_start, slave, self.topic)
 	       if not ok then
 		  p.state = self.PUBSTATE_FAILED
