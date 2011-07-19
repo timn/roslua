@@ -151,8 +151,9 @@ end
 --- Check if concurrent execution is still busy.
 -- @return true if execution is still busy, false otherwise
 function SlaveProxy:requestTopic_busy()
-   self:assert_running_method("requestTopic")
-   return self.xmlrpc_post:running()
+   return self.xmlrpc_post.request and
+      self.xmlrpc_post.request.method == "requestTopic" and
+      self.xmlrpc_post:running()
 end
 
 --- Check if concurrent execution has successfully completed.
