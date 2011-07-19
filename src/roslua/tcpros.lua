@@ -309,11 +309,10 @@ function TcpRosPubSubConnection:receive_header(yield_on_timeout)
    TcpRosConnection.receive_header(self, yield_on_timeout)
 
    assert(self.header.error == nil,
-	  "Opposite side reported error: " .. tostring(self.header.error))
+	  "Remote reported error: " .. tostring(self.header.error))
    assert(self.header.type == "*" or self.header.type == self.msgspec.type,
-          "Opposite site did not set proper type (got " ..
-	  tostring(self.header.type) ..
-          ", expected: " .. tostring(self.msgspec.type) .. ")")
+          "Type mismatched, got " .. tostring(self.header.type) ..
+          ", but expected: " .. tostring(self.msgspec.type))
 
    return self.header
 end
