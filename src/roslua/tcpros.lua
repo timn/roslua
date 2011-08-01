@@ -294,10 +294,17 @@ end
 --- Receive data from the network.
 -- Upon return contains the new messages in the messages array field.
 function TcpRosPubSubConnection:receive()
-   if assert(TcpRosConnection.receive(self)) then
+   local ok, err = pcall(TcpRosConnection.receive, self)
+   if ok then
       local message = self.msgspec:instantiate()
       message:deserialize(self.payload)
       table.insert(self.messages, message)
+   else
+      if err == "closed" then
+         error(err, 0)
+      else
+         error("Failed to receive (connection " .. err .. ")", 0)
+      end
    end
 end
 

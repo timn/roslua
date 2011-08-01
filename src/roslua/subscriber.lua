@@ -210,8 +210,8 @@ function Subscriber:connect()
 	       local ok, err = pcall(slave.requestTopic_start, slave, self.topic)
 	       if not ok then
 		  p.state = self.PUBSTATE_FAILED
-		  print_warn("Subscriber[%s:%s]: parameter negotiation to "..
-			     "%s failed (%s)", self.type, self.topic, uri, err)
+		  print_warn("Subscriber[%s]: parameter negotiation to "..
+			     "%s failed (%s)", self.topic, uri, err)
 	       end
 	       p.state = self.PUBSTATE_TOPIC_REQUESTED
 	    end
@@ -219,9 +219,8 @@ function Subscriber:connect()
 
 	 if p.state == self.PUBSTATE_TOPIC_REQUESTED then
 	    if slave:requestTopic_failed() then
-	       print_warn("Subscriber[%s:%s]: parameter negotiation "..
-			  "failed: %s", self.type, self.topic,
-		          slave.xmlrpc_post.error)
+	       print_warn("Subscriber[%s]: Parameter negotiation "..
+			  "failed. %s", self.topic, slave.xmlrpc_post.error)
 	       p.num_tries = p.num_tries + 1
 	       p.state = self.PUBSTATE_FAILED
 	       slave.xmlrpc_post:reset()
@@ -242,12 +241,11 @@ function Subscriber:connect()
 
 	 elseif p.state == self.PUBSTATE_TOPIC_NEGOTIATED then
 	    if self.DEBUG then
-	       print_debug("Subscriber[%s:%s]: Connecting to %s:%d",
-			   self.type, self.topic, p.proto[2], p.proto[3])
+	       print_debug("Subscriber[%s]: Connecting to %s:%d",
+			   self.topic, p.proto[2], p.proto[3])
 	    end
 	    p.connection = roslua.tcpros.TcpRosPubSubConnection:new()
-	    p.connection.name = string.format("Subscriber[%s:%s]",
-					 self.type, self.topic)
+	    p.connection.name = string.format("Subscriber[%s]", self.topic)
 	    local ok, err = pcall(p.connection.connect_start, p.connection,
 				  p.proto[2], p.proto[3])
 	    if ok then
@@ -377,8 +375,10 @@ function Subscriber:spin()
 		  p.connection = nil
 		  -- we do not try to reconnect, we rely on proper publisher updates
 	       else
-		  print_warn("Subscriber[%s]: receiving failed: %s",
-			     self.topic, err)
+                  if self.DEBUG then
+                     print_warn("Subscriber[%s]: receiving failed: %s",
+                                self.topic, err)
+                  end
 		  p.state = self.PUBSTATE_FAILED
 	       end
 	    elseif p.connection:data_received() then

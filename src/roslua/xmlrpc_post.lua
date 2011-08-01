@@ -147,20 +147,27 @@ function XmlRpcPost:post_request()
 				 self.request.http_method, self.request.uri)
 
    local bytes, err = socket_send(self.c, reqline)
-   assert(bytes == #reqline, "Failed to send request line "..tostring(err))
+   if bytes ~= #reqline then
+      error("Failed to send XML-RPC request line to " ..
+            self.uri .. " ("..tostring(err) .. ")", 0)
+   end
 
    local h = "\r\n"
    for i, v in pairs(self.request.headers) do
       h = i .. ": " .. v .. "\r\n" .. h
    end
    local bytes, err = socket_send(self.c, h)
-   assert(bytes == #h, "Failed to send headers")
+   if bytes ~= #h then
+      error("Failed to send XML-RPC headers to " ..
+            self.uri .. " ("..tostring(err) .. ")", 0)
+   end
    
    local bytes, err = socket_send(self.c, self.request.request_body)
 
-   assert(bytes == #self.request.request_body,
-	  "Failed to send request: " .. tostring(err))
-
+   if bytes ~= #self.request.request_body then
+      error("Failed to send XML-RPC request to " ..
+            self.uri .. " ("..tostring(err) .. ")", 0)
+   end
 end
 
 
