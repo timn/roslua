@@ -223,6 +223,12 @@ end
 function finalize()
    printf("ROS node %s is finalizing", roslua.node_name)
 
+
+   for _,t in pairs(roslua.timers) do
+      t:finalize()
+      roslua.registry.unregister_timer(t)
+   end
+
    -- shutdown all connections
    for topic,s in pairs(roslua.subscribers) do
       s.subscriber:finalize()
@@ -496,11 +502,18 @@ end
 --- Create timer.
 -- Creates a timer and registers it for execution.
 -- @param interval minimum time between invocations, i.e. the desired
--- time interval between invocations. Either a number, which is considered
--- as time in seconds, or an instance of Duration.
--- @param callback function to execute when the timer is due
-function timer(interval, callback)
-   local t = Timer:new(interval, callback)
+-- time interval between invocations. Either a number, which is
+-- considered as time in seconds, or an instance of Duration.
+-- @param callback_or_timer either callback function to execute when
+-- the timer is due, or an instance of a Timer sub-class. In the
+-- latter case finalization is invoked on roslua finalization.
+function timer(interval, callback_or_timer)
+   local t
+   if Timer.is_instance(callback_or_timer) then
+      t = callback_or_timer
+   else
+      t = Timer:new(interval, callback_or_timer)
+   end
    roslua.registry.register_timer(t)
    return t
 end

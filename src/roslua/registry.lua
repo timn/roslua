@@ -134,7 +134,7 @@ end
 -- @param timer timer to register
 -- @see Timer
 function register_timer(timer)
-   assert(not roslua.timers[timer], "Timer has already been registerd")
+   assert(not roslua.timers[timer], "Timer has already been registered")
 
    roslua.timers[timer] = timer
 end
