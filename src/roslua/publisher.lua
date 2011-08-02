@@ -44,13 +44,16 @@ Publisher = {DEBUG = false,
 -- Create a new publisher instance.
 -- @param topic topic to publish to
 -- @param type type of the topic
-function Publisher:new(topic, type)
+-- @param latching true to create latching publisher,
+-- false or nil to create regular publisher. A latching publisher keeps
+-- the last sent message in a buffer and sends it to connecting nodes.
+function Publisher:new(topic, type, latching)
    local o = {}
    setmetatable(o, self)
    self.__index = self
 
    o.topic       = topic
-   o.latching    = o.latching or false
+   o.latching    = latching or false
    if roslua.msg_spec.is_msgspec(type) then
       o.type    = type.type
       o.msgspec = type

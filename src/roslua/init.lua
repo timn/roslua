@@ -446,11 +446,13 @@ end
 -- publisher which is shared.
 -- @param topic name of topic to request publisher for
 -- @param type type of topic
+-- @param latching true to create latching publisher,
+-- false or nil to create regular publisher
 -- @return Publisher instance for the requested topic
 -- @see Publisher
-function publisher(topic, type)
+function publisher(topic, type, latching)
    if not roslua.publishers[topic] then
-      local p = Publisher:new(topic, type)
+      local p = Publisher:new(topic, type, latching)
       -- the following sets publishers table entry
       roslua.registry.register_publisher(topic, p.type, p)
    end
