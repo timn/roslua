@@ -197,13 +197,21 @@ end
 -- The finalizer will be called when roslua.finalize() is executed.
 -- @param finalizer function which is called without arguments on finalization
 function add_finalizer(finalizer)
-   assert(type(finalizer) == "function", "Finalizer must be a function")
-   for _, f in ipairs(finalizers) do
-      if f == finalizer then
-	 error("Finalizer has already been registered", 0)
+   if type(finalizer) == "function" or
+      (type(finalizer) == "table" and type(finalizer.finalize) == "function")
+   then
+
+      for _, f in ipairs(finalizers) do
+         if f == finalizer then
+            error("Finalizer has already been registered", 0)
+         end
       end
+      table.insert(finalizers, finalizer);
+
+   else
+      error("Finalizer must be a function, or table with finalize function entry",
+            0)
    end
-   table.insert(finalizers, finalizer);
 end
 
 --- Remove finalizer.
@@ -223,6 +231,16 @@ end
 function finalize()
    printf("ROS node %s is finalizing", roslua.node_name)
 
+   -- Run custom finalizers
+   local fcopy = {}
+   for i, f in ipairs(finalizers) do fcopy[i] = f end
+   for _, f in ipairs(fcopy) do
+      if type(f) == "function" then
+         f()
+      else
+         f:finalize()
+      end
+   end
 
    for _,t in pairs(roslua.timers) do
       t:finalize()
@@ -230,6 +248,10 @@ function finalize()
    end
 
    -- shutdown all connections
+   for service,s in pairs(roslua.services) do
+      s.provider:finalize()
+      roslua.registry.unregister_service(service, s.type, s.provider)
+   end
    for topic,s in pairs(roslua.subscribers) do
       s.subscriber:finalize()
       roslua.registry.unregister_subscriber(topic, s.type, s.subscriber)
@@ -237,21 +259,6 @@ function finalize()
    for topic,p in pairs(roslua.publishers) do
       p.publisher:finalize()
       roslua.registry.unregister_publisher(topic, p.type, p.publisher)
-   end
-   for service,s in pairs(roslua.services) do
-      s.provider:finalize()
-      roslua.registry.unregister_service(service, s.type, s.provider)
-   end
-   for _,t in pairs(roslua.timers) do
-      t:finalize()
-      roslua.registry.unregister_timer(t)
-   end
-   local fcopy = {}
-   for i, f in ipairs(finalizers) do
-      fcopy[i] = f
-   end
-   for _, f in ipairs(fcopy) do
-      f()
    end
 end
 
