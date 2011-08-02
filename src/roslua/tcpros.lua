@@ -49,7 +49,8 @@ end
 function TcpRosConnection:connect(host, port)
    assert(not self.socket, "Socket has already been created")
    self.socket = socket.tcp()
-   assert(self.socket:connect(host, port))
+   local ok, err = pcall(self.socket.connect, socket, host, port)
+   if not ok then error(err, 0) end
    self.socket:settimeout(0)
    self.is_client = true
 end
@@ -148,9 +149,11 @@ end
 function TcpRosConnection:receive_header(yield_on_timeout)
    self.header = {}
 
-   local rd = assert(self:receive_data(4, yield_on_timeout))
+   local ok, rd = pcall(self.receive_data, self, 4, yield_on_timeout)
+   if not ok then error("Connection " .. tostring(rd), 0) end
    local packet_size = struct.unpack("<!1i4", rd)
-   local packet = assert(self:receive_data(packet_size, yield_on_timeout))
+   local ok, packet = pcall(self.receive_data, self, packet_size, yield_on_timeout)
+   if not ok then error("Connection " .. tostring(packet), 0) end
 
    local i = 1
 
@@ -315,11 +318,12 @@ end
 function TcpRosPubSubConnection:receive_header(yield_on_timeout)
    TcpRosConnection.receive_header(self, yield_on_timeout)
 
-   assert(self.header.error == nil,
-	  "Remote reported error: " .. tostring(self.header.error))
-   assert(self.header.type == "*" or self.header.type == self.msgspec.type,
-          "Type mismatched, got " .. tostring(self.header.type) ..
-          ", but expected: " .. tostring(self.msgspec.type))
+   if self.header.error ~= nil then
+      error("Remote reported error: " .. tostring(self.header.error), 0)
+   elseif self.header.type ~= "*" and self.header.type ~= self.msgspec.type then
+      error("Type mismatched, got " .. tostring(self.header.type) ..
+            ", but expected: " .. tostring(self.msgspec.type), 0)
+   end
 
    return self.header
 end
