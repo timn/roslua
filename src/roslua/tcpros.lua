@@ -176,12 +176,12 @@ end
 
 
 function TcpRosConnection:writable()
-   local _, ready_w = socket.select({}, {self.socket})
+   local _, ready_w = socket.select({}, {self.socket}, 0)
    return (ready_w[self.socket] ~= nil)
 end
 
 function TcpRosConnection:readable()
-   local ready_r, _ = socket.select({self.socket}, {})
+   local ready_r, _ = socket.select({self.socket}, {}, 0)
    return (ready_r[self.socket] ~= nil)
 end
 
