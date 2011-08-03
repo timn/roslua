@@ -284,8 +284,9 @@ function Subscriber:connect()
 				end)
 	    
 	 elseif p.state == self.PUBSTATE_HEADER_SENT then
-	    local data, err = coroutine.resume(p.header_receive_coroutine)
-	    if not data then
+	    local ok, data_err =
+               coroutine.resume(p.header_receive_coroutine)
+	    if not ok or not data_err then
 	       --print_warn("Subscriber[%s] -> %s:%d: Failed to receive "..
                --           "header (%s)", self.topic, p.proto[2],
                --           p.proto[3], tostring(data_err))

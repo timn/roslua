@@ -126,8 +126,10 @@ function Publisher:process_subscribers()
       if s.state < self.SUBSTATE_COMMUNICATING then
 	 local old_state = s.state
 	 if s.state == self.SUBSTATE_CONNECTED then
-	    --printf("Publisher[%s] accepting connection from %s:%s",
-	    --	     self.topic, self.server:get_ip_port())
+            if self.DEBUG then
+               print_debug("Publisher[%s]: accepting connection from %s:%s",
+                           self.topic, self.server:get_ip_port())
+            end
 
 	    s.md5sum = self.msgspec:md5()
 	    s.connection:send_header{callerid=roslua.node_name,
@@ -142,10 +144,11 @@ function Publisher:process_subscribers()
 	    s.state = self.SUBSTATE_HEADER_SENT
 
 	 elseif s.state == self.SUBSTATE_HEADER_SENT then
-	    local data, err = coroutine.resume(s.header_receive_coroutine)
-	    if not data then
+	    local ok, data_err =
+               coroutine.resume(s.header_receive_coroutine)
+	    if not ok or not data_err then
 	       print_warn("Publisher[%s]: failed to receive header: %s",
-			  self.topic, err)
+			  self.topic, data_err)
 	       s.state = self.SUBSTATE_FAILED
 	    elseif coroutine.status(s.header_receive_coroutine) == "dead" then
 	       -- finished
