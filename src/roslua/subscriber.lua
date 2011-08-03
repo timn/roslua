@@ -202,31 +202,33 @@ function Subscriber:connect()
 	 p.state ~= self.PUBSTATE_FAILED
       then
 	 if p.state == self.PUBSTATE_DISCONNECTED then
-	    if not slave:requestTopic_busy() then
-	       if self.DEBUG then
-	          print_debug("Subscriber[%s]: Request topic from %s",
-			      self.topic, uri)
-	       end
-	       local ok, err = pcall(slave.requestTopic_start, slave, self.topic)
-	       if not ok then
-		  p.state = self.PUBSTATE_FAILED
-		  print_warn("Subscriber[%s]: parameter negotiation to "..
-			     "%s failed (%s)", self.topic, uri, err)
-	       end
-	       p.state = self.PUBSTATE_TOPIC_REQUESTED
-	    end
+            if self.DEBUG then
+               print_debug("Subscriber[%s]: Request topic from %s",
+                           self.topic, uri)
+            end
+            local ok, handle_err = pcall(slave.requestTopic_conc, slave, self.topic)
+            if not ok then
+               p.state = self.PUBSTATE_FAILED
+               print_warn("Subscriber[%s]: parameter negotiation to "..
+			     "%s failed (%s)", self.topic, uri, handle_err)
+            else
+               p.req_handle = handle_err
+               p.state = self.PUBSTATE_TOPIC_REQUESTED
+            end
 	 end
 
 	 if p.state == self.PUBSTATE_TOPIC_REQUESTED then
-	    if slave:requestTopic_failed() then
-	       print_warn("Subscriber[%s]: Parameter negotiation "..
-			  "failed. %s", self.topic, slave.xmlrpc_post.error)
+	    if p.req_handle:failed() then
+	       --print_warn("Subscriber[%s]: Parameter negotiation "..
+               --           "failed. %s", self.topic, p.req_handle:error())
 	       p.num_tries = p.num_tries + 1
 	       p.state = self.PUBSTATE_FAILED
-	       slave.xmlrpc_post:reset()
-	    elseif slave:requestTopic_done() then
-	       local proto = slave:requestTopic_result()
-	       slave.xmlrpc_post:reset()
+	       p.req_handle:finalize()
+	       p.req_handle = nil
+	    elseif p.req_handle:succeeded() then
+	       local proto = p.req_handle:result()
+	       p.req_handle:finalize()
+	       p.req_handle = nil
 
 	       if proto[1] ~= "TCPROS" then
 		  print_warn("Subscriber[%s:%s]: TCPROS not supported "..

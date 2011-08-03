@@ -42,7 +42,6 @@ function SlaveProxy:new(slave_uri, node_name)
 
    o.slave_uri = slave_uri
    o.node_name = node_name
-   o.xmlrpc_post = roslua.xmlrpc_post.XmlRpcPost:new(slave_uri)
 
    return o
 end
@@ -132,52 +131,75 @@ function SlaveProxy:requestTopic(topic)
 end
 
 
---- Assert that a specific method is currently running.
--- If the method is not running throws an error.
--- @param method name of the method that must run
-function SlaveProxy:assert_running_method(method)
-   assert(self.xmlrpc_post.request and self.xmlrpc_post.request.method == method,
-          method .. " is not currently being executed")
-end
-
 --- Start a topic request.
 -- This starts a concurrent execution of requestTopic().
 -- @param topic topic to request
-function SlaveProxy:requestTopic_start(topic)
-   return self.xmlrpc_post:start_call("requestTopic", self.node_name,
-				      topic, self:connection_params())
+function SlaveProxy:requestTopic_conc(topic)
+   return SlaveProxyRequest:new(self.slave_uri, self.node_name, "requestTopic",
+                                topic, self:connection_params())
 end
+
+
+SlaveProxyRequest = { slave_uri = nil, node_name = nil, method = nil }
+
+--- Constructor.
+-- @param slave_uri XML-RPC HTTP slave URI
+-- @param node_name name of this node
+function SlaveProxyRequest:new(slave_uri, node_name, method, ...)
+   local o = {}
+   setmetatable(o, self)
+   self.__index = self
+
+   o.slave_uri   = slave_uri
+   o.node_name   = node_name
+   o.method      = method
+   o.xmlrpc_post = roslua.xmlrpc_post.XmlRpcPost:new(slave_uri)
+
+   o.xmlrpc_post:start_call(method, node_name, ...)
+
+   return o
+end
+
+--- Destructor.
+function SlaveProxyRequest:finalize()
+   self.xmlrpc_post:reset()
+end
+
 
 --- Check if concurrent execution is still busy.
 -- @return true if execution is still busy, false otherwise
-function SlaveProxy:requestTopic_busy()
+function SlaveProxyRequest:busy()
    return self.xmlrpc_post.request and
-      self.xmlrpc_post.request.method == "requestTopic" and
+      self.xmlrpc_post.request.method == self.method and
       self.xmlrpc_post:running()
 end
 
 --- Check if concurrent execution has successfully completed.
 -- @return true if execution has succeeded, false otherwise
-function SlaveProxy:requestTopic_done()
-   self:assert_running_method("requestTopic")
+function SlaveProxyRequest:succeeded()
    return self.xmlrpc_post:done()
 end
 
 --- Check if concurrent execution has failed.
 -- @return true if execution has failed, false otherwise
-function SlaveProxy:requestTopic_failed()
-   self:assert_running_method("requestTopic")
+function SlaveProxyRequest:failed()
    return self.xmlrpc_post:failed()
+end
+
+--- Get error message if any.
+-- @return error message if any, empty string otherwise
+function SlaveProxyRequest:error()
+   return self.xmlrpc_post.error or ""
 end
 
 --- Result from completed concurrent call.
 -- @return result of completed concurrent call
-function SlaveProxy:requestTopic_result()
-   self:assert_running_method("requestTopic")
-   assert(self.xmlrpc_post:done(), "requestTopic not done")
+function SlaveProxyRequest:result()
+   assert(self.xmlrpc_post:done(), self.method .. " not done")
    assert(self.xmlrpc_post.result[1][1] == 1,
 	  string.format("XML-RPC call %s failed on server: %s",
 			self.xmlrpc_post.request.method,
 			tostring(self.xmlrpc_post.result[1][2])))
    return self.xmlrpc_post.result[1][3]
 end
+
