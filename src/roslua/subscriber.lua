@@ -38,7 +38,8 @@ Subscriber = {DEBUG = false,
 	      PUBSTATE_HEADER_SENT = 6,
 	      PUBSTATE_HEADER_RECEIVED = 7,
 	      PUBSTATE_COMMUNICATING = 8,
-	      PUBSTATE_FAILED = 9,
+	      PUBSTATE_MAYRETRY = 9,
+	      PUBSTATE_FAILED = 10,
 
 	      PUBSTATE_TO_STR = { "PUBSTATE_DISCONNECTED",
 				  "PUBSTATE_TOPIC_REQUESTED",
@@ -48,6 +49,7 @@ Subscriber = {DEBUG = false,
 				  "PUBSTATE_HEADER_SENT",
 				  "PUBSTATE_HEADER_RECEIVED",
 				  "PUBSTATE_COMMUNICATING",
+                                  "PUBSTATE_MAYRETRY",
 				  "PUBSTATE_FAILED" }
 	   }
 
@@ -208,7 +210,7 @@ function Subscriber:connect()
             end
             local ok, handle_err = pcall(slave.requestTopic_conc, slave, self.topic)
             if not ok then
-               p.state = self.PUBSTATE_FAILED
+               p.state = self.PUBSTATE_MAYRETRY
                print_warn("Subscriber[%s]: parameter negotiation to "..
 			     "%s failed (%s)", self.topic, uri, handle_err)
             else
@@ -221,8 +223,7 @@ function Subscriber:connect()
 	    if p.req_handle:failed() then
 	       --print_warn("Subscriber[%s]: Parameter negotiation "..
                --           "failed. %s", self.topic, p.req_handle:error())
-	       p.num_tries = p.num_tries + 1
-	       p.state = self.PUBSTATE_FAILED
+	       p.state = self.PUBSTATE_MAYRETRY
 	       p.req_handle:finalize()
 	       p.req_handle = nil
 	    elseif p.req_handle:succeeded() then
@@ -231,10 +232,10 @@ function Subscriber:connect()
 	       p.req_handle = nil
 
 	       if proto[1] ~= "TCPROS" then
-		  print_warn("Subscriber[%s:%s]: TCPROS not supported "..
-			     " by remote %s, ignoring peer", uri)
-		  p.state = self.PUBSTATE_DISCONNECTED
-		  p.num_tries = p.num_tries + 1
+		  print_warn("Subscriber[%s]: TCPROS not supported "..
+			     " by remote %s, ignoring peer", 
+                             self.topic, uri)
+		  p.state = self.PUBSTATE_FAILED
 	       else
 		  p.proto = proto
 		  p.state = self.PUBSTATE_TOPIC_NEGOTIATED
@@ -288,8 +289,7 @@ function Subscriber:connect()
 	       --print_warn("Subscriber[%s] -> %s:%d: Failed to receive "..
                --           "header (%s)", self.topic, p.proto[2],
                --           p.proto[3], tostring(data_err))
-	       p.num_tries = p.num_tries + 1
-	       p.state = self.PUBSTATE_FAILED
+	       p.state = self.PUBSTATE_MAYRETRY
 	    elseif coroutine.status(p.header_receive_coroutine) == "dead" then
 	       -- finished
 	       p.header_receive_coroutine = nil
@@ -304,7 +304,6 @@ function Subscriber:connect()
 		       self.topic, p.md5sum, p.connection.header.md5sum,
 		       p.connection.header.callerid)
 	       p.state = self.PUBSTATE_FAILED
-	       p.num_tries = CONNECTION_MAX_TRIES
 	    else
 	       if self.DEBUG then
 		  printf("Subscriber[%s]: established connection to %s",
@@ -315,17 +314,22 @@ function Subscriber:connect()
 	    end
 	 end
 
-	 if p.state == self.PUBSTATE_FAILED and p.connection then
+	 if (p.state == self.PUBSTATE_FAILED or
+             p.state == self.PUBSTATE_MAYRETRY) and p.connection
+         then
 	    p.connection:close()
 	    p.connection = nil
-	    if p.num_tries < CONNECTION_MAX_TRIES then
-	       -- may still retry
-	       p.state = PUBSTATE_DISCONNECTED
-            else
-	       print_warn("Subscriber[%s] -> %s:%d: Failed to connect "..
-                          "%d times, ignoring peer", self.topic,
-                           p.proto[2], p.proto[3], p.num_tries)
-	    end
+            if p.state == self.PUBSTATE_MAYRETRY then
+               p.num_tries = p.num_tries + 1
+               if p.num_tries < CONNECTION_MAX_TRIES then
+                  p.state = self.PUBSTATE_DISCONNECTED
+               else
+                  p.state = self.PUBSTATE.FAILED
+                  print_warn("Subscriber[%s] -> %s:%d: Failed to connect "..
+                             "%d times, ignoring peer", self.topic,
+                             p.proto[2], p.proto[3], p.num_tries)
+               end
+            end
 	 end
 
 	 if p.state ~= self.PUBSTATE_COMMUNICATING and
