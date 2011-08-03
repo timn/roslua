@@ -149,11 +149,11 @@ end
 function TcpRosConnection:receive_header(yield_on_timeout)
    self.header = {}
 
-   local ok, rd = pcall(self.receive_data, self, 4, yield_on_timeout)
-   if not ok then error("Connection " .. tostring(rd), 0) end
+   local rd, err = self:receive_data(4, yield_on_timeout)
+   if not rd then error("Connection " .. tostring(err), 0) end
    local packet_size = struct.unpack("<!1i4", rd)
-   local ok, packet = pcall(self.receive_data, self, packet_size, yield_on_timeout)
-   if not ok then error("Connection " .. tostring(packet), 0) end
+   local packet, err = self:receive_data(packet_size, yield_on_timeout)
+   if not packet then error("Connection " .. tostring(err), 0) end
 
    local i = 1
 
