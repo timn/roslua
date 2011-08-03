@@ -352,6 +352,7 @@ function spin()
    --tracked_times.api_slave.endtime = roslua.Time.now()
 
    --*** spin subscribers for receiving
+   --printf("*** Running subscribers")
    --tracked_times.subscribers = {start = roslua.Time.now()}
    for _,s in pairs(roslua.subscribers) do
       s.subscriber:spin()
@@ -359,26 +360,32 @@ function spin()
    --tracked_times.subscribers.endtime = roslua.Time.now()
 
    --*** spin publishers for accepting
-   -- tracked_times.publishers = {start = roslua.Time.now()}
+   --printf("*** Running publishers")
+   --tracked_times.publishers = {start = roslua.Time.now()}
    for _,p in pairs(roslua.publishers) do
       p.publisher:spin()
    end
    --tracked_times.publishers.endtime = roslua.Time.now()
 
    --*** spin service providers for accepting and processing
+   --printf("*** Running service providers")
    --tracked_times.providers = {start = roslua.Time.now()}
    for _,s in pairs(roslua.services) do
       s.provider:spin()
    end
    --tracked_times.providers.endtime = roslua.Time.now()
 
+   --printf("*** Running timers")
+   --tracked_times.timers = {start = roslua.Time.now()}
    for _,t in pairs(roslua.timers) do
       t:spin()
    end
+   --tracked_times.timers.endtime = roslua.Time.now()
 
    --*** Spin all registered spinners
    -- work on a copy of the list as the list might change while we run the
    -- spinners if one of the removes itself
+   --printf("*** Running spinners")
    --tracked_times.spinners = {start = roslua.Time.now()}
    local tmpspinners = {}
    for i, s in ipairs(spinners) do
@@ -387,6 +394,8 @@ function spin()
    for _, s in ipairs(spinners) do
       s()
    end
+
+   --printf("*** DONE")
 
    --tracked_times.spinners.endtime = roslua.Time.now()
    --tracked_times.total.endtime = roslua.Time.now()
