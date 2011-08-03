@@ -107,8 +107,8 @@ end
 function ServiceClient:connect()
    assert(not self.connection, "Already connected")
 
-   self.connection = roslua.tcpros.TcpRosServiceClientConnection:new()
-   self.connection.srvspec = self.srvspec
+   local connection = roslua.tcpros.TcpRosServiceClientConnection:new()
+   connection.srvspec = self.srvspec
 
    local uri = roslua.master:lookupService(self.service)
    assert(uri ~= "", "No provider found for service")
@@ -117,13 +117,15 @@ function ServiceClient:connect()
    local host, port = uri:match("rosrpc://([^:]+):(%d+)$")
    assert(host and port, "Parsing ROSRCP uri " .. uri .. " failed")
 
-   self.connection:connect(host, port, 5)
-   self.connection:send_header{callerid=roslua.node_name,
-			       service=self.service,
-			       type=self.type,
-			       md5sum=self.srvspec:md5(),
-			       persistent=self.persistent and 1 or 0}
-   self.connection:receive_header()
+   connection:connect(host, port, 5)
+   connection:send_header{callerid=roslua.node_name,
+                          service=self.service,
+                          type=self.type,
+                          md5sum=self.srvspec:md5(),
+                          persistent=self.persistent and 1 or 0}
+   connection:receive_header()
+
+   self.connection = connection
 end
 
 --- Initiate service execution.
@@ -154,6 +156,8 @@ function ServiceClient:concexec_start(args)
       ok, err = pcall(self.connection.send, self.connection, m)
       if not ok then
 	 self.concexec_error = "Sending message failed: " .. tostring(err)
+         self.connection:close()
+         self.connection = nil
       end
    end
 
@@ -161,12 +165,18 @@ function ServiceClient:concexec_start(args)
 end
 
 --- Wait for the execution to finish.
-function ServiceClient:concexec_wait()
+-- Warning, that blocks the complete execution until a reply has been
+-- received!
+-- @param timeout optional timeout in seconds after which the waiting
+-- should be aborted. An error is thrown if the timeout happens with
+-- only the string "timeout". A missing timeout or if set to -1 will
+-- cause it to wait indefinitely.
+function ServiceClient:concexec_wait(timeout)
    assert(self.running, "Service "..self.service.." ("..self.type..") is not being executed")
    assert(self.concurrent, "Service "..self.service.." ("..self.type..") is not executed concurrently")
    assert(not self._concexec_failed, "Service "..self.service.." ("..self.type..") has failed")
 
-   self.connection:wait_for_message()   
+   self.connection:wait_for_message(timeout)
 end
 
 
@@ -178,13 +188,15 @@ function ServiceClient:concexec_succeeded()
    assert(self.concurrent, "Service "..self.service.." ("..self.type..") is not executed concurrently")
 
    if not self.finished then
-      if self.connection:data_available() then
+      if self.connection and self.connection:data_available() then
 	 local ok, err = pcall(self.connection.receive, self.connection)
          if ok then
-	          self.finished = true
+            self.finished = true
          else
-	          self.concexec_error = "Receiving result failed: " .. err
+            self.concexec_error = "Receiving result failed: " .. err
             self._concexec_failed = true
+            self.connection:close()
+            self.connection = nil
          end
       end
    end
