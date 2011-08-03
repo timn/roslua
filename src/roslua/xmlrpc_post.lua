@@ -65,6 +65,7 @@ function XmlRpcPost:new(uri, method, ...)
 
    if method then
       o:start_call(method, ...)
+      self.args = { ... }
    end
 
    return o
@@ -76,6 +77,7 @@ end
 -- @param ... any parameter required for the method call
 function XmlRpcPost:setup_request(method, ...)
    local request_body = xmlrpc.clEncode(method, ...)
+   self.args = { ... }
 
    local u = socket.url.parse(self.uri, {path="/"})
 
@@ -334,7 +336,7 @@ end
 -- This method usually does not need to be called manually, rather it automtically
 -- registers with roslua to be called on roslua.spin().
 function XmlRpcPost:spin()
-   local old_state = self.state
+   --local old_state = self.state
 
    if self.state == STATE_INITIATED then
       -- check if we already connected
