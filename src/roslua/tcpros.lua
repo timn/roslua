@@ -190,11 +190,25 @@ end
 
 
 --- Wait for a message to arrive.
--- This message blocks until a message has been received.
-function TcpRosConnection:wait_for_message()
+-- This message blocks until a message has been received or the
+-- timeout has been reached.
+-- @param timeout optional timeout in seconds after which the waiting
+-- should be aborted. An error is thrown if the timeout happens with
+-- only the string "timeout". A missing timeout or if set to -1 will
+-- cause it to wait indefinitely.
+function TcpRosConnection:wait_for_message(timeout)
+   local timeout = timeout or -1
+   local start, now = roslua.Time.now()
+
    repeat
-      local selres = socket.select({self.socket}, {}, -1)
-   until selres[self.socket]
+      local selres = socket.select({self.socket}, {}, timeout)
+      now = roslua.Time.now()
+   until selres[self.socket] or
+      (timeout >= 0 and (now - start):to_sec() > timeout)
+
+   -- Timeout, throw an error.
+   if not selres[self.socket] then error("timeout", 0) end
+
    self:receive()
 end
 
