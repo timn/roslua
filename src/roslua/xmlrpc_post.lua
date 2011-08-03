@@ -282,7 +282,7 @@ end
 -- @return true if data can be written without blocking, false otherwise
 function XmlRpcPost:writable()
    assert(self.state ~= STATE_IDLE, "writable(): no request running")
-   local ready_r, ready_w = socket.select({}, {self.c})
+   local ready_r, ready_w = socket.select({}, {self.c}, 0)
    return (ready_w[self.c] ~= nil)
 end
 
@@ -290,7 +290,7 @@ end
 -- @return true if data can be read without blocking, false otherwise
 function XmlRpcPost:readable()
    assert(self.state ~= STATE_IDLE, "readable(): no request running")
-   local ready_r, ready_w = socket.select({self.c}, {})
+   local ready_r, ready_w = socket.select({self.c}, {}, 0)
    return (ready_r[self.c] ~= nil)
 end
 
