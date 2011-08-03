@@ -147,12 +147,12 @@ function Subscriber:update_publishers(publishers, connect_now)
       if not self.publishers[uri] then
 	 --if roslua.slave_uri == uri then
 	 --   print_warn("Subscriber[%s:%s]: removing ourselves from list of "..
-	--	       "publishers", self.type, self.topic)
+         --              "publishers", self.type, self.topic)
 	 --else
-	   self.publishers[uri] = { uri = uri, num_tries = 0,
-				     state = self.PUBSTATE_DISCONNECTED }
-	    self.connect_on_spin = true
-	 --end
+         self.publishers[uri] = { uri = uri, num_tries = 0,
+                                  state = self.PUBSTATE_DISCONNECTED }
+         self.connect_on_spin = true
+         --end
       end
    end
    local remove_pubs = {}
@@ -253,8 +253,9 @@ function Subscriber:connect()
 	    if ok then
 	       p.state = self.PUBSTATE_CONNECTING
 	    else
-	       print_warn("Subscriber[%s] -> %s:%d: Connection start "..
-			  "failed (%s)", self.topic, p.proto[2], p.proto[3], err)
+	       --print_warn("Subscriber[%s] -> %s:%d: Connection start "..
+               --	  "failed (%s)", self.topic, p.proto[2],
+               --         p.proto[3], err)
 	       p.state = self.PUBSTATE_DISCONNECTED
 	       p.num_tries = p.num_tries + 1
 	    end
@@ -265,6 +266,10 @@ function Subscriber:connect()
 	    end
 
 	 elseif p.state == self.PUBSTATE_CONNECTED then
+	    if self.DEBUG then
+	       print_debug("Subscriber[%s]: Connected to %s:%d, sending header",
+			   self.topic, p.proto[2], p.proto[3])
+	    end
 	    p.md5sum = self.msgspec:md5()
 	    p.connection:send_header{callerid=roslua.node_name,
 				topic=self.topic,
@@ -280,8 +285,9 @@ function Subscriber:connect()
 	 elseif p.state == self.PUBSTATE_HEADER_SENT then
 	    local data, err = coroutine.resume(p.header_receive_coroutine)
 	    if not data then
-	       print_warn("Subscriber[%s] -> %s:%d: Failed to receive header"..
-			  " (%s)", self.topic, p.proto[2], p.proto[3], err)
+	       --print_warn("Subscriber[%s] -> %s:%d: Failed to receive "..
+               --           "header (%s)", self.topic, p.proto[2],
+               --           p.proto[3], tostring(data_err))
 	       p.num_tries = p.num_tries + 1
 	       p.state = self.PUBSTATE_FAILED
 	    elseif coroutine.status(p.header_receive_coroutine) == "dead" then
@@ -315,6 +321,10 @@ function Subscriber:connect()
 	    if p.num_tries < CONNECTION_MAX_TRIES then
 	       -- may still retry
 	       p.state = PUBSTATE_DISCONNECTED
+            else
+	       print_warn("Subscriber[%s] -> %s:%d: Failed to connect "..
+                          "%d times, ignoring peer", self.topic,
+                           p.proto[2], p.proto[3], p.num_tries)
 	    end
 	 end
 
@@ -324,18 +334,20 @@ function Subscriber:connect()
 	    self.connect_on_spin = true
 	 end
 
-	 --if p.state ~= old_state then
-	 --   printf("Subscriber[%s] pub %s: %s -> %s", self.topic, p.uri,
-	 --	   self.PUBSTATE_TO_STR[old_state], self.PUBSTATE_TO_STR[p.state])
-	 --end
+	 if self.DEBUG and p.state ~= old_state then
+	    printf("Subscriber[%s] pub %s: %s[%s] -> %s[%s]",
+                   self.topic, p.uri,
+                   self.PUBSTATE_TO_STR[old_state], tostring(old_state),
+                   tostring(self.PUBSTATE_TO_STR[p.state]), tostring(p.state))
+	 end
       end
    end
 
    local remove_uris = {}
    for uri, p in pairs(self.publishers) do
       if not p.connection and p.num_tries >= CONNECTION_MAX_TRIES then
-	 print_warn("Subscriber[%s]: publisher %s connection failed %d times, "..
-		    "dropping publisher", self.topic, uri, p.num_tries)
+	 print_warn("Subscriber[%s]: publisher %s connection failed %d times"..
+                    ", dropping publisher", self.topic, uri, p.num_tries)
 	 table.insert(remove_uris, uri)
       end
    end
