@@ -40,8 +40,15 @@ ServiceClient = { persistent = true }
 -- a row, but no guarantee is made that the connection is re-opened if it
 -- fails.<br /><br />
 -- Examples:<br />
--- Positional: <code>ServiceClient:new("/myservice", "myservice/MyType")</code>
--- Named: <code>ServiceClient:new{service="/myservice", type="myservice/MyType",persistent=true}</code> (mind the curly braces instead of round brackets!)
+-- Positional:
+-- <code>
+-- ServiceClient:new("/myservice", "myservice/MyType")
+-- </code>
+-- Named:
+-- <code>
+-- ServiceClient:new{service="/myservice", type="myservice/MyType",persistent=true}
+-- </code>
+-- (mind the curly braces instead of round brackets!)
 -- @param args_or_service argument table or service name, see above
 -- @param srvtype service type, only used in positional case
 function ServiceClient:new(args_or_service, srvtype)
@@ -74,7 +81,12 @@ function ServiceClient:new(args_or_service, srvtype)
    if o.persistent then
       -- we don't care if it fails, we'll try again when the service is
       -- actually called, hence wrap in pcall.
-      pcall(o.connect, o)
+      if self.DEBUG and not ok then
+         local ok, err = xpcall(function() o:connect() end, debug.traceback)
+         print_warn("ServiceClient[%s]: failed init connect: %s", o.service, err)
+      else
+         pcall(o.connect, o)
+      end
    end
 
    return o
@@ -105,7 +117,7 @@ function ServiceClient:connect()
    local host, port = uri:match("rosrpc://([^:]+):(%d+)$")
    assert(host and port, "Parsing ROSRCP uri " .. uri .. " failed")
 
-   self.connection:connect(host, port)
+   self.connection:connect(host, port, 5)
    self.connection:send_header{callerid=roslua.node_name,
 			       service=self.service,
 			       type=self.type,
@@ -120,25 +132,28 @@ end
 -- concexec_result(), and concexec_wait() methods can be used.
 -- @param args argument array
 function ServiceClient:concexec_start(args)
-   assert(not self.running, "A service call for "..self.service.." ("..self.type..") is already being executed")
+   assert(not self.running, "A service call for "..self.service.." (" ..
+          self.type..") is already being executed")
    self.running = true
    self.concurrent = true
    self.finished = false
 
    local ok = true
    if not self.connection then
-      ok = pcall(self.connect, self)
+      local err
+      ok, err = pcall(self.connect, self)
       if not ok then
-	 self.concexec_error = "Connection failed"
+	 self.concexec_error = "Connection failed: " .. tostring(err)
       end
    end
 
    if ok then
       local m = self.srvspec.reqspec:instantiate()
+      local err
       m:set_from_array(args)
-      ok = pcall(self.connection.send, self.connection, m)
+      ok, err = pcall(self.connection.send, self.connection, m)
       if not ok then
-	 self.concexec_error = "Sending message failed"
+	 self.concexec_error = "Sending message failed: " .. tostring(err)
       end
    end
 
