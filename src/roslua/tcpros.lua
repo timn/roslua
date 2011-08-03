@@ -46,12 +46,15 @@ end
 --- Connect to given host and port.
 -- @param host hostname or IP address of remote side
 -- @param port port of remote side
-function TcpRosConnection:connect(host, port)
+-- @param timeout timeout to set on the socket after connecting. Note that
+-- the connection itself is done with the system default timeout! Defaults
+-- to 0 if omitted. Timeout is provided in seconds.
+function TcpRosConnection:connect(host, port, timeout)
    assert(not self.socket, "Socket has already been created")
    self.socket = socket.tcp()
-   local ok, err = pcall(self.socket.connect, socket, host, port)
+   local ok, err = pcall(self.socket.connect, self.socket, host, port)
    if not ok then error(err, 0) end
-   self.socket:settimeout(0)
+   self.socket:settimeout(timeout or 0)
    self.is_client = true
 end
 
