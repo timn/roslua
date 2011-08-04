@@ -59,12 +59,12 @@ function ServiceClient:new(args_or_service, srvtype)
 
    local lsrvtype
    if type(args_or_service) == "table" then
-      o.service    = args_or_service[1] or args_or_service.service
+      o.service    = roslua.resolve(args_or_service[1] or args_or_service.service)
       lsrvtype     = args_or_service[2] or args_or_service.type
       o.persistent = args_or_service.persistent
       o.simplified_return = args_or_service.simplified_return
    else
-      o.service    = args_or_service
+      o.service    = roslua.resolve(args_or_service)
       lsrvtype     = srvtype
    end
    if roslua.srv_spec.is_srvspec(lsrvtype) then

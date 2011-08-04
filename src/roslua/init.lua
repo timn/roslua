@@ -501,12 +501,13 @@ end
 -- @return Subscriber instance for the requested topic
 -- @see Subscriber
 function subscriber(topic, type)
-   if not roslua.subscribers[topic] then
-      local s = Subscriber:new(topic, type)
+   local resolved_topic = resolve(topic)
+   if not roslua.subscribers[resolved_topic] then
+      local s = Subscriber:new(resolved_topic, type)
       -- the following sets subscribers table entry
-      roslua.registry.register_subscriber(topic, s.type, s)
+      roslua.registry.register_subscriber(resolved_topic, s.type, s)
    end
-   return roslua.subscribers[topic].subscriber
+   return roslua.subscribers[resolved_topic].subscriber
 end
 
 --- Get a new publisher for a topic.
@@ -520,12 +521,13 @@ end
 -- @return Publisher instance for the requested topic
 -- @see Publisher
 function publisher(topic, type, latching)
-   if not roslua.publishers[topic] then
-      local p = Publisher:new(topic, type, latching)
+   local resolved_topic = resolve(topic)
+   if not roslua.publishers[resolved_topic] then
+      local p = Publisher:new(resolved_topic, type, latching)
       -- the following sets publishers table entry
-      roslua.registry.register_publisher(topic, p.type, p)
+      roslua.registry.register_publisher(resolved_topic, p.type, p)
    end
-   return roslua.publishers[topic].publisher
+   return roslua.publishers[resolved_topic].publisher
 end
 
 
@@ -539,11 +541,12 @@ end
 -- @see Service
 -- @return Service instance for the requested service
 function service(service, type, handler)
-   assert(not roslua.services[service], "Service already provided")
-   local s = Service:new(service, type, handler)
-   roslua.registry.register_service(service, s.type, s)
+   local resolved_service = resolve(service)
+   assert(not roslua.services[resolved_service], "Service already provided")
+   local s = Service:new(resolved_service, type, handler)
+   roslua.registry.register_service(resolved_service, s.type, s)
 
-   return roslua.services[service].provider
+   return roslua.services[resolved_service].provider
 end
 
 --- Get a service client.
@@ -561,7 +564,8 @@ end
 -- complex types will be flattened in the return value.
 -- @see ServiceClient
 function service_client(service, type, options)
-   local o = {service, type}
+   local resolved_service = resolve(service)
+   local o = {resolved_service, type}
    if options and _G.type(options) == "table" then
       o.persistent=options.persistent
       o.simplified_return=options.simplified_return

@@ -62,7 +62,7 @@ function Subscriber:new(topic, type)
    setmetatable(o, self)
    self.__index = self
 
-   o.topic       = topic
+   o.topic       = roslua.resolve(topic)
    if roslua.msg_spec.is_msgspec(type) then
       o.type    = type.type
       o.msgspec = type

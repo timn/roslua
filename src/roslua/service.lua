@@ -57,7 +57,7 @@ function Service:new(service, srvtype, handler)
    setmetatable(o, self)
    self.__index = self
 
-   o.service     = service
+   o.service     = roslua.resolve(service)
    o.handler     = handler
    if roslua.srv_spec.is_srvspec(srvtype) then
       o.type    = srvtype.type

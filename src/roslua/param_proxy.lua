@@ -34,7 +34,7 @@ function init()
    for k, v in pairs(roslua.names.remappings) do
       local param = k:match("^_([%w][%w/_]*)$")
       if param then
-         roslua.set_param(roslua.resolve("~" .. param), v)
+         roslua.set_param("~" .. param, v)
       end
    end
 end
@@ -86,7 +86,7 @@ end
 -- @param key key of the parameter to query
 -- @return true if the parameter exists, false otherwise
 function ParamProxy:has_param(key)
-   local res = self:do_call("hasParam", key)
+   local res = self:do_call("hasParam", roslua.resolve(key))
 
    return res[3]
 end
@@ -95,7 +95,7 @@ end
 -- @param key key of the parameter to query
 -- @return value of the parameter
 function ParamProxy:get_param(key)
-   local res = self:do_call("getParam", key)
+   local res = self:do_call("getParam", roslua.resolve(key))
 
    return res[3]
 end
@@ -104,20 +104,20 @@ end
 -- @param key key of the parameter to set
 -- @param value value of the parameter to set
 function ParamProxy:set_param(key, value)
-   self:do_call("setParam", key, value)
+   self:do_call("setParam", roslua.resolve(key), tonumber(value) or value)
 end
 
 --- Delete parameter.
 -- @param key key of the parameter to delete
 function ParamProxy:delete_param(key)
-   self:do_call("deleteParam", key)
+   self:do_call("deleteParam", roslua.resolve(key))
 end
 
 --- Search for parameter.
 -- @param key substring of the key to look for
 -- @return first key that matched
 function ParamProxy:search_param(key)
-   local res = self:do_call("searchParam", key)
+   local res = self:do_call("searchParam", roslua.resolve(key))
 
    return res[3]
 end
@@ -125,7 +125,8 @@ end
 --- Subscribe to parameter.
 -- @param key key to subscribe to
 function ParamProxy:subscribe_param(key)
-   local res = self:do_call("subscribeParam", roslua.slave_uri, key)
+   local res = self:do_call("subscribeParam", roslua.slave_uri,
+                            roslua.resolve(key))
 
    return res[3]
 end
@@ -133,6 +134,6 @@ end
 --- Unsubscribe from parameter.
 -- @param key key to unsubscribe from
 function ParamProxy:unsubscribe_param(key)
-   self:do_call("subscribeParam", roslua.slave_uri, key)
+   self:do_call("subscribeParam", roslua.slave_uri, roslua.resolve(key))
 end
 

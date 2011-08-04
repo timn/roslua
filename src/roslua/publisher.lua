@@ -52,7 +52,7 @@ function Publisher:new(topic, type, latching)
    setmetatable(o, self)
    self.__index = self
 
-   o.topic       = topic
+   o.topic       = roslua.resolve(topic)
    o.latching    = latching or false
    if roslua.msg_spec.is_msgspec(type) then
       o.type    = type.type

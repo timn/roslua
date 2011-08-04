@@ -113,12 +113,11 @@ function MasterProxy:getUri()
    return res[3]
 end
 
-
 --- Lookup service by name.
 -- @param service name of service to lookup
 -- @return ROS RPC URI of service provider
 function MasterProxy:lookupService(service)
-   local res = self:do_call("lookupService", service)
+   local res = self:do_call("lookupService", roslua.resolve(service))
 
    return res[3]
 end
@@ -137,14 +136,15 @@ end
 -- @param service name of service to register
 -- @param service_api ROS RPC URI of service
 function MasterProxy:registerService(service, service_api)
-   self:do_call("registerService", service, service_api, roslua.slave_uri)
+   self:do_call("registerService", roslua.resolve(service),
+                service_api, roslua.slave_uri)
 end
 
 --- Unregister a service from master.
 -- @param service name of service to register
 -- @param service_api ROS RPC URI of service
 function MasterProxy:unregisterService(service, service_api)
-   self:do_call("unregisterService", service, service_api)
+   self:do_call("unregisterService", roslua.resolve(service), service_api)
 end
 
 
@@ -152,7 +152,8 @@ end
 -- @param topic topic to register for
 -- @param topic_type type of the topic
 function MasterProxy:registerSubscriber(topic, topic_type)
-   local res = self:do_call("registerSubscriber", topic, topic_type, roslua.slave_uri)
+   local res = self:do_call("registerSubscriber", roslua.resolve(topic),
+                            topic_type, roslua.slave_uri)
 
    return res[3]
 end
@@ -160,7 +161,7 @@ end
 --- Unregister subscriber from master.
 -- @param topic topic to register for
 function MasterProxy:unregisterSubscriber(topic)
-   self:do_call("unregisterSubscriber", topic, roslua.slave_uri)
+   self:do_call("unregisterSubscriber", roslua.resolve(topic), roslua.slave_uri)
 end
 
 
@@ -168,7 +169,8 @@ end
 -- @param topic topic to register for
 -- @param topic_type type of the topic
 function MasterProxy:registerPublisher(topic, topic_type)
-   local res = self:do_call("registerPublisher", topic, topic_type, roslua.slave_uri)
+   local res = self:do_call("registerPublisher",
+                            roslua.resolve(topic), topic_type, roslua.slave_uri)
 
    return res[3]
 end
@@ -176,5 +178,5 @@ end
 --- Unregister publisher from master.
 -- @param topic topic to register for
 function MasterProxy:unregisterPublisher(topic)
-   self:do_call("unregisterPublisher", topic, roslua.slave_uri)
+   self:do_call("unregisterPublisher", roslua.resolve(topic), roslua.slave_uri)
 end
