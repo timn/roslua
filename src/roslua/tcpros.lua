@@ -200,8 +200,9 @@ function TcpRosConnection:wait_for_message(timeout)
    local timeout = timeout or -1
    local start, now = roslua.Time.now()
 
+   local selres
    repeat
-      local selres = socket.select({self.socket}, {}, timeout)
+      selres = socket.select({self.socket}, {}, timeout)
       now = roslua.Time.now()
    until selres[self.socket] or
       (timeout >= 0 and (now - start):to_sec() > timeout)
