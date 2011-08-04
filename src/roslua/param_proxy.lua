@@ -21,7 +21,24 @@ require("xmlrpc.http")
 assert(xmlrpc._VERSION_MAJOR and (xmlrpc._VERSION_MAJOR > 1 or xmlrpc._VERSION_MAJOR == 1 and xmlrpc._VERSION_MINOR >= 2),
        "You must use version 1.2 or newer of lua-xmlrpc")
 
+require("roslua")
+require("roslua.names")
+
 __DEBUG = false
+
+
+--- Initialize parameters.
+-- This reads the remappings and stores parameters (remapping left hand
+-- sides that start with a single underscore) in the parameter server.
+function init()
+   for k, v in pairs(roslua.names.remappings) do
+      local param = k:match("^_([%w][%w/_]*)$")
+      if param then
+         roslua.set_param(roslua.resolve("~" .. param), v)
+      end
+   end
+end
+
 
 ParamProxy = { ros_master_uri = nil, node_name = nil }
 
