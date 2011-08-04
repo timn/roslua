@@ -29,7 +29,7 @@ function read_remappings()
    -- arg is a global array with command line arguments
    if not _G.arg then return end
    for i,v in ipairs(_G.arg) do
-      local from, to = v:match("^([%w_/]+):=([%w_/]+)$")
+      local from, to = v:match("^([%w_/]+):=([%w_/.]+)$")
       if from and to then -- it's a mapping
          remappings[from] = to
       end
