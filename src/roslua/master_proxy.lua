@@ -41,7 +41,6 @@ function MasterProxy:new(ros_master_uri, node_name)
 
    o.ros_master_uri = ros_master_uri
    o.node_name      = node_name
-   o.xmlrpc_post    = roslua.xmlrpc_post.XmlRpcPost:new(ros_master_uri)
 
    return o
 end
@@ -127,55 +126,15 @@ function MasterProxy:lookupService(service)
    return res[3]
 end
 
-
---- Assert that a specific method is currently running.
--- If the method is not running throws an error.
--- @param method name of the method that must run
-function MasterProxy:assert_running_method(method)
-   assert(self.xmlrpc_post.request and self.xmlrpc_post.request.method == method,
-          method .. " is not currently being executed")
-end
-
 --- Start a lookup request.
--- This starts a concurrent execution of requestTopic().
--- @param topic topic to request
-function MasterProxy:lookupService_start(service)
-   return self.xmlrpc_post:start_call("lookupService", self.node_name, service)
+-- This starts a concurrent execution of lookupService().
+-- @param service service to lookup
+-- @return XmlRpcRequest handle for the started request
+function MasterProxy:lookupService_conc(service)
+   return roslua.xmlrpc_post.XmlRpcRequest:new(roslua.master_uri, "lookupService",
+                                               roslua.node_name,
+                                               roslua.resolve(service))
 end
-
---- Check if concurrent execution is still busy.
--- @return true if execution is still busy, false otherwise
-function MasterProxy:lookupService_busy()
-   self:assert_running_method("lookupService")
-   return self.xmlrpc_post:running()
-end
-
---- Check if concurrent execution has successfully completed.
--- @return true if execution has succeeded, false otherwise
-function MasterProxy:lookupService_done()
-   self:assert_running_method("lookupService")
-   return self.xmlrpc_post:done()
-end
-
---- Check if concurrent execution has failed.
--- @return true if execution has failed, false otherwise
-function MasterProxy:requestTopic_failed()
-   self:assert_running_method("lookupService")
-   return self.xmlrpc_post:failed()
-end
-
---- Result from completed concurrent call.
--- @return result of completed concurrent call
-function MasterProxy:requestTopic_result()
-   self:assert_running_method("lookupService")
-   assert(self.xmlrpc_post:done(), "lookupService not done")
-   assert(self.xmlrpc_post.result[1][1] == 1,
-	  string.format("XML-RPC call %s failed on server: %s",
-			self.xmlrpc_post.request.method,
-			tostring(self.xmlrpc_post.result[1][2])))
-   return self.xmlrpc_post.result[1][3]
-end
-
 
 --- Register a service with the master.
 -- @param service name of service to register
