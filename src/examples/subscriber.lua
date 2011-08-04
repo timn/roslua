@@ -8,9 +8,9 @@
 ----------------------------------------------------------------------------
 
 require("roslua")
+require("roslua.names")
 
-roslua.init_node{master_uri=os.getenv("ROS_MASTER_URI"),
-		 node_name="/talkersub"}
+roslua.init_node{node_name="talkersub"}
 
 local topic = "/chatter"
 local msgtype = "std_msgs/String"
