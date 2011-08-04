@@ -171,10 +171,8 @@ function init_node(args)
 
    roslua.node_name = resolve(roslua.node_name)
 
-   roslua.master =
-      roslua.master_proxy.MasterProxy:new(roslua.master_uri, roslua.node_name)
-   roslua.parameter_server =
-      roslua.param_proxy.ParamProxy:new(roslua.master_uri, roslua.node_name)
+   roslua.master = roslua.master_proxy.MasterProxy:new()
+   roslua.parameter_server = roslua.param_proxy.ParamProxy:new()
    roslua.slave_api.init()
    roslua.slave_uri = roslua.slave_api.slave_uri()
 

@@ -34,13 +34,10 @@ MasterProxy = { ros_master_uri = nil, node_name = nil }
 --- Constructor.
 -- @param ros_master_uri XML-RPC HTTP URI of ROS master
 -- @param node_name name of this node
-function MasterProxy:new(ros_master_uri, node_name)
+function MasterProxy:new()
    local o = {}
    setmetatable(o, self)
    self.__index = self
-
-   o.ros_master_uri = ros_master_uri
-   o.node_name      = node_name
 
    return o
 end
@@ -50,8 +47,8 @@ end
 -- @param method_name name of the method to execute
 -- @param ... Arguments depending on the method call
 function MasterProxy:do_call(method_name, ...)
-   local ok, res = xmlrpc.http.call(self.ros_master_uri,
-				    method_name, self.node_name, ...)
+   local ok, res = xmlrpc.http.call(roslua.master_uri,
+				    method_name, roslua.node_name, ...)
    assert(ok, string.format("XML-RPC call %s failed on client: %s", method_name, tostring(res)))
    assert(res[1] == 1, string.format("XML-RPC call %s failed on server: %s",
 				     method_name, tostring(res[2])))
