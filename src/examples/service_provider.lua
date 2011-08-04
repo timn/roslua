@@ -9,10 +9,9 @@
 
 require("roslua")
 
-roslua.init_node{master_uri=os.getenv("ROS_MASTER_URI"),
-		 node_name="/serviceprovider"}
+roslua.init_node{node_name="serviceprovider"}
 
-local service = "/add_two_ints"
+local service = "add_two_ints"
 local srvtype = "rospy_tutorials/AddTwoInts"
 
 function add_two_ints(a, b)

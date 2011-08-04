@@ -12,7 +12,7 @@ require("roslua.names")
 
 roslua.init_node{node_name="talkersub"}
 
-local topic = "/chatter"
+local topic = "chatter"
 local msgtype = "std_msgs/String"
 
 local s = roslua.subscriber(topic, msgtype)
