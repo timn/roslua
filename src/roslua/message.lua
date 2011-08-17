@@ -356,8 +356,8 @@ function Message:print(indent)
    local indent = indent or ""
 
    print(indent .. self.spec.type)
-   for k, v in pairs(self.values) do
-      self:print_value(indent, self.spec.fields[k], k, v)
+   for k, f in pairs(self.spec.fields) do
+      self:print_value(indent, f.type, k, self.values[k])
    end
 end
 
@@ -538,9 +538,11 @@ end
 
 
 --- Set message values from array.
--- Set the values field from the given array. Assumes a non-flat array layout
--- where positions of complex sub-messages contain an appropriate array of
--- values for the message (possibly recursively having arrays again).
+-- Set the values field from the given array. Assumes a non-flat array
+-- layout.  Positions of complex sub-messages contain either contain
+-- an instance of the appropriate message type or an appropriate array
+-- of values for the message (possibly recursively having arrays
+-- again).
 -- @param arr array of values
 function Message:set_from_array(arr)
    for i, f in ipairs(self.spec.fields) do
@@ -559,11 +561,15 @@ function Message:set_from_array(arr)
          else
 	    local a = arr[fname] or arr[i] or {}
 	    if a then
+               local ms = roslua.get_msgspec(f.base_type)
 	       for _,va in ipairs(a) do
-		  local ms = roslua.get_msgspec(f.base_type)
-		  local m = ms:instantiate(false)
-		  m:set_from_array(va)
-		  table.insert(ma, m)
+                  if ms:is_instance(va) then
+                     table.insert(ma, va:clone())
+                  else
+                     local m = ms:instantiate(false)
+                     m:set_from_array(va)
+                     table.insert(ma, m)
+                  end
 	       end
 	       self.values[fname] = ma
 	    end
@@ -571,9 +577,13 @@ function Message:set_from_array(arr)
       else
 	 -- complex, but not an array
 	 local ms = roslua.get_msgspec(ftype)
-	 local m = ms:instantiate(false)
-	 m:set_from_array(arr[fname] or arr[i] or {})
-	 self.values[fname] = m
+         if arr[fname] and ms:is_instance(arr[fname]) then
+            self.values[fname] = arr[fname]:clone()
+         else
+            local m = ms:instantiate(false)
+            m:set_from_array(arr[fname] or arr[i] or {})
+            self.values[fname] = m
+         end
       end
    end
 end
