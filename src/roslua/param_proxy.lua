@@ -21,20 +21,34 @@ require("xmlrpc.http")
 assert(xmlrpc._VERSION_MAJOR and (xmlrpc._VERSION_MAJOR > 1 or xmlrpc._VERSION_MAJOR == 1 and xmlrpc._VERSION_MINOR >= 2),
        "You must use version 1.2 or newer of lua-xmlrpc")
 
+require("roslua")
+require("roslua.names")
+
 __DEBUG = false
+
+
+--- Initialize parameters.
+-- This reads the remappings and stores parameters (remapping left hand
+-- sides that start with a single underscore) in the parameter server.
+function init()
+   for k, v in pairs(roslua.names.remappings) do
+      local param = k:match("^_([%w][%w/_]*)$")
+      if param then
+         roslua.set_param("~" .. param, v)
+      end
+   end
+end
+
 
 ParamProxy = { ros_master_uri = nil, node_name = nil }
 
 --- Constructor.
 -- @param ros_master_uri XML-RPC HTTP URI of ROS master
 -- @param node_name name of this node
-function ParamProxy:new(ros_master_uri, node_name)
+function ParamProxy:new()
    local o = {}
    setmetatable(o, self)
    self.__index = self
-
-   o.ros_master_uri = ros_master_uri
-   o.node_name      = node_name
 
    return o
 end
@@ -45,14 +59,16 @@ end
 -- @param method_name name of the method to execute
 -- @param ... Arguments depending on the method call
 function ParamProxy:do_call(method_name, ...)
-   local ok, res = xmlrpc.http.call(self.ros_master_uri,
-				    method_name, self.node_name, ...)
-   assert(ok, string.format("XML-RPC call %s failed on client: %s", method_name, tostring(res)))
+   local ok, res = xmlrpc.http.call(roslua.master_uri,
+				    method_name, roslua.node_name, ...)
+   assert(ok, string.format("XML-RPC call %s failed on client: %s",
+                            method_name, tostring(res)))
    assert(res[1] == 1, string.format("XML-RPC call %s failed on server: %s",
 				     method_name, tostring(res[2])))
 
    if __DEBUG then
-      print(string.format("Ok: %s  Code: %d  Error: %s", tostring(ok), res[1], res[2]))
+      print(string.format("Ok: %s  Code: %d  Error: %s",
+                          tostring(ok), res[1], res[2]))
    end
 
    return res
@@ -70,7 +86,7 @@ end
 -- @param key key of the parameter to query
 -- @return true if the parameter exists, false otherwise
 function ParamProxy:has_param(key)
-   local res = self:do_call("hasParam", key)
+   local res = self:do_call("hasParam", roslua.resolve(key))
 
    return res[3]
 end
@@ -79,7 +95,7 @@ end
 -- @param key key of the parameter to query
 -- @return value of the parameter
 function ParamProxy:get_param(key)
-   local res = self:do_call("getParam", key)
+   local res = self:do_call("getParam", roslua.resolve(key))
 
    return res[3]
 end
@@ -88,20 +104,20 @@ end
 -- @param key key of the parameter to set
 -- @param value value of the parameter to set
 function ParamProxy:set_param(key, value)
-   self:do_call("setParam", key, value)
+   self:do_call("setParam", roslua.resolve(key), tonumber(value) or value)
 end
 
 --- Delete parameter.
 -- @param key key of the parameter to delete
 function ParamProxy:delete_param(key)
-   self:do_call("deleteParam", key)
+   self:do_call("deleteParam", roslua.resolve(key))
 end
 
 --- Search for parameter.
 -- @param key substring of the key to look for
 -- @return first key that matched
 function ParamProxy:search_param(key)
-   local res = self:do_call("searchParam", key)
+   local res = self:do_call("searchParam", roslua.resolve(key))
 
    return res[3]
 end
@@ -109,7 +125,8 @@ end
 --- Subscribe to parameter.
 -- @param key key to subscribe to
 function ParamProxy:subscribe_param(key)
-   local res = self:do_call("subscribeParam", roslua.slave_uri, key)
+   local res = self:do_call("subscribeParam", roslua.slave_uri,
+                            roslua.resolve(key))
 
    return res[3]
 end
@@ -117,6 +134,6 @@ end
 --- Unsubscribe from parameter.
 -- @param key key to unsubscribe from
 function ParamProxy:unsubscribe_param(key)
-   self:do_call("subscribeParam", roslua.slave_uri, key)
+   self:do_call("subscribeParam", roslua.slave_uri, roslua.resolve(key))
 end
 

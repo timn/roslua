@@ -32,6 +32,7 @@ require("roslua.master_proxy")
 require("roslua.param_proxy")
 require("roslua.slave_proxy")
 
+require("roslua.names")
 require("roslua.msg_spec")
 require("roslua.srv_spec")
 require("roslua.message")
@@ -78,6 +79,7 @@ Timer = roslua.timer.Timer
 
 get_msgspec = roslua.msg_spec.get_msgspec
 get_srvspec = roslua.srv_spec.get_srvspec
+resolve     = roslua.names.resolve
 
 subscribers   = roslua.registry.subscribers
 publishers    = roslua.registry.publishers
@@ -117,20 +119,45 @@ end
 -- flag to true if the signal is received.
 -- @param args a table with argument entries. The following fields are mandatory:
 -- <dl>
---  <dt>master_uri</dt><dd>The ROS master URI</dd>
 --  <dt>node_name</dt><dd>the name of the node using the library</dd>
 -- </dl>
 -- The following fields are optional.
 -- <dl>
+--  <dt>master_uri</dt><dd>The ROS master URI</dd>
+--  <dt>namespace</dt><dd>Namespace to push node down to</dd>
 --  <dt>no_rosout</dt><dd>Do not log to /rosout.</dd>
 --  <dt>no_signal_handler</dt><dd>Do not register default signal handler.</dd>
 -- </dl>
 function init_node(args)
    roslua.master_uri = args.master_uri
    roslua.node_name  = args.node_name
+   roslua.namespace  = args.namespace
+
+   if not roslua.master_uri then
+      roslua.master_uri = os.getenv("ROS_MASTER_URI")
+   end
+   if not roslua.namespace then
+      roslua.namespace = os.getenv("ROS_NAMESPACE") or "/"
+   end
+
+   roslua.names.read_remappings()
+
+   -- Overrides from remappings
+   if roslua.names.remappings["__master"] then
+      roslua.master_uri = roslua.names.remappings["__master"]
+   end
+   if roslua.names.remappings["__ns"] then
+      roslua.namespace = roslua.names.remappings["__ns"]
+   end
+   if roslua.names.remappings["__name"] then
+      roslua.node_name = roslua.names.remappings["__name"]
+   end
+
+   roslua.names.init_remappings()
 
    assert(roslua.master_uri, "ROS Master URI not set")
    assert(roslua.node_name, "Node name not set")
+   assert(not roslua.node_name:match("^/"), "Node names may not begin with /")
    roslua.anonymous = args.anonymous or false
 
    roslua.msg_spec.init()
@@ -138,12 +165,14 @@ function init_node(args)
    if anonymous then
       -- make up random name
       local posix = require("posix")
-      roslua.node_name = string.format("%s_%s_%s", node_name,
+      roslua.node_name = string.format("%s_%s_%s", roslua.node_name,
 				       posix.getpid("pid"), os.time() * 1000)
    end
 
-   roslua.master = roslua.master_proxy.MasterProxy:new(roslua.master_uri, node_name)
-   roslua.parameter_server = roslua.param_proxy.ParamProxy:new(roslua.master_uri, node_name)
+   roslua.node_name = resolve(roslua.node_name)
+
+   roslua.master = roslua.master_proxy.MasterProxy:new()
+   roslua.parameter_server = roslua.param_proxy.ParamProxy:new()
    roslua.slave_api.init()
    roslua.slave_uri = roslua.slave_api.slave_uri()
 
@@ -151,6 +180,8 @@ function init_node(args)
    if not args.no_rosout then
       roslua.logging.add_logger(roslua.logging.rosout.get_logger())
    end
+
+   roslua.param_proxy.init()
 
    if roslua.parameter_server:has_param("/use_sim_time") then
       local use_sim_time = roslua.parameter_server:get_param("/use_sim_time")
@@ -439,6 +470,28 @@ function get_name()
    return roslua.node_name
 end
 
+--- Get value from parameter server.
+-- @param key of value
+-- @return value, throws an error if not found
+function get_param(key)
+   return roslua.parameter_server:get_param(key)
+end
+
+--- Check if value exists in parameter server.
+-- @param key of value
+-- @return true if parameter exists, false otherwise
+function has_param(key)
+   return roslua.parameter_server:has_param(key)
+end
+
+
+--- Set value from parameter server.
+-- @param key of value
+-- @param value value to set
+function set_param(key, value)
+   return roslua.parameter_server:set_param(key, value)
+end
+
 --- Get a new subscriber for a topic.
 -- Request the creation of a subscriber for a specific topic. Subscribers are
 -- maintained in a cache, and for any one topic there is always at most one
@@ -448,12 +501,13 @@ end
 -- @return Subscriber instance for the requested topic
 -- @see Subscriber
 function subscriber(topic, type)
-   if not roslua.subscribers[topic] then
-      local s = Subscriber:new(topic, type)
+   local resolved_topic = resolve(topic)
+   if not roslua.subscribers[resolved_topic] then
+      local s = Subscriber:new(resolved_topic, type)
       -- the following sets subscribers table entry
-      roslua.registry.register_subscriber(topic, s.type, s)
+      roslua.registry.register_subscriber(resolved_topic, s.type, s)
    end
-   return roslua.subscribers[topic].subscriber
+   return roslua.subscribers[resolved_topic].subscriber
 end
 
 --- Get a new publisher for a topic.
@@ -467,12 +521,13 @@ end
 -- @return Publisher instance for the requested topic
 -- @see Publisher
 function publisher(topic, type, latching)
-   if not roslua.publishers[topic] then
-      local p = Publisher:new(topic, type, latching)
+   local resolved_topic = resolve(topic)
+   if not roslua.publishers[resolved_topic] then
+      local p = Publisher:new(resolved_topic, type, latching)
       -- the following sets publishers table entry
-      roslua.registry.register_publisher(topic, p.type, p)
+      roslua.registry.register_publisher(resolved_topic, p.type, p)
    end
-   return roslua.publishers[topic].publisher
+   return roslua.publishers[resolved_topic].publisher
 end
 
 
@@ -486,11 +541,12 @@ end
 -- @see Service
 -- @return Service instance for the requested service
 function service(service, type, handler)
-   assert(not roslua.services[service], "Service already provided")
-   local s = Service:new(service, type, handler)
-   roslua.registry.register_service(service, s.type, s)
+   local resolved_service = resolve(service)
+   assert(not roslua.services[resolved_service], "Service already provided")
+   local s = Service:new(resolved_service, type, handler)
+   roslua.registry.register_service(resolved_service, s.type, s)
 
-   return roslua.services[service].provider
+   return roslua.services[resolved_service].provider
 end
 
 --- Get a service client.
@@ -508,7 +564,8 @@ end
 -- complex types will be flattened in the return value.
 -- @see ServiceClient
 function service_client(service, type, options)
-   local o = {service, type}
+   local resolved_service = resolve(service)
+   local o = {resolved_service, type}
    if options and _G.type(options) == "table" then
       o.persistent=options.persistent
       o.simplified_return=options.simplified_return

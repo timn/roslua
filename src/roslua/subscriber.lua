@@ -62,7 +62,7 @@ function Subscriber:new(topic, type)
    setmetatable(o, self)
    self.__index = self
 
-   o.topic       = topic
+   o.topic       = roslua.resolve(topic)
    if roslua.msg_spec.is_msgspec(type) then
       o.type    = type.type
       o.msgspec = type
@@ -325,7 +325,7 @@ function Subscriber:connect()
                if p.num_tries < CONNECTION_MAX_TRIES then
                   p.state = self.PUBSTATE_DISCONNECTED
                else
-                  p.state = self.PUBSTATE.FAILED
+                  p.state = self.PUBSTATE_FAILED
                   print_warn("Subscriber[%s] -> %s:%d: Failed to connect "..
                              "%d times, ignoring peer", self.topic,
                              p.proto[2], p.proto[3], p.num_tries)

@@ -9,10 +9,9 @@
 
 require("roslua")
 
-roslua.init_node{master_uri=os.getenv("ROS_MASTER_URI"),
-		 node_name="/talkerpub"}
+roslua.init_node{node_name="talkerpub"}
 
-local topic = "/chatter"
+local topic = "chatter"
 local msgtype = "std_msgs/String"
 
 local p = roslua.publisher(topic, msgtype)

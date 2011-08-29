@@ -34,14 +34,10 @@ MasterProxy = { ros_master_uri = nil, node_name = nil }
 --- Constructor.
 -- @param ros_master_uri XML-RPC HTTP URI of ROS master
 -- @param node_name name of this node
-function MasterProxy:new(ros_master_uri, node_name)
+function MasterProxy:new()
    local o = {}
    setmetatable(o, self)
    self.__index = self
-
-   o.ros_master_uri = ros_master_uri
-   o.node_name      = node_name
-   o.xmlrpc_post    = roslua.xmlrpc_post.XmlRpcPost:new(ros_master_uri)
 
    return o
 end
@@ -51,8 +47,8 @@ end
 -- @param method_name name of the method to execute
 -- @param ... Arguments depending on the method call
 function MasterProxy:do_call(method_name, ...)
-   local ok, res = xmlrpc.http.call(self.ros_master_uri,
-				    method_name, self.node_name, ...)
+   local ok, res = xmlrpc.http.call(roslua.master_uri,
+				    method_name, roslua.node_name, ...)
    assert(ok, string.format("XML-RPC call %s failed on client: %s", method_name, tostring(res)))
    assert(res[1] == 1, string.format("XML-RPC call %s failed on server: %s",
 				     method_name, tostring(res[2])))
@@ -117,78 +113,38 @@ function MasterProxy:getUri()
    return res[3]
 end
 
-
 --- Lookup service by name.
 -- @param service name of service to lookup
 -- @return ROS RPC URI of service provider
 function MasterProxy:lookupService(service)
-   local res = self:do_call("lookupService", service)
+   local res = self:do_call("lookupService", roslua.resolve(service))
 
    return res[3]
 end
 
-
---- Assert that a specific method is currently running.
--- If the method is not running throws an error.
--- @param method name of the method that must run
-function MasterProxy:assert_running_method(method)
-   assert(self.xmlrpc_post.request and self.xmlrpc_post.request.method == method,
-          method .. " is not currently being executed")
-end
-
 --- Start a lookup request.
--- This starts a concurrent execution of requestTopic().
--- @param topic topic to request
-function MasterProxy:lookupService_start(service)
-   return self.xmlrpc_post:start_call("lookupService", self.node_name, service)
+-- This starts a concurrent execution of lookupService().
+-- @param service service to lookup
+-- @return XmlRpcRequest handle for the started request
+function MasterProxy:lookupService_conc(service)
+   return roslua.xmlrpc_post.XmlRpcRequest:new(roslua.master_uri, "lookupService",
+                                               roslua.node_name,
+                                               roslua.resolve(service))
 end
-
---- Check if concurrent execution is still busy.
--- @return true if execution is still busy, false otherwise
-function MasterProxy:lookupService_busy()
-   self:assert_running_method("lookupService")
-   return self.xmlrpc_post:running()
-end
-
---- Check if concurrent execution has successfully completed.
--- @return true if execution has succeeded, false otherwise
-function MasterProxy:lookupService_done()
-   self:assert_running_method("lookupService")
-   return self.xmlrpc_post:done()
-end
-
---- Check if concurrent execution has failed.
--- @return true if execution has failed, false otherwise
-function MasterProxy:requestTopic_failed()
-   self:assert_running_method("lookupService")
-   return self.xmlrpc_post:failed()
-end
-
---- Result from completed concurrent call.
--- @return result of completed concurrent call
-function MasterProxy:requestTopic_result()
-   self:assert_running_method("lookupService")
-   assert(self.xmlrpc_post:done(), "lookupService not done")
-   assert(self.xmlrpc_post.result[1][1] == 1,
-	  string.format("XML-RPC call %s failed on server: %s",
-			self.xmlrpc_post.request.method,
-			tostring(self.xmlrpc_post.result[1][2])))
-   return self.xmlrpc_post.result[1][3]
-end
-
 
 --- Register a service with the master.
 -- @param service name of service to register
 -- @param service_api ROS RPC URI of service
 function MasterProxy:registerService(service, service_api)
-   self:do_call("registerService", service, service_api, roslua.slave_uri)
+   self:do_call("registerService", roslua.resolve(service),
+                service_api, roslua.slave_uri)
 end
 
 --- Unregister a service from master.
 -- @param service name of service to register
 -- @param service_api ROS RPC URI of service
 function MasterProxy:unregisterService(service, service_api)
-   self:do_call("unregisterService", service, service_api)
+   self:do_call("unregisterService", roslua.resolve(service), service_api)
 end
 
 
@@ -196,7 +152,8 @@ end
 -- @param topic topic to register for
 -- @param topic_type type of the topic
 function MasterProxy:registerSubscriber(topic, topic_type)
-   local res = self:do_call("registerSubscriber", topic, topic_type, roslua.slave_uri)
+   local res = self:do_call("registerSubscriber", roslua.resolve(topic),
+                            topic_type, roslua.slave_uri)
 
    return res[3]
 end
@@ -204,7 +161,7 @@ end
 --- Unregister subscriber from master.
 -- @param topic topic to register for
 function MasterProxy:unregisterSubscriber(topic)
-   self:do_call("unregisterSubscriber", topic, roslua.slave_uri)
+   self:do_call("unregisterSubscriber", roslua.resolve(topic), roslua.slave_uri)
 end
 
 
@@ -212,7 +169,8 @@ end
 -- @param topic topic to register for
 -- @param topic_type type of the topic
 function MasterProxy:registerPublisher(topic, topic_type)
-   local res = self:do_call("registerPublisher", topic, topic_type, roslua.slave_uri)
+   local res = self:do_call("registerPublisher",
+                            roslua.resolve(topic), topic_type, roslua.slave_uri)
 
    return res[3]
 end
@@ -220,5 +178,5 @@ end
 --- Unregister publisher from master.
 -- @param topic topic to register for
 function MasterProxy:unregisterPublisher(topic)
-   self:do_call("unregisterPublisher", topic, roslua.slave_uri)
+   self:do_call("unregisterPublisher", roslua.resolve(topic), roslua.slave_uri)
 end

@@ -382,3 +382,67 @@ function XmlRpcPost:spin()
    --   printf("%s -> %s", num_to_state[old_state], num_to_state[self.state])
    --end
 end
+
+
+XmlRpcRequest = { uri = nil, method = nil, args = {} }
+
+--- Constructor.
+-- @param slave_uri XML-RPC HTTP slave URI
+-- @param node_name name of this node
+function XmlRpcRequest:new(uri, method, ...)
+   local o = {}
+   setmetatable(o, self)
+   self.__index = self
+
+   o.uri         = uri
+   o.method      = method
+   o.args        = { ... }
+   o.xmlrpc_post = XmlRpcPost:new(uri)
+
+   o.xmlrpc_post:start_call(method, ...)
+
+   return o
+end
+
+--- Destructor.
+function XmlRpcRequest:finalize()
+   self.xmlrpc_post:reset()
+end
+
+
+--- Check if concurrent execution is still busy.
+-- @return true if execution is still busy, false otherwise
+function XmlRpcRequest:busy()
+   return self.xmlrpc_post.request and
+      self.xmlrpc_post.request.method == self.method and
+      self.xmlrpc_post:running()
+end
+
+--- Check if concurrent execution has successfully completed.
+-- @return true if execution has succeeded, false otherwise
+function XmlRpcRequest:succeeded()
+   return self.xmlrpc_post:done()
+end
+
+--- Check if concurrent execution has failed.
+-- @return true if execution has failed, false otherwise
+function XmlRpcRequest:failed()
+   return self.xmlrpc_post:failed()
+end
+
+--- Get error message if any.
+-- @return error message if any, empty string otherwise
+function XmlRpcRequest:error()
+   return self.xmlrpc_post.error or ""
+end
+
+--- Result from completed concurrent call.
+-- @return result of completed concurrent call
+function XmlRpcRequest:result()
+   assert(self.xmlrpc_post:done(), self.method .. " not done")
+   assert(self.xmlrpc_post.result[1][1] == 1,
+	  string.format("XML-RPC call %s failed on server: %s",
+			self.xmlrpc_post.request.method,
+			tostring(self.xmlrpc_post.result[1][2])))
+   return self.xmlrpc_post.result[1][3]
+end

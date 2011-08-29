@@ -9,10 +9,9 @@
 
 require("roslua")
 
-roslua.init_node{master_uri=os.getenv("ROS_MASTER_URI"),
-		 node_name="/serviceclient"}
+roslua.init_node{node_name="serviceclient"}
 
-local service = "/add_two_ints"
+local service = "add_two_ints"
 local srvtype = "rospy_tutorials/AddTwoInts"
 
 math.randomseed(os.time())

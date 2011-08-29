@@ -12,8 +12,7 @@
 
 require("roslua")
 
-roslua.init_node{master_uri=os.getenv("ROS_MASTER_URI"),
-		 node_name="/timertest"}
+roslua.init_node{node_name="timertest"}
 
 function callback(event)
    local offset = (event.current_real - event.current_expected):to_sec()
