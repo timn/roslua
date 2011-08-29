@@ -2,11 +2,12 @@
 ----------------------------------------------------------------------------
 --  slave_api.lua - Slave XML-RPC API
 --
---  Created: Thu Jul 22 19:06:06 2010 (at Intel Research, Pittsburgh)
+--  Created: Thu Jul 22 19:06:06 2010 (at Intel Labs Pittsburgh)
 --  License: BSD, cf. LICENSE file of roslua
---  Copyright  2010  Tim Niemueller [www.niemueller.de]
---             2010  Carnegie Mellon University
---             2010  Intel Research Pittsburgh
+--  Copyright  2010-2011  Tim Niemueller [www.niemueller.de]
+--             2010-2011  Carnegie Mellon University
+--             2010       Intel Labs Pittsburgh
+--             2011       SRI International
 ----------------------------------------------------------------------------
 
 --- Slave API implementation.
@@ -25,12 +26,10 @@ require("wsapi.request")
 require("xmlrpc")
 require("posix")
 require("socket")
-require("socket.http")
 assert(xmlrpc._VERSION_MAJOR and (xmlrpc._VERSION_MAJOR > 1 or xmlrpc._VERSION_MAJOR == 1 and xmlrpc._VERSION_MINOR >= 2),
        "You must use version 1.2 or newer of lua-xmlrpc")
 
 __DEBUG = false
-XMLRPC_CONNECTION_TIMEOUT = 4
 
 --- XML-RPC WSAPI handler
 -- @param wsapi_env WSAPI environment
@@ -157,15 +156,17 @@ function xmlrpc_exports.getBusInfo(caller_id)
 
    for topic, s in pairs(roslua.subscribers) do
       for uri, p in pairs(s.subscriber.publishers) do
-	 local conn = {p.uri, uri, "i", "TCPROS", topic, (p.connection ~= nil)}
+	 local conn = {p.uri, uri, "i", "TCPROS", topic,
+		       p.state == roslua.Subscriber.PUBSTATE_COMMUNICATING}
 	 local xconn = xmlrpc.newTypedValue(conn, xmlrpc.newArray())
 	 table.insert(businfo, xconn)
       end
    end
 
    for topic, p in pairs(roslua.publishers) do
-      for _, s in pairs(p.publisher.subscribers) do
-	 local conn = {s.uri, "", "o", "TCPROS", topic, (s.connection ~= nil)}
+      for i, s in pairs(p.publisher.subscribers) do
+	 local conn = {tostring(i), s.callerid, "o", "TCPROS", topic,
+		       (s.state == roslua.Publisher.SUBSTATE_COMMUNICATING)}
 	 local xconn = xmlrpc.newTypedValue(conn, xmlrpc.newArray())
 	 table.insert(businfo, xconn)
       end
@@ -317,7 +318,6 @@ local config = { server = {host = "*", port = 0}, defaultHost = { rules = rules}
 function init()
    xmlrpc.srvMethods(xmlrpc_exports)
    xavante.HTTP(config)
-   socket.http.TIMEOUT = XMLRPC_CONNECTION_TIMEOUT
 end
 
 --- Get slave URI.

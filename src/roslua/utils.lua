@@ -4,9 +4,10 @@
 --
 --  Created: Thu Jul 29 10:59:22 2010 (at Intel Research, Pittsburgh)
 --  License: BSD, cf. LICENSE file of roslua
---  Copyright  2010  Tim Niemueller [www.niemueller.de]
---             2010  Carnegie Mellon University
---             2010  Intel Research Pittsburgh
+--  Copyright  2010-2011  Tim Niemueller [www.niemueller.de]
+--             2010-2011  Carnegie Mellon University
+--             2010-2011  Intel Research Pittsburgh
+--             2011       SRI International
 ----------------------------------------------------------------------------
 
 --- General roslua utilities.
@@ -200,4 +201,61 @@ function c_package_loader(module)
    end
 
    return errmsg
+end
+
+
+function socket_send(socket, data)
+   local sent_bytes = 0
+   while sent_bytes < #data do
+      local index, error, err_index =
+	 socket:send(data, sent_bytes + 1, #data)
+      if index == nil then
+	 if error ~= "timeout" then
+	    return nil, error
+	 else
+	    --printscr("Sending: index %d <= %d", err_index, #data)
+	    sent_bytes = err_index
+	 end
+      else
+	 sent_bytes = index
+      end
+   end
+
+   return sent_bytes
+end
+
+function socket_recv(socket, num_bytes, yield_on_timeout)
+   local result = ""
+   local read_bytes = 0
+   socket:settimeout(0)
+   while read_bytes < num_bytes do
+      local data, error, chunk = socket:receive(num_bytes - read_bytes)
+      if not data then
+	 if error ~= "timeout" then
+	    return nil, error
+	 else
+	    read_bytes = read_bytes + #chunk
+	    result = result .. chunk
+	    if yield_on_timeout then
+	       coroutine.yield(read_bytes)
+	    end
+	 end
+      elseif data then
+	 return data
+      end
+   end
+end
+
+
+function socket_recvline(socket, yield_on_timeout)
+   local line = ""
+   local d
+   repeat
+      d = socket_recv(socket, 1, yield_on_timeout)
+      if d ~= "\n" and d ~= "\r" then
+	 line = line .. d
+      end
+   until d == "\n"
+
+   return line
 end

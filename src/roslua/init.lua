@@ -197,13 +197,21 @@ end
 -- The finalizer will be called when roslua.finalize() is executed.
 -- @param finalizer function which is called without arguments on finalization
 function add_finalizer(finalizer)
-   assert(type(finalizer) == "function", "Finalizer must be a function")
-   for _, f in ipairs(finalizers) do
-      if f == finalizer then
-	 error("Finalizer has already been registered", 0)
+   if type(finalizer) == "function" or
+      (type(finalizer) == "table" and type(finalizer.finalize) == "function")
+   then
+
+      for _, f in ipairs(finalizers) do
+         if f == finalizer then
+            error("Finalizer has already been registered", 0)
+         end
       end
+      table.insert(finalizers, finalizer);
+
+   else
+      error("Finalizer must be a function, or table with finalize function entry",
+            0)
    end
-   table.insert(finalizers, finalizer);
 end
 
 --- Remove finalizer.
@@ -223,7 +231,27 @@ end
 function finalize()
    printf("ROS node %s is finalizing", roslua.node_name)
 
+   -- Run custom finalizers
+   local fcopy = {}
+   for i, f in ipairs(finalizers) do fcopy[i] = f end
+   for _, f in ipairs(fcopy) do
+      if type(f) == "function" then
+         f()
+      else
+         f:finalize()
+      end
+   end
+
+   for _,t in pairs(roslua.timers) do
+      t:finalize()
+      roslua.registry.unregister_timer(t)
+   end
+
    -- shutdown all connections
+   for service,s in pairs(roslua.services) do
+      s.provider:finalize()
+      roslua.registry.unregister_service(service, s.type, s.provider)
+   end
    for topic,s in pairs(roslua.subscribers) do
       s.subscriber:finalize()
       roslua.registry.unregister_subscriber(topic, s.type, s.subscriber)
@@ -231,21 +259,6 @@ function finalize()
    for topic,p in pairs(roslua.publishers) do
       p.publisher:finalize()
       roslua.registry.unregister_publisher(topic, p.type, p.publisher)
-   end
-   for service,s in pairs(roslua.services) do
-      s.provider:finalize()
-      roslua.registry.unregister_service(service, s.type, s.provider)
-   end
-   for _,t in pairs(roslua.timers) do
-      t:finalize()
-      roslua.registry.unregister_timer(t)
-   end
-   local fcopy = {}
-   for i, f in ipairs(finalizers) do
-      fcopy[i] = f
-   end
-   for _, f in ipairs(fcopy) do
-      f()
    end
 end
 
@@ -339,6 +352,7 @@ function spin()
    --tracked_times.api_slave.endtime = roslua.Time.now()
 
    --*** spin subscribers for receiving
+   --printf("*** Running subscribers")
    --tracked_times.subscribers = {start = roslua.Time.now()}
    for _,s in pairs(roslua.subscribers) do
       s.subscriber:spin()
@@ -346,26 +360,32 @@ function spin()
    --tracked_times.subscribers.endtime = roslua.Time.now()
 
    --*** spin publishers for accepting
-   -- tracked_times.publishers = {start = roslua.Time.now()}
+   --printf("*** Running publishers")
+   --tracked_times.publishers = {start = roslua.Time.now()}
    for _,p in pairs(roslua.publishers) do
       p.publisher:spin()
    end
    --tracked_times.publishers.endtime = roslua.Time.now()
 
    --*** spin service providers for accepting and processing
+   --printf("*** Running service providers")
    --tracked_times.providers = {start = roslua.Time.now()}
    for _,s in pairs(roslua.services) do
       s.provider:spin()
    end
    --tracked_times.providers.endtime = roslua.Time.now()
 
+   --printf("*** Running timers")
+   --tracked_times.timers = {start = roslua.Time.now()}
    for _,t in pairs(roslua.timers) do
       t:spin()
    end
+   --tracked_times.timers.endtime = roslua.Time.now()
 
    --*** Spin all registered spinners
    -- work on a copy of the list as the list might change while we run the
    -- spinners if one of the removes itself
+   --printf("*** Running spinners")
    --tracked_times.spinners = {start = roslua.Time.now()}
    local tmpspinners = {}
    for i, s in ipairs(spinners) do
@@ -374,6 +394,8 @@ function spin()
    for _, s in ipairs(spinners) do
       s()
    end
+
+   --printf("*** DONE")
 
    --tracked_times.spinners.endtime = roslua.Time.now()
    --tracked_times.total.endtime = roslua.Time.now()
@@ -440,11 +462,13 @@ end
 -- publisher which is shared.
 -- @param topic name of topic to request publisher for
 -- @param type type of topic
+-- @param latching true to create latching publisher,
+-- false or nil to create regular publisher
 -- @return Publisher instance for the requested topic
 -- @see Publisher
-function publisher(topic, type)
+function publisher(topic, type, latching)
    if not roslua.publishers[topic] then
-      local p = Publisher:new(topic, type)
+      local p = Publisher:new(topic, type, latching)
       -- the following sets publishers table entry
       roslua.registry.register_publisher(topic, p.type, p)
    end
@@ -485,7 +509,7 @@ end
 -- @see ServiceClient
 function service_client(service, type, options)
    local o = {service, type}
-   if options and type(options) == "table" then
+   if options and _G.type(options) == "table" then
       o.persistent=options.persistent
       o.simplified_return=options.simplified_return
    end
@@ -496,11 +520,18 @@ end
 --- Create timer.
 -- Creates a timer and registers it for execution.
 -- @param interval minimum time between invocations, i.e. the desired
--- time interval between invocations. Either a number, which is considered
--- as time in seconds, or an instance of Duration.
--- @param callback function to execute when the timer is due
-function timer(interval, callback)
-   local t = Timer:new(interval, callback)
+-- time interval between invocations. Either a number, which is
+-- considered as time in seconds, or an instance of Duration.
+-- @param callback_or_timer either callback function to execute when
+-- the timer is due, or an instance of a Timer sub-class. In the
+-- latter case finalization is invoked on roslua finalization.
+function timer(interval, callback_or_timer)
+   local t
+   if Timer.is_instance(callback_or_timer) then
+      t = callback_or_timer
+   else
+      t = Timer:new(interval, callback_or_timer)
+   end
    roslua.registry.register_timer(t)
    return t
 end

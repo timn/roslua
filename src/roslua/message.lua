@@ -546,7 +546,11 @@ function Message:set_from_array(arr)
    for i, f in ipairs(self.spec.fields) do
       local ftype, fname = f.type, f.name
       if f.is_builtin then
-	 self.values[fname] = arr[fname] or arr[i]
+         if arr[fname] ~= nil then
+            self.values[fname] = arr[fname]
+         else
+            self.values[fname] = arr[i]
+         end
       elseif f.is_array then
 	 -- complex type and array
 	 local ma = {}

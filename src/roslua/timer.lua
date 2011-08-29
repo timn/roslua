@@ -89,12 +89,26 @@ function Timer:finalize()
    --end
 end
 
+--- Check if given table is an instance of Timer.
+-- @param t instance to check
+-- @return true if given object t is an instance of Timer, false otherwise
+function Timer.is_instance(t)
+   return getmetatable(t) == Timer
+end
+
+--- Default run function.
+-- This function calls a registered callback function with the event
+-- table as the only parameter.
+function Timer:run()
+   self.callback(self.event)
+end
+
 --- Check time and execute callback if due.
 function Timer:spin()
    local now = roslua.Time.now()
    if now >= self.event.current_expected then
       self.event.current_real = now
-      self.callback(self.event)
+      self:run()
       local after = roslua.Time.now()
       self.event.last_expected    = self.event.current_expected
       self.event.last_real        = self.event.current_real

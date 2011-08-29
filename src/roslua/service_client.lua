@@ -2,11 +2,12 @@
 ----------------------------------------------------------------------------
 --  service_client.lua - Service client
 --
---  Created: Fri Jul 30 10:34:47 2010 (at Intel Research, Pittsburgh)
+--  Created: Fri Jul 30 10:34:47 2010 (at Intel Labs Pittsburgh)
 --  License: BSD, cf. LICENSE file of roslua
---  Copyright  2010  Tim Niemueller [www.niemueller.de]
---             2010  Carnegie Mellon University
---             2010  Intel Research Pittsburgh
+--  Copyright  2010-2011  Tim Niemueller [www.niemueller.de]
+--             2010-2011  Carnegie Mellon University
+--             2010       Intel Labs Pittsburgh
+--             2011       SRI International
 ----------------------------------------------------------------------------
 
 --- Service client.
@@ -39,8 +40,15 @@ ServiceClient = { persistent = true }
 -- a row, but no guarantee is made that the connection is re-opened if it
 -- fails.<br /><br />
 -- Examples:<br />
--- Positional: <code>ServiceClient:new("/myservice", "myservice/MyType")</code>
--- Named: <code>ServiceClient:new{service="/myservice", type="myservice/MyType",persistent=true}</code> (mind the curly braces instead of round brackets!)
+-- Positional:
+-- <code>
+-- ServiceClient:new("/myservice", "myservice/MyType")
+-- </code>
+-- Named:
+-- <code>
+-- ServiceClient:new{service="/myservice", type="myservice/MyType",persistent=true}
+-- </code>
+-- (mind the curly braces instead of round brackets!)
 -- @param args_or_service argument table or service name, see above
 -- @param srvtype service type, only used in positional case
 function ServiceClient:new(args_or_service, srvtype)
@@ -73,7 +81,12 @@ function ServiceClient:new(args_or_service, srvtype)
    if o.persistent then
       -- we don't care if it fails, we'll try again when the service is
       -- actually called, hence wrap in pcall.
-      pcall(o.connect, o)
+      if self.DEBUG and not ok then
+         local ok, err = xpcall(function() o:connect() end, debug.traceback)
+         print_warn("ServiceClient[%s]: failed init connect: %s", o.service, err)
+      else
+         pcall(o.connect, o)
+      end
    end
 
    return o
@@ -94,8 +107,8 @@ end
 function ServiceClient:connect()
    assert(not self.connection, "Already connected")
 
-   self.connection = roslua.tcpros.TcpRosServiceClientConnection:new()
-   self.connection.srvspec = self.srvspec
+   local connection = roslua.tcpros.TcpRosServiceClientConnection:new()
+   connection.srvspec = self.srvspec
 
    local uri = roslua.master:lookupService(self.service)
    assert(uri ~= "", "No provider found for service")
@@ -104,13 +117,15 @@ function ServiceClient:connect()
    local host, port = uri:match("rosrpc://([^:]+):(%d+)$")
    assert(host and port, "Parsing ROSRCP uri " .. uri .. " failed")
 
-   self.connection:connect(host, port)
-   self.connection:send_header{callerid=roslua.node_name,
-			       service=self.service,
-			       type=self.type,
-			       md5sum=self.srvspec:md5(),
-			       persistent=self.persistent and 1 or 0}
-   self.connection:receive_header()
+   connection:connect(host, port, 5)
+   connection:send_header{callerid=roslua.node_name,
+                          service=self.service,
+                          type=self.type,
+                          md5sum=self.srvspec:md5(),
+                          persistent=self.persistent and 1 or 0}
+   connection:receive_header()
+
+   self.connection = connection
 end
 
 --- Initiate service execution.
@@ -119,25 +134,30 @@ end
 -- concexec_result(), and concexec_wait() methods can be used.
 -- @param args argument array
 function ServiceClient:concexec_start(args)
-   assert(not self.running, "A service call for "..self.service.." ("..self.type..") is already being executed")
+   assert(not self.running, "A service call for "..self.service.." (" ..
+          self.type..") is already being executed")
    self.running = true
    self.concurrent = true
    self.finished = false
 
    local ok = true
    if not self.connection then
-      ok = pcall(self.connect, self)
+      local err
+      ok, err = pcall(self.connect, self)
       if not ok then
-	 self.concexec_error = "Connection failed"
+	 self.concexec_error = "Connection failed: " .. tostring(err)
       end
    end
 
    if ok then
       local m = self.srvspec.reqspec:instantiate()
+      local err
       m:set_from_array(args)
-      ok = pcall(self.connection.send, self.connection, m)
+      ok, err = pcall(self.connection.send, self.connection, m)
       if not ok then
-	 self.concexec_error = "Sending message failed"
+	 self.concexec_error = "Sending message failed: " .. tostring(err)
+         self.connection:close()
+         self.connection = nil
       end
    end
 
@@ -145,12 +165,18 @@ function ServiceClient:concexec_start(args)
 end
 
 --- Wait for the execution to finish.
-function ServiceClient:concexec_wait()
+-- Warning, that blocks the complete execution until a reply has been
+-- received!
+-- @param timeout optional timeout in seconds after which the waiting
+-- should be aborted. An error is thrown if the timeout happens with
+-- only the string "timeout". A missing timeout or if set to -1 will
+-- cause it to wait indefinitely.
+function ServiceClient:concexec_wait(timeout)
    assert(self.running, "Service "..self.service.." ("..self.type..") is not being executed")
    assert(self.concurrent, "Service "..self.service.." ("..self.type..") is not executed concurrently")
    assert(not self._concexec_failed, "Service "..self.service.." ("..self.type..") has failed")
 
-   self.connection:wait_for_message()   
+   self.connection:wait_for_message(timeout)
 end
 
 
@@ -162,13 +188,15 @@ function ServiceClient:concexec_succeeded()
    assert(self.concurrent, "Service "..self.service.." ("..self.type..") is not executed concurrently")
 
    if not self.finished then
-      if self.connection:data_available() then
+      if self.connection and self.connection:data_available() then
 	 local ok, err = pcall(self.connection.receive, self.connection)
          if ok then
-	          self.finished = true
+            self.finished = true
          else
-	          self.concexec_error = "Receiving result failed: " .. err
+            self.concexec_error = "Receiving result failed: " .. err
             self._concexec_failed = true
+            self.connection:close()
+            self.connection = nil
          end
       end
    end
