@@ -315,9 +315,12 @@ end
 --- Receive data from the network.
 -- Upon return contains the new messages in the messages array field.
 function TcpRosPubSubConnection:receive()
-   local ok, err = pcall(TcpRosConnection.receive, self)
+   local ok, err = TcpRosConnection.receive(self)
    if ok then
       local message = self.msgspec:instantiate()
+      if not self.payload then
+         error("payload is nil", 0)
+      end
       local ok, err = xpcall(function() message:deserialize(self.payload) end, debug.traceback)
       if not ok then error(err, 0) end
       table.insert(self.messages, message)
