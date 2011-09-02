@@ -318,7 +318,8 @@ function TcpRosPubSubConnection:receive()
    local ok, err = pcall(TcpRosConnection.receive, self)
    if ok then
       local message = self.msgspec:instantiate()
-      message:deserialize(self.payload)
+      local ok, err = xpcall(function() message:deserialize(self.payload) end, debug.traceback)
+      if not ok then error(err, 0) end
       table.insert(self.messages, message)
    else
       if err == "closed" then

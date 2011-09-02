@@ -394,10 +394,10 @@ function Subscriber:spin()
 		  p.connection = nil
 		  -- we do not try to reconnect, we rely on proper publisher updates
 	       else
-                  if self.DEBUG then
+                  --if self.DEBUG then
                      print_warn("Subscriber[%s]: receiving failed: %s",
                                 self.topic, err)
-                  end
+                  --end
 		  p.state = self.PUBSTATE_FAILED
 	       end
 	    elseif p.connection:data_received() then

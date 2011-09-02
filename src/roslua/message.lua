@@ -198,17 +198,17 @@ function Message:split_format(format)
 		end
 		local f = format:sub(l, l+lread-1)
 		l = l + lread
-
+                
+                local last = format:sub(l-1,l-1)
+                if last == "i" or last == "I" or last == "c" then
+                   f = f .. format:sub(l,l)
+                   l = l + 1
+                end
 		if format:sub(l, l+1) == "c0" then
 		   f = f .. format:sub(l, l+1)
 		   l = l + 2
-                else
-                   local last = format:sub(l-1,l-1)
-                   if last == "i" or last == "I" or last == "c" then
-                      f = f .. format:sub(l,l)
-                      l = l + 1
-                   end
-		end
+                end
+
 		return f
 	     end
 	  end
