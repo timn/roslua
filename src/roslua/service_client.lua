@@ -27,7 +27,7 @@ module("roslua.service_client", package.seeall)
 require("roslua")
 require("roslua.srv_spec")
 
-ServiceClient = { persistent = true }
+ServiceClient = { persistent = true, num_exec_tries = 2 }
 
 --- Constructor.
 -- The constructor can be called in two ways, either with positional or
@@ -139,6 +139,12 @@ function ServiceClient:concexec_start(args)
    self.running = true
    self.concurrent = true
    self.finished = false
+   self.concexec_args = args
+   if self.concexec_try == nil then
+      self.concexec_try = 1
+   else
+      self.concexec_try = self.concexec_try + 1
+   end
 
    local ok = true
    if not self.connection then
@@ -153,7 +159,7 @@ function ServiceClient:concexec_start(args)
       local m = self.srvspec.reqspec:instantiate()
       local err
       m:set_from_array(args)
-      ok, err = pcall(self.connection.send, self.connection, m)
+      ok, err = self.connection:send(m)
       if not ok then
 	 self.concexec_error = "Sending message failed: " .. tostring(err)
          self.connection:close()
@@ -193,10 +199,22 @@ function ServiceClient:concexec_succeeded()
          if ok then
             self.finished = true
          else
-            self.concexec_error = "Receiving result failed: " .. err
-            self._concexec_failed = true
-            self.connection:close()
-            self.connection = nil
+            if err:find("Service execution failed") then
+               self.concexec_error = err
+               self._concexec_failed = true
+            else
+               self.connection:close()
+               self.connection = nil
+               -- we check for "smaller than" here because the value is
+               -- incremented in concexec_start() *after* the test!
+               if self.concexec_try < self.num_exec_tries then
+                  self.running = false
+                  self:concexec_start(self.concexec_args)
+               else
+                  self.concexec_error = err
+                  self._concexec_failed = true
+               end
+            end
          end
       end
    end
@@ -210,7 +228,11 @@ function ServiceClient:concexec_failed()
    assert(self.running, "Service "..self.service.." ("..self.type..") is not being executed")
    assert(self.concurrent, "Service "..self.service.." ("..self.type..") is not executed concurrently")
 
-   return self._concexec_failed == true
+   if self._concexec_failed then
+      self.running = false
+      self.concexec_try = nil
+      return true
+   end
 end
 
 --- Check if execution has failed or succeeded
@@ -234,6 +256,7 @@ function ServiceClient:concexec_result()
    end
 
    self.running = false
+   self.concexec_try = nil
 
    assert(message, "Service "..self.service.." ("..self.type..") no result received")
    if self.simplified_return then
@@ -256,24 +279,63 @@ function ServiceClient:concexec_abort()
    end
 end
 
+--- Reset finished service call.
+-- Precondition is that the service has been executed and finished
+-- (it does not matter if it succeeded or failed). To abort a currently
+-- running service call use concexec_abort().
+function ServiceClient:concexec_reset()
+   assert(self.running, "Service "..self.service.." ("..self.type..
+          ") is not being executed")
+   assert(self:concexec_finished(), "Service "..self.service.." ("..self.type..
+       ") has not recently finished.")
+
+   self.running = false
+end
+
 --- Execute service.
 -- This method is set as __call entry in the meta table. See the module documentation
 -- on the passed arguments. The method will return only after it has received a reply
 -- from the service provider!
 -- @param args argument array
 function ServiceClient:execute(args)
-   assert(not self.running, "A service call for "..self.service.." ("..self.type..") is already being executed")
+   assert(not self.running, "A service call for "..self.service.." ("..
+          self.type..") is already being executed")
+
    self.running = true
    self.concurrent = false
 
-   if not self.connection then
-      self:connect()
+   local try = 1
+   local finished = false
+   local err = ""
+   while not finished and try <= self.num_exec_tries do
+      if not self.connection then
+         self:connect()
+      end
+
+      local m = self.srvspec.reqspec:instantiate()
+      m:set_from_array(args)
+      finished, err = self.connection:send(m)
+      if finished then
+         finished, err =
+            pcall(self.connection.wait_for_message, self.connection)
+         if not finished and err:find("Service execution failed") then
+            self.running = false
+            error(err, 0)
+         end
+      end
+
+      if not finished then
+         try = try + 1
+         self.connection:close()
+         self.connection = nil
+      end
    end
 
-   local m = self.srvspec.reqspec:instantiate()
-   m:set_from_array(args)
-   self.connection:send(m)
-   self.connection:wait_for_message()
+   self.running = false
+
+   if not finished then
+      error("Failed to call service " .. self.service .. ": " .. err)
+   end
 
    local message = self.connection.message
 
@@ -281,8 +343,6 @@ function ServiceClient:execute(args)
       self.connection:close()
       self.connection = nil
    end
-
-   self.running = false
 
    if self.simplified_return then
      local _, rv = message:generate_value_array(false)

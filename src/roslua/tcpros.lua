@@ -399,7 +399,11 @@ function TcpRosServiceClientConnection:receive()
    -- get OK-byte
    local ok_byte_d, err = roslua.utils.socket_recv(self.socket, 1)
    if ok_byte_d == nil then
-      error("Reading OK byte failed: " .. err, (err == "closed") and 0)
+      if err == "closed" then
+         error("closed", 0)
+      else
+         error("Reading OK byte failed: " .. err)
+      end
    end
    local ok_byte = struct.unpack("<!1I1", ok_byte_d)
 
