@@ -1,9 +1,9 @@
 
 ----------------------------------------------------------------------------
---  service_client.lua - service client example
+--  service_client_concexec.lua - concurrent service client example
 --
---  Created: Fri Jul 30 10:58:59 2010 (at Intel Research, Pittsburgh)
---  Copyright  2010  Tim Niemueller [www.niemueller.de]
+--  Created: Tue Sep 20 18:27:22 2011 (Papas 65.!)
+--  Copyright  2010-2011  Tim Niemueller [www.niemueller.de]
 --  Licensed under BSD license, cf. LICENSE file of roslua
 ----------------------------------------------------------------------------
 
@@ -25,13 +25,21 @@ math.randomseed(os.time())
 for i = 1, LOOPS do
    local a, b = math.random(1000), math.random(1000)
 
-   -- Use simple form without concurrent execution
-   local ok, res = pcall(s, {a, b})
-      
-   if ok then
-      print(a .. " + " .. b .. " = " .. res)
-   else
-      printf("%s", res)
+   -- Use more complex but also more powerful form of execution
+   -- which can be run concurrent to other tasks
+
+   s:concexec_start{a, b}
+
+   local running = true
+   while running do
+      if s:concexec_succeeded() then
+         print(a .. " + " .. b .. " = " .. s:concexec_result())
+         running = false
+      elseif s:concexec_failed() then
+         printf("%s", s.concexec_error)
+         running = false
+      end
+      roslua.sleep(0.1)
    end
 
    -- Sleep after loop, for example to restart provider in between loops
