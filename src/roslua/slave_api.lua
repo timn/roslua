@@ -326,7 +326,7 @@ function slave_uri()
    local port = xavante.httpd.get_ports()[1]
    assert(port and port ~= "0", "Xavante patch for ephemeral port not applied. ".. 
 	  "You need at least version 2.2.1 or later of Xavante, cf. README.")
-   return "http://" .. socket.dns.gethostname() .. ":" .. port
+   return "http://" .. socket.dns.gethostname() .. ":" .. port .. "/"
 end
 
 --- Process requests.
