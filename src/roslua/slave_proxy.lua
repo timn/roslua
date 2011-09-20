@@ -75,6 +75,15 @@ function SlaveProxy:getBusStats()
 end
 
 
+--- Get bus info.
+-- @return bus info
+function SlaveProxy:getBusInfo()
+   local res = self:do_call("getBusInfo")
+
+   return res[3]
+end
+
+
 --- Get slaves master URI.
 -- @return slaves master URI
 function SlaveProxy:getMasterUri()
