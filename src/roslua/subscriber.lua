@@ -30,6 +30,7 @@ require("roslua.tcpros")
 CONNECTION_MAX_TRIES = 10
 
 Subscriber = {DEBUG = false,
+              MAX_MSGS_PER_LOOP = 10,
 	      PUBSTATE_DISCONNECTED = 1,
 	      PUBSTATE_TOPIC_REQUESTED = 2,
 	      PUBSTATE_TOPIC_NEGOTIATED = 3,
@@ -385,7 +386,9 @@ function Subscriber:spin()
    for uri, p in pairs(self.publishers) do
       if p.state == self.PUBSTATE_COMMUNICATING and p.connection then
 	 p.connection.messages = {}
-	 if p.connection:data_available() then
+         local num_msgs = 0
+         while num_msgs < self.MAX_MSGS_PER_LOOP and p.connection:data_available() do
+            num_msgs = num_msgs + 1
 	    local ok, err = pcall(p.connection.receive, p.connection)
 	    if not ok then
 	       if err == "closed" then
