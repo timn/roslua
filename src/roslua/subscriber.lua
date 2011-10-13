@@ -387,7 +387,9 @@ function Subscriber:spin()
       if p.state == self.PUBSTATE_COMMUNICATING and p.connection then
 	 p.connection.messages = {}
          local num_msgs = 0
-         while num_msgs < self.MAX_MSGS_PER_LOOP and p.connection:data_available() do
+         while num_msgs < self.MAX_MSGS_PER_LOOP
+               and p.connection and p.connection:data_available()
+         do
             num_msgs = num_msgs + 1
 	    local ok, err = pcall(p.connection.receive, p.connection)
 	    if not ok then
