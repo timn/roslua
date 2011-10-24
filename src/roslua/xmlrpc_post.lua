@@ -115,6 +115,10 @@ function XmlRpcPost:start_call(method, ...)
    self:setup_request(method, ...)
 
    self.c = socket.tcp()
+   assert(self.c,
+          string.format("XmlRpcPost: Failed to create TCP socket "..
+                        "(host: %s, port %d, method: %s)",
+                     self.request.host, self.request.port, method))
    self.c:settimeout(0)
    local ok, err = self.c:connect(self.request.host, self.request.port)
    if not ok then
@@ -122,6 +126,7 @@ function XmlRpcPost:start_call(method, ...)
 	 -- it might still complete at some point
 	 self.state = STATE_INITIATED
       else
+         self.c = nil
 	 self.state = STATE_FAILED
 	 error(err)
       end
