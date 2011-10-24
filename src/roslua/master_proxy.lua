@@ -49,12 +49,16 @@ end
 function MasterProxy:do_call(method_name, ...)
    local ok, res = xmlrpc.http.call(roslua.master_uri,
 				    method_name, roslua.node_name, ...)
-   assert(ok, string.format("XML-RPC call %s failed on client: %s", method_name, tostring(res)))
-   assert(res[1] == 1, string.format("XML-RPC call %s failed on server: %s",
-				     method_name, tostring(res[2])))
+   assert(ok, string.format("XML-RPC call %s failed on client: %s",
+                            method_name, tostring(res)))
+   if res[1] ~= 1 then
+      error(string.format("XML-RPC call %s failed on server: %s",
+                          method_name, tostring(res[2])), 0)
+   end
 
    if __DEBUG then
-      print(string.format("Ok: %s  Code: %d  Error: %s", tostring(ok), res[1], res[2]))
+      print(string.format("Ok: %s  Code: %d  Error: %s",
+                          tostring(ok), res[1], res[2]))
    end
 
    return res

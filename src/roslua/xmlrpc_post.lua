@@ -440,9 +440,10 @@ end
 -- @return result of completed concurrent call
 function XmlRpcRequest:result()
    assert(self.xmlrpc_post:done(), self.method .. " not done")
-   assert(self.xmlrpc_post.result[1][1] == 1,
-	  string.format("XML-RPC call %s failed on server: %s",
-			self.xmlrpc_post.request.method,
-			tostring(self.xmlrpc_post.result[1][2])))
+   if self.xmlrpc_post.result[1][1] ~= 1 then
+      error(string.format("XML-RPC call %s failed on server: %s",
+                          self.xmlrpc_post.request.method,
+                          tostring(self.xmlrpc_post.result[1][2])), 0)
+   end
    return self.xmlrpc_post.result[1][3]
 end
