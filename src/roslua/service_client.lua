@@ -300,6 +300,11 @@ function ServiceClient:concexec_reset()
        ") has not recently finished.")
 
    self.running = false
+
+   if not self.persistent and self.connection then
+      self.connection:close()
+      self.connection = nil
+   end
 end
 
 --- Execute service.
