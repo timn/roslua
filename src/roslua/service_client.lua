@@ -307,6 +307,19 @@ function ServiceClient:concexec_reset()
    end
 end
 
+
+--- Check if concurrent execution is running.
+-- Note that this function only determines if the service client is currently
+-- involved in a service execution. This might already have succeeded or failed,
+-- but the concurrent execution has been neither aborted nor reset. If you want
+-- to know if the service call has finished on the remote end use
+-- concexec_finished() to find out.
+-- @return true if concurrent execution is running, false otherwise
+-- @see concexec_finished()
+function ServiceClient:concexec_running()
+   return self.running
+end
+
 --- Execute service.
 -- This method is set as __call entry in the meta table. See the
 -- module documentation on the passed arguments. The method will
