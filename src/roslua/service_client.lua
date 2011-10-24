@@ -240,11 +240,7 @@ function ServiceClient:concexec_failed()
    assert(self.concurrent, "Service "..self.service.." ("..self.type..
           ") is not executed concurrently")
 
-   if self._concexec_failed then
-      self.running = false
-      self.concexec_try = nil
-      return true
-   end
+   return self._concexec_failed
 end
 
 --- Check if execution has failed or succeeded
