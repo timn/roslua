@@ -151,7 +151,11 @@ function ServiceClient:concexec_start(args)
       local err
       ok, err = pcall(self.connect, self)
       if not ok then
-	 self.concexec_error = "Connection failed: " .. tostring(err)
+         if err:match(".*no provider$") then
+            self.concexec_error = "no service provider"
+         else
+            self.concexec_error = "Connection failed: " .. tostring(err)
+         end
       end
    end
 
@@ -178,9 +182,12 @@ end
 -- only the string "timeout". A missing timeout or if set to -1 will
 -- cause it to wait indefinitely.
 function ServiceClient:concexec_wait(timeout)
-   assert(self.running, "Service "..self.service.." ("..self.type..") is not being executed")
-   assert(self.concurrent, "Service "..self.service.." ("..self.type..") is not executed concurrently")
-   assert(not self._concexec_failed, "Service "..self.service.." ("..self.type..") has failed")
+   assert(self.running,
+          "Service "..self.service.." ("..self.type..") is not being executed")
+   assert(self.concurrent, "Service "..self.service.." ("..self.type..
+          ") is not executed concurrently")
+   assert(not self._concexec_failed,
+          "Service "..self.service.." ("..self.type..") has failed")
 
    self.connection:wait_for_message(timeout)
 end
@@ -188,10 +195,13 @@ end
 
 --- Check if execution is finished successfully.
 -- Precondition is that the service is being concurrently executed.
--- @return true if the execution is finished and a result has been received, false otherwise
+-- @return true if the execution is finished and a result has been
+-- received, false otherwise
 function ServiceClient:concexec_succeeded()
-   assert(self.running, "Service "..self.service.." ("..self.type..") is not being executed")
-   assert(self.concurrent, "Service "..self.service.." ("..self.type..") is not executed concurrently")
+   assert(self.running,
+          "Service "..self.service.." ("..self.type..") is not being executed")
+   assert(self.concurrent, "Service "..self.service.." ("..self.type..
+          ") is not executed concurrently")
 
    if not self.finished then
       if self.connection and self.connection:data_available() then
@@ -223,10 +233,12 @@ end
 
 --- Check if execution has failed.
 -- Precondition is that the service is being concurrently executed.
--- @return true if the execution is finished and a result has been received, false otherwise
+-- @return true if the execution has failed
 function ServiceClient:concexec_failed()
-   assert(self.running, "Service "..self.service.." ("..self.type..") is not being executed")
-   assert(self.concurrent, "Service "..self.service.." ("..self.type..") is not executed concurrently")
+   assert(self.running,
+          "Service "..self.service.." ("..self.type..") is not being executed")
+   assert(self.concurrent, "Service "..self.service.." ("..self.type..
+          ") is not executed concurrently")
 
    if self._concexec_failed then
       self.running = false
@@ -258,7 +270,8 @@ function ServiceClient:concexec_result()
    self.running = false
    self.concexec_try = nil
 
-   assert(message, "Service "..self.service.." ("..self.type..") no result received")
+   assert(message,
+          "Service "..self.service.." ("..self.type..") no result received")
    if self.simplified_return then
      local _, rv = message:generate_value_array(false)
      return unpack(rv)
@@ -293,9 +306,10 @@ function ServiceClient:concexec_reset()
 end
 
 --- Execute service.
--- This method is set as __call entry in the meta table. See the module documentation
--- on the passed arguments. The method will return only after it has received a reply
--- from the service provider!
+-- This method is set as __call entry in the meta table. See the
+-- module documentation on the passed arguments. The method will
+-- return only after it has received a reply from the service
+-- provider!
 -- @param args argument array
 function ServiceClient:execute(args)
    assert(not self.running, "A service call for "..self.service.." ("..
