@@ -282,7 +282,8 @@ end
 -- be closed even if it is marked persistent. It will be reopened on the next call.
 function ServiceClient:concexec_abort()
    self.running = false
-   if not self.persistent then
+
+   if self.connection then
       self.connection:close()
       self.connection = nil
    end
