@@ -174,7 +174,8 @@ function c_package_loader(module)
 	 errmsg = errmsg .. string.format("\n\tFound matching ROS package %s at %s (ROS C loader)",
 					  tpackage, packpath)
 
-	 local try_paths = {{string.format("%s/lib/%s.luaso", packpath, package_name), string.gsub(module, "%.", "_")}}
+	 local try_paths = {{string.format("%s/lib/%s.luaso", packpath, package_name), string.gsub(module, "%.", "_")},
+	                    {string.format("%s/lib/%s_lua.luaso", packpath, package_name), string.gsub(module, "%.", "_")}}
 	 if submod ~= nil or submod ~= "" then
 	    table.insert(try_paths, {string.format("%s/lib/%s.luaso", packpath, submod),
 				     string.gsub(submod, "%.", "_")})
