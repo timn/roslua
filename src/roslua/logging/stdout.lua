@@ -21,7 +21,7 @@ module("roslua.logging.stdout", package.seeall)
 
 require("roslua.logging")
 
-COLOR_GRAY     = "\27[0;37m"
+COLOR_GRAY     = "\27[2;37m"
 COLOR_RED      = "\27[0;31m"
 COLOR_BROWN    = "\27[0;33m"
 COLOR_CYAN     = "\27[0;36m"
