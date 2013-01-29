@@ -260,7 +260,7 @@ end
 -- Call this function when existing the program to allow for proper unregistering
 -- of topic and services and to perform other cleanup tasks.
 function finalize()
-   printf("ROS node %s is finalizing", roslua.node_name)
+   print("ROS node " .. roslua.node_name .. " is finalizing")
 
    -- Run custom finalizers
    local fcopy = {}
