@@ -46,6 +46,15 @@ function rosversion()
       assert_rospack()
       local p = io.popen("rosversion ros 2>/dev/null")
       local version = p:read("*a")
+      p:close()
+      if not version or version == "" then
+        local p = io.popen("rosversion roslaunch 2>/dev/null")
+        version = p:read("*a")
+        p:close()
+      end
+      if not version or version == "" then
+         error("Cannot determine ROS version")
+      end
 
       local t = split(version, ".")
       ros_version_major = tonumber(t[1])
