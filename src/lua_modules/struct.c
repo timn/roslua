@@ -34,6 +34,11 @@
 ** ' ' - ignored
 */
 
+#if LUA_VERSION_NUM >= 502
+#  define luaL_putchar luaL_addchar
+#  define luaL_reg     luaL_Reg
+#endif
+
 
 /* is 'x' a power of 2? */
 #define isp2(x)		((x) > 0 && ((x) & ((x) - 1)) == 0)
