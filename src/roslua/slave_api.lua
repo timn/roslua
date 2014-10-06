@@ -19,12 +19,14 @@
 module("roslua.slave_api", package.seeall)
 
 require("roslua")
-require("xavante")
-require("xavante.httpd")
-require("wsapi.xavante")
-require("wsapi.request")
+local xavante = require("xavante")
+xavante.httpd = require("xavante.httpd")
+local wsapi = {}
+wsapi.xavante = require("wsapi.xavante")
+wsapi.request = require("wsapi.request")
+local copas = require("copas")
 require("xmlrpc")
-require("posix")
+local posix = require("posix")
 require("socket")
 assert(xmlrpc._VERSION_MAJOR and (xmlrpc._VERSION_MAJOR > 1 or xmlrpc._VERSION_MAJOR == 1 and xmlrpc._VERSION_MINOR >= 2),
        "You must use version 1.2 or newer of lua-xmlrpc")
@@ -50,7 +52,7 @@ function wsapi_handler(wsapi_env)
      result = { code = 3, message = result[2] }
   else
      table.remove(result, 1)
-     if table.getn(result) == 1 then
+     if #result == 1 then
 	result = result[1]
      end
   end
