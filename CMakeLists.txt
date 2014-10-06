@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.4.6)
 include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 
+find_package(PkgConfig REQUIRED)
+
 # Set the build type.  Options are:
 #  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
 #  Debug          : w/ debug symbols, w/o optimization
@@ -21,7 +23,11 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
 set(CMAKE_SHARED_LIBRARY_SUFFIX ".luaso")
 
-include_directories(/usr/include/lua5.1)
+pkg_search_module(LUA REQUIRED lua lua5.2 lua-5.2 lua5.1 lua-5.1)
+
+message(STATUS "Found Lua ${LUA_VERSION}")
+
+include_directories(${LUA_INCLUDE_DIRS})
 
 #uncomment if you have defined messages
 #rosbuild_genmsg()
@@ -38,7 +44,11 @@ include_directories(/usr/include/lua5.1)
 
 rosbuild_add_library(signal src/lua_modules/lsignal.c)
 rosbuild_add_library(struct src/lua_modules/struct.c)
-rosbuild_add_library(posix src/lua_modules/lposix.c)
 
-target_link_libraries(posix rt crypt)
+target_link_libraries(signal ${LUA_LIBRARIES})
+target_link_libraries(struct ${LUA_LIBRARIES})
+
+# Use system posix library
+#rosbuild_add_library(posix src/lua_modules/lposix.c)
+#target_link_libraries(posix rt crypt)
 
