@@ -1,7 +1,9 @@
 /*
- * lsignal.c -- Signal Handler Library for Lua
+ * signal.c -- Signal Handler Library for Lua
  *
- * Copyright (C) 2010  Patrick J. Donnelly (batrick@batbytes.com)
+ * Version: 1.000+changes
+ *
+ * Copyright (C) 2007  Patrick J. Donnelly (batrick@batbytes.com)
  *
  * This software is distributed under the same license as Lua 5.0:
  *
@@ -24,30 +26,31 @@
  * OTHER DEALINGS IN THE SOFTWARE. 
 */
 
-#define LUA_LIB_NAME      "signal"
-#define LUA_LIB_VERSION   1.2
-#define LUA_SIGNAL_NAME   "LUA_SIGNAL"
-
-#if !(defined(_POSIX_SOURCE) || defined(sun) || defined(__sun))
-  #define INCLUDE_KILL  1
-  #define INCLUDE_PAUSE 1
-  #define USE_SIGACTION 1
-#endif
-
-#include <lua.h>
-#include <lauxlib.h>
-
-#include <assert.h>
-#include <errno.h>
 #include <signal.h>
 #include <stdlib.h>
-#include <string.h>
+
+#include "lua.h"
+#include "lauxlib.h"
+
+/*
+if (LUA_VERSION_NUM == 502)
+define luaL_register(L, N, R) luaL_setfuncs(L, R, 0)
+endif
+*/
+
+#ifndef lsig
+
+#define lsig
 
 struct lua_signal
 {
-  const char *name; /* name of the signal */
-  const int sig; /* the signal */
+  char *name; /* name of the signal */
+  int sig; /* the signal */
 };
+
+#endif
+
+#define LUA_SIGNAL "lua_signal"
 
 static const struct lua_signal lua_signals[] = {
   /* ANSI C signals */
@@ -153,282 +156,266 @@ static const struct lua_signal lua_signals[] = {
   {NULL, 0}
 };
 
-/*
- *  The signal counts in the 1st half of the array are modified by
- *  the handler.  The corresponding signal counts in the 2nd half
- *  are modifed by the hook routine.
- */
-static volatile sig_atomic_t *signal_stack = NULL;
-static int signal_stack_top;
-static lua_State *ML = NULL;
-static struct hook {
-  lua_Hook hook;
-  int mask;
-  int count;
-} old_hook = {NULL, 0, 0};
+static lua_State *Lsig = NULL;
+static lua_Hook Hsig = NULL;
+static int Hmask = 0;
+static int Hcount = 0;
 
-static void hook (lua_State *L, lua_Debug *ar)
+static struct signal_event
 {
-  int i, j;
-  assert(L == ML);
-  for (i = 0; i < signal_stack_top; i++)
-    while (signal_stack[i] != signal_stack[i+signal_stack_top])
-    {
-      lua_getfield(L, LUA_REGISTRYINDEX, LUA_SIGNAL_NAME);
-      lua_pushinteger(L, i);
-      lua_rawget(L, -2);
-      lua_replace(L, -2); /* replace _R.LUA_SIGNAL_NAME */
-      assert(lua_isfunction(L, -1));
-      for (j = 0; lua_signals[j].name != NULL; j++)
-        if (lua_signals[j].sig == i)
-        {
-          lua_pushstring(L, lua_signals[j].name);
-          break;
-        }
-      if (lua_signals[j].name == NULL) lua_pushliteral(L, "");
-      lua_pushinteger(L, i);
-      lua_call(L, 2, 0);
-      signal_stack[i+signal_stack_top]++;
-    }
-  lua_sethook(ML, old_hook.hook, old_hook.mask, old_hook.count);
-  old_hook.hook = NULL;
+	int Nsig;
+	struct signal_event *next_event;
+} *signal_queue = NULL;
+
+static struct signal_event *last_event = NULL;
+
+static void sighook(lua_State *L, lua_Debug *ar)
+{
+  struct signal_event *event;
+  /* restore the old hook */
+  lua_sethook(L, Hsig, Hmask, Hcount);
+
+  lua_pushstring(L, LUA_SIGNAL);
+  lua_gettable(L, LUA_REGISTRYINDEX);
+
+  while((event = signal_queue))
+  {
+    lua_pushnumber(L, event->Nsig);
+    lua_gettable(L, -2);
+    lua_call(L, 0, 0);
+    signal_queue = event->next_event;
+    free(event);
+  };
+
+  lua_pop(L, 1); /* pop lua_signal table */
+
 }
 
-static void handle (int sig)
+static void handle(int sig)
 {
-  assert(ML != NULL);
-  if (old_hook.hook == NULL) /* replace it */
+  if(!signal_queue)
   {
-    old_hook.hook = lua_gethook(ML);
-    old_hook.mask = lua_gethookmask(ML);
-    old_hook.count = lua_gethookcount(ML);
-    lua_sethook(ML, hook, LUA_MASKCOUNT, 1);
-  }
-  signal_stack[sig]++;
-}
+    /* Store the existing debug hook (if any) and its parameters */
+    Hsig = lua_gethook(Lsig);
+    Hmask = lua_gethookmask(Lsig);
+    Hcount = lua_gethookcount(Lsig);
+    
+    signal_queue = malloc(sizeof(struct signal_event));
+    signal_queue->Nsig = sig;
+    signal_queue->next_event = NULL;
 
-static int get_signal (lua_State *L, int idx)
-{
-  switch (lua_type(L, idx))
-  {
-    case LUA_TNUMBER:
-      return (int) lua_tointeger(L, idx);
-    case LUA_TSTRING:
-      lua_pushvalue(L, idx);
-      lua_rawget(L, LUA_ENVIRONINDEX);
-      if (!lua_isnumber(L, -1))
-        return luaL_argerror(L, idx, "invalid signal string");
-      lua_replace(L, idx);
-      return (int) lua_tointeger(L, idx);
-    default:
-      return luaL_argerror(L, idx, "expected signal string/number");
-  }
-}
-
-static int status (lua_State *L, int s)
-{
-  if (s)
-  {
-    lua_pushboolean(L, 1);
-    return 1;
+    last_event = signal_queue;
+    
+    /* Set our new debug hook */
+    lua_sethook(Lsig, sighook, LUA_MASKCALL | LUA_MASKRET | LUA_MASKCOUNT, 1);
   }
   else
   {
-    lua_pushnil(L);
-    lua_pushstring(L, strerror(errno));
-    return 2;
+    last_event->next_event = malloc(sizeof(struct signal_event));
+    last_event->next_event->Nsig = sig;
+    last_event->next_event->next_event = NULL;
+    
+    last_event = last_event->next_event;
   }
 }
 
 /*
- * old_handler[, err] == signal(signal [, func])
+ * l_signal == signal(signal [, func [, chook]])
  *
  * signal = signal number or string
- * func/"ignore"/"default" = Lua function to call
+ * func = Lua function to call
+ * chook = catch within C functions
+ *         if caught, Lua function _must_
+ *         exit, as the stack is most likely
+ *         in an unstable state.
 */  
-static int l_signal (lua_State *L)
+
+static int l_signal(lua_State *L)
 {
-  enum {IGNORE, DEFAULT, SET};
-  static const char *options[] = {"ignore", "default", NULL};
-  int sig = get_signal(L, 1);
-  int option;
+  int args = lua_gettop(L);
+  int t, sig; /* type, signal */
 
-  if (lua_isstring(L, 2))
-    option = luaL_checkoption(L, 2, NULL, options);
-  else if (lua_isnil(L, 2))
-    option = DEFAULT;
-  else
-    option = (luaL_checktype(L, 2, LUA_TFUNCTION), SET);
-
-  lua_pushvalue(L, 1);
-  lua_rawget(L, LUA_ENVIRONINDEX); /* return old handler */
-
-  lua_pushvalue(L, 1);
-  switch (option)
+  /* get type of signal */
+  luaL_checkany(L, 1);
+  t = lua_type(L, 1);
+  if (t == LUA_TNUMBER)
+    sig = (int) lua_tonumber(L, 1);
+  else if (t == LUA_TSTRING)
   {
-    case IGNORE:
-      lua_pushnil(L);
-      lua_rawset(L, LUA_ENVIRONINDEX);
-      signal(sig, SIG_IGN);
-      signal_stack[sig+signal_stack_top] = signal_stack[sig] = 0;
-      break;
-    case DEFAULT:
-      lua_pushnil(L);
-      lua_rawset(L, LUA_ENVIRONINDEX);
-      signal(sig, SIG_DFL);
-      signal_stack[sig+signal_stack_top] = signal_stack[sig] = 0;
-      break;
-    case SET:
-      lua_pushvalue(L, 2);
-      lua_rawset(L, LUA_ENVIRONINDEX);
-
-#if USE_SIGACTION
-      {
-        struct sigaction act;
-        act.sa_handler = handle;
-        sigemptyset(&act.sa_mask);
-        act.sa_flags = 0;
-        if (sigaction(sig, &act, NULL))
-          return status(L, 0);
-      }
-#else
-      if (signal(sig, handle) == SIG_ERR)
-        return status(L, 0);
-#endif
-      break;
-    default: assert(0);
+    lua_pushstring(L, LUA_SIGNAL);
+    lua_gettable(L, LUA_REGISTRYINDEX);
+    lua_pushvalue(L, 1);
+    lua_gettable(L, -2);
+    if (!lua_isnumber(L, -1))
+      luaL_error(L, "invalid signal string");
+    sig = (int) lua_tonumber(L, -1);
+    lua_pop(L, 1); /* get rid of number we pushed */
+  } else {
+    sig = SIGUSR1;
+    luaL_checknumber(L, 1); /* will always error, with good error msg */
   }
 
+  /* set handler */
+  if (args == 1 || lua_isnil(L, 2)) /* clear handler */
+  {
+    lua_pushstring(L, LUA_SIGNAL);
+    lua_gettable(L, LUA_REGISTRYINDEX);
+    lua_pushnumber(L, sig);
+    lua_gettable(L, -2); /* return old handler */
+    lua_pushnumber(L, sig);
+    lua_pushnil(L);
+    lua_settable(L, -4);
+    lua_remove(L, -2); /* remove LUA_SIGNAL table */
+    signal(sig, SIG_DFL);
+  } else
+  {
+    luaL_checktype(L, 2, LUA_TFUNCTION);
+
+    lua_pushstring(L, LUA_SIGNAL);
+    lua_gettable(L, LUA_REGISTRYINDEX);
+
+    lua_pushnumber(L, sig);
+    lua_pushvalue(L, 2);
+    lua_settable(L, -3);
+
+    /* Set the state for the handler */
+    Lsig = L;
+
+    if (lua_toboolean(L, 3)) /* c hook? */
+    {
+      if (signal(sig, handle) == SIG_ERR)
+        lua_pushboolean(L, 0);
+      else
+        lua_pushboolean(L, 1);
+    } else /* lua_hook */
+    {
+      if (signal(sig, handle) == SIG_ERR)
+        lua_pushboolean(L, 0);
+      else
+        lua_pushboolean(L, 1);
+    }
+  }
   return 1;
 }
 
 /*
- * status, err = raise(signal)
+ * l_raise == raise(signal)
  *
  * signal = signal number or string
 */  
-static int l_raise (lua_State *L)
+
+static int l_raise(lua_State *L)
 {
-  return status(L, raise(get_signal(L, 1)) == 0);
+  /* int args = lua_gettop(L); */
+  int t = 0; /* type */
+  lua_Number ret;
+
+  luaL_checkany(L, 1);
+
+  t = lua_type(L, 1);
+  if (t == LUA_TNUMBER)
+  {
+    ret = (lua_Number) raise((int) lua_tonumber(L, 1));
+    lua_pushnumber(L, ret);
+  } else if (t == LUA_TSTRING)
+  {
+    lua_pushstring(L, LUA_SIGNAL);
+    lua_gettable(L, LUA_REGISTRYINDEX);
+    lua_pushvalue(L, 1);
+    lua_gettable(L, -2);
+    if (!lua_isnumber(L, -1))
+      luaL_error(L, "invalid signal string");
+    ret = (lua_Number) raise((int) lua_tonumber(L, -1));
+    lua_pop(L, 1); /* get rid of number we pushed */
+    lua_pushnumber(L, ret);
+  } else
+    luaL_checknumber(L, 1); /* will always error, with good error msg */
+
+  return 1;
 }
 
-#if INCLUDE_KILL
+#if defined(__unix__) || defined(__APPLE__)
 
 /* define some posix only functions */
 
 /*
- * status, err = kill(pid, signal)
+ * l_kill == kill(pid, signal)
  *
  * pid = process id
  * signal = signal number or string
 */  
-static int l_kill (lua_State *L)
+
+static int l_kill(lua_State *L)
 {
-  return status(L, kill(luaL_checkinteger(L, 1), get_signal(L, 2)) == 0);
+  int t; /* type */
+  lua_Number ret; /* return value */
+
+  luaL_checknumber(L, 1); /* must be int for pid */
+  luaL_checkany(L, 2); /* check for a second arg */
+
+  t = lua_type(L, 2);
+  if (t == LUA_TNUMBER)
+  {
+    ret = (lua_Number) kill((int) lua_tonumber(L, 1),
+        (int) lua_tonumber(L, 2));
+    lua_pushnumber(L, ret);
+  } else if (t == LUA_TSTRING)
+  {
+    lua_pushstring(L, LUA_SIGNAL);
+    lua_gettable(L, LUA_REGISTRYINDEX);
+    lua_pushvalue(L, 2);
+    lua_gettable(L, -2);
+    if (!lua_isnumber(L, -1))
+      luaL_error(L, "invalid signal string");
+    ret = (lua_Number) kill((int) lua_tonumber(L, 1),
+        (int) lua_tonumber(L, -1));
+    lua_pop(L, 1); /* get rid of number we pushed */
+    lua_pushnumber(L, ret);
+  } else
+    luaL_checknumber(L, 2); /* will always error, with good error msg */
+  return 1;
 }
 
 #endif
 
-#if INCLUDE_PAUSE
-
-static int l_pause (lua_State *L) /* race condition free */
-{
-  sigset_t mask, old_mask;
-  if (sigfillset(&mask) == -1) return status(L, 0);
-  if (sigprocmask(SIG_BLOCK, &mask, &old_mask) == -1) return status(L, 0);
-  if (sigsuspend(&old_mask) != -1) abort(); /* that's strange */
-  return status(L, 0);
-}
-
+static const struct luaL_Reg lsignal_lib[] = {
+  {"signal", l_signal},
+  {"raise", l_raise},
+#if defined(__unix__) || defined(__APPLE__)
+  {"kill", l_kill},
 #endif
+  {NULL, NULL}
+};
 
-static int interrupted (lua_State *L)
+int luaopen_signal(lua_State *L)
 {
-  return luaL_error(L, "interrupted!");
-}
-
-static int library_gc (lua_State *L)
-{
-  if (ML == L) {
-    lua_getfield(L, LUA_REGISTRYINDEX, LUA_SIGNAL_NAME);
-    lua_pushnil(L);
-    while (lua_next(L, -2))
-    {
-      if (lua_isnumber(L, -2)) /* <signal, function> */
-	signal((int) lua_tointeger(L, -2), SIG_DFL);
-      lua_pop(L, 1); /* value */
-    }
-    signal_stack = NULL;
-    ML = NULL;
-    old_hook.hook = NULL;
-    signal_stack_top = 0;
-  }
-  return 0;
-}
-
-int luaopen_signal (lua_State *L)
-{
-  static const struct luaL_Reg lib[] = {
-    {"signal", l_signal},
-    {"raise", l_raise},
-#if INCLUDE_KILL
-    {"kill", l_kill},
-#endif
-#if INCLUDE_PAUSE
-    {"pause", l_pause},
-#endif
-    {NULL, NULL}
-  };
-
-  int i;
-  int max_signal;
-
-  ML = L;
-  if (lua_pushthread(L))
-    lua_pop(L, 1);
-  else
-    luaL_error(L, "library should be opened by the main thread");
-
-  /* environment */
-  lua_newtable(L);
-  lua_replace(L, LUA_ENVIRONINDEX);
-  lua_pushvalue(L, LUA_ENVIRONINDEX);
-  lua_setfield(L, LUA_REGISTRYINDEX, LUA_SIGNAL_NAME); /* for hooks */
+  int i = 0;
 
   /* add the library */
-  luaL_register(L, LUA_LIB_NAME, lib);
-  lua_pushnumber(L, LUA_LIB_VERSION);
-  lua_setfield(L, -2, "version");
-
-  for (i = 0, max_signal = 0; lua_signals[i].name != NULL; i++)
-    if (lua_signals[i].sig > max_signal)
-      max_signal = lua_signals[i].sig+1; /* +1 !!! (for < loops) */
-
-  signal_stack = lua_newuserdata(L, sizeof(volatile sig_atomic_t)*max_signal*2);
   lua_newtable(L);
-  lua_pushcfunction(L, library_gc);
-  lua_setfield(L, -2, "__gc");
-  lua_setmetatable(L, -2); /* when userdata is gc'd, close library */
-  memset((void *) signal_stack, 0, sizeof(volatile sig_atomic_t)*max_signal*2);
-  signal_stack_top = max_signal;
-  lua_pushboolean(L, 1);
-  lua_rawset(L, LUA_ENVIRONINDEX);
+  luaL_register(L, NULL, lsignal_lib);
 
-  while (i--) /* i set from previous for loop */
+  /* push lua_signals table into the registry */
+  /* put the signals inside the library table too,
+   * they are only a reference */
+  lua_pushstring(L, LUA_SIGNAL);
+  lua_newtable(L);
+
+  while (lua_signals[i].name != NULL)
   {
+    /* registry table */
     lua_pushstring(L, lua_signals[i].name);
-    lua_pushinteger(L, lua_signals[i].sig);
-    lua_rawset(L, LUA_ENVIRONINDEX); /* add copy to environment table */
+    lua_pushnumber(L, lua_signals[i].sig);
+    lua_settable(L, -3);
+    /* signal table */
     lua_pushstring(L, lua_signals[i].name);
-    lua_pushinteger(L, lua_signals[i].sig);
-    lua_settable(L, -3); /* add copy to signal table */
+    lua_pushnumber(L, lua_signals[i].sig);
+    lua_settable(L, -5);
+    i++;
   }
 
-  /* set default interrupt handler */
-  lua_getfield(L, -1, "signal");
-  lua_pushinteger(L, SIGINT);
-  lua_pushcfunction(L, interrupted);
-  lua_call(L, 2, 0);
+  /* add newtable to the registry */
+  lua_settable(L, LUA_REGISTRYINDEX);
 
   return 1;
 }
