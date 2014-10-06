@@ -15,11 +15,11 @@
 require("roslua")
 
 roslua.init_node{master_uri=os.getenv("ROS_MASTER_URI"),
-		 node_name="/talkersub"}
+		 node_name="talkersub"}
 
 --local topic = "/rosout"
 --local msgtype = "roslib/Log"
-local topic = "/chatter"
+local topic = "chatter"
 local msgtype = "std_msgs/String"
 
 local s = roslua.subscriber(topic, msgtype)

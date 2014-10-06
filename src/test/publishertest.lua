@@ -12,9 +12,9 @@
 require("roslua")
 
 roslua.init_node{master_uri=os.getenv("ROS_MASTER_URI"),
-		 node_name="/talkerpub"}
+		 node_name="talkerpub"}
 
-local topic = "/chatter"
+local topic = "chatter"
 local msgtype = "std_msgs/String"
 local msgspec = roslua.get_msgspec(msgtype)
 
@@ -25,6 +25,9 @@ while not roslua.quit do
 
    local m = msgspec:instantiate()
    m.values.data = "hello world " .. os.date()
+   print("Sending: " .. m.values.data)
    p:publish(m)
+
+   roslua.sleep(0.5)
 end
 roslua.finalize()
