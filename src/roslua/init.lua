@@ -176,7 +176,9 @@ function init_node(args)
    roslua.slave_api.init()
    roslua.slave_uri = roslua.slave_api.slave_uri()
 
-   roslua.logging.register_print_funcs(_G)
+   if not args.no_print_funcs then
+      roslua.logging.register_print_funcs(_G)
+   end
    if not args.no_rosout then
       roslua.logging.add_logger(roslua.logging.rosout.get_logger())
    end
