@@ -10,6 +10,8 @@
 --             2011       SRI International
 ----------------------------------------------------------------------------
 
+local _VERSION = _VERSION
+
 --- General roslua utilities.
 -- This module contains useful functions used in roslua.
 -- @copyright Tim Niemueller, Carnegie Mellon University, Intel Research Pittsburgh
@@ -22,8 +24,13 @@ local asserted_rospack = false
 -- not installed or the binary is not in the PATH.
 function assert_rospack()
    if not asserted_rospack then
-      local rv = os.execute("rospack 2>/dev/null")
-      assert(rv == 0, "Cannot find rospack command, must be in PATH")
+      if _VERSION > "Lua 5.1" then
+         local rv, exmode, value = os.execute("rospack 2>/dev/null")
+         assert(rv and exmode == "exit" and value == 0, "Cannot find rospack command, must be in PATH")
+      else
+         local rv = os.execute("rospack 2>/dev/null")
+         assert(rv == 0, "Cannot find rospack command, must be in PATH")
+      end
       asserted_rospack = true
    end
 end
