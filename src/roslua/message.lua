@@ -330,23 +330,25 @@ end
 function Message:print_value(indent, ftype, fname, fvalue)
    if type(fvalue) == "table" then
       if ftype == "time" or ftype == "duration" then
-	 print(indent .. "  " .. "k" .. "=" .. fvalue[1] .. "." .. fvalue[2])
+	 print(indent .. fname .. "=" .. fvalue[1] .. "." .. fvalue[2])
       elseif roslua.msg_spec.is_array_type(ftype) then
 	 if #fvalue == 0 then
-	    print(indent .. "  " .. fname .. " = []")
+	    print(indent .. fname .. " = []")
 	 else
 	    for i, a in ipairs(fvalue) do
-	       self:print_value(indent .. "  ", roslua.msg_spec.base_type(ftype),
+	       self:print_value(indent, roslua.msg_spec.base_type(ftype),
 				fname .. "[" .. tostring(i) .. "]", a)
 	    end
 	 end
       elseif fvalue.print then
+	 print(indent .. fname .. " = {")
 	 fvalue:print(indent .. "  ")
+	 print(indent .. "}")
       else
-	 print(indent .. "  " .. fname .. " [cannot print]")
+	 print(indent .. fname .. " [cannot print]")
       end
    else
-      print(indent .. "  " .. fname .. "=" .. tostring(fvalue))
+      print(indent .. fname .. "=" .. tostring(fvalue))
    end
 end
 
@@ -355,9 +357,9 @@ end
 function Message:print(indent)
    local indent = indent or ""
 
-   print(indent .. self.spec.type)
-   for k, f in pairs(self.spec.fields) do
-      self:print_value(indent, f.type, k, self.values[k])
+   print(indent .. "-- " .. self.spec.type)
+   for _, f in ipairs(self.spec.fields) do
+      self:print_value(indent, f.type, f.name, self.values[f.name])
    end
 end
 
