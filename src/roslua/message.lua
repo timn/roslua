@@ -334,6 +334,8 @@ function Message:print_value(indent, ftype, fname, fvalue)
       elseif roslua.msg_spec.is_array_type(ftype) then
 	 if #fvalue == 0 then
 	    print(indent .. fname .. " = []")
+	 elseif ftype == "byte[]" or ftype == "uint8[]" then
+	    print(indent .. fname .. " = " .. #fvalue .. " bytes of data")
 	 else
 	    for i, a in ipairs(fvalue) do
 	       self:print_value(indent, roslua.msg_spec.base_type(ftype),
