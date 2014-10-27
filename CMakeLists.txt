@@ -49,6 +49,9 @@ target_link_libraries(signal ${LUA_LIBRARIES})
 target_link_libraries(struct ${LUA_LIBRARIES})
 
 # Use system posix library
-#rosbuild_add_library(posix src/lua_modules/lposix.c)
-#target_link_libraries(posix rt crypt)
+if (${LUA_VERSION} VERSION_LESS 5.2)
+  rosbuild_add_library(posix src/lua_modules/lposix.c)
+  target_link_libraries(posix rt crypt)
+endif ()
+
 
