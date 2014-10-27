@@ -113,9 +113,8 @@ function Publisher:wait_for_subscriber(timeout_sec)
 	 break
       end
       roslua.spin()
-      local now = roslua.Time.now()
-      local time_diff = now - start_time
-      timeout = timeout_sec > 0 and time_diff > timeout_sec
+      local time_diff = roslua.Time.now() - start_time
+      timeout = timeout_sec > 0 and time_diff:to_sec() > timeout_sec
    until have_subscriber or timeout
 
    return have_subscriber
