@@ -407,23 +407,31 @@ end
 -- @param d2 second duration to compare
 -- @return true if d1 == d2, false otherwise
 function Duration.__eq(d1, d2)
-   return d1.sec == d2.sec and d1.nsec == d2.nsec
+   if Duration.is_instance(d1) and type(d2) == "number" then
+      return d1:to_sec() == d2
+   elseif Duration.is_instance(d2) then
+      return d1.sec == d2.sec and d1.nsec == d2.nsec
+   elseif Duration.is_instance(d2) and type(d1) == "number" then
+      return d1 == d2:to_sec()
+   else
+      error("Duration::== must be called with either duration or number parameter")
+   end
 end
 
 --- Check if d1 is less than d2.
 -- @param d1 first duration to compare
--- @param d2 second duration to compare
+-- @param d2 second duration to compare, or number of seconds
 -- @return true if d1 < d2, false otherwise
 function Duration.__lt(d1, d2)
-   return d1.sec < d2.sec or (d1.sec == d2.sec and d1.nsec < d2.nsec)
-end
-
---- Check if d1 is greater than d2.
--- @param d1 first duration to compare
--- @param d2 second duration to compare
--- @return true if d1 > d2, false otherwise
-function Duration.__gt(d1, d2)
-   return d1.sec > d2.sec or (d1.sec == d2.sec and d1.nsec > d2.nsec)
+   if Duration.is_instance(d1) and type(d2) == "number" then
+      return d1:to_sec() < d2
+   elseif Duration.is_instance(d1) and Duration.is_instance(d2) then
+      return d1.sec < d2.sec or (d1.sec == d2.sec and d1.nsec < d2.nsec)
+   elseif Duration.is_instance(d2) and type(d1) == "number" then
+      return d1 < d2:to_sec()
+   else
+      error("Duration::< must be called with either duration or number parameter")
+   end
 end
 
 
