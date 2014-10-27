@@ -98,8 +98,13 @@ end
 
 
 --- Wait for a subscriber to connect.
-function Publisher:wait_for_subscriber()
+-- @param timeout_sec timeout to wait for subscribers, 0 by default which
+-- means to wait forever
+-- @return true if a subscriber exists, false if a timeout occured
+function Publisher:wait_for_subscriber(timeout_sec)
    local have_subscriber = false
+   local timeout = false
+   local start_time = roslua.Time.now()
    repeat
       assert(not roslua.quit, "Aborted while waiting for subscriber for topic "
 	     .. self.topic)
@@ -108,7 +113,12 @@ function Publisher:wait_for_subscriber()
 	 break
       end
       roslua.spin()
-   until have_subscriber
+      local now = roslua.Time.now()
+      local time_diff = now - start_time
+      timeout = timeout_sec > 0 and time_diff > timeout_sec
+   until have_subscriber or timeout
+
+   return have_subscriber
 end
 
 -- (internal) Called by spin() to accept new connections.
