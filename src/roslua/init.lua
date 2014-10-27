@@ -27,6 +27,10 @@ local utils = require("roslua.utils")
 table.insert(package.loaders, 3, utils.package_loader)
 table.insert(package.loaders, 5, utils.c_package_loader)
 
+-- Make sure our local posix module is loaded
+local ok, posix = pcall(require, "roslua.posix")
+if not ok then posix = require("posix") end
+
 require("roslua.slave_api")
 require("roslua.master_proxy")
 require("roslua.param_proxy")
@@ -164,7 +168,6 @@ function init_node(args)
 
    if anonymous then
       -- make up random name
-      local posix = require("posix")
       roslua.node_name = string.format("%s_%s_%s", roslua.node_name,
 				       posix.getpid("pid"), os.time() * 1000)
    end
